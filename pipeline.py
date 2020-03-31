@@ -29,10 +29,10 @@ R1_CANCER = args.R1_CANCER
 R2_CANCER = args.R2_CANCER
 sampleID = args.sample
 tumor_type = args.tumor
+THREADS = multiprocessing.cpu_count() - 1
 
 # Assumed to be in ~/shared/ for convenience
-IILLUMINA_ADAPTERS = "~/shared/"
-
+IILLUMINA_ADAPTERS = "~/shared/TruSeq-PE.fa"
 # BWA index must be present here
 GENOME_REF = "~/shared/hg19.fa"
 
@@ -41,8 +41,7 @@ os.chdir(os.path.abspath(DIR))
 
 # These must be installed in the system or in PATH
 TRIPTOMATIC = 'java -jar trimmomatic.jar'
-BWA = 'bwa men'
-THREADS = multiprocessing.cpu_count() - 1
+BWA = 'bwa mem'
 SAMTOOLS = 'samtools'
 
 # TRIMMING
