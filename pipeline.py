@@ -13,6 +13,8 @@ parser.add_argument('R1_NORMAL', help='FASTQ file R1 (Normal)')
 parser.add_argument('R2_NORMAL', help='FASTQ file R2 (Normal)')
 parser.add_argument('R1_CANCER', help='FASTQ file R1 (Cancer)')
 parser.add_argument('R2_CANCER', help='FASTQ file R2 (Cancer)')
+parser.add_argument('-a', '--adapter',
+                    help='Path to the Illumina adapters FASTA file. Default TruSeq2-PE.fa', default='TruSeq2-PE.fa')
 parser.add_argument('-s', '--sample',
                     help='Name of the sample/experiment. Default is sample', default='sample')
 parser.add_argument('-t', '--tumor',
@@ -29,10 +31,10 @@ R1_CANCER = args.R1_CANCER
 R2_CANCER = args.R2_CANCER
 sampleID = args.sample
 tumor_type = args.tumor
+IILLUMINA_ADAPTERS = os.path.abspath(args.adapter)
 THREADS = multiprocessing.cpu_count() - 1
 
 # Assumed to be in ~/shared/ for convenience
-IILLUMINA_ADAPTERS = os.path.abspath("shared/TruSeq2-PE.fa")
 # BWA index must be present here
 GENOME_REF = "~/shared/hg19.fa"
 
