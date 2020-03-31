@@ -32,7 +32,7 @@ tumor_type = args.tumor
 THREADS = multiprocessing.cpu_count() - 1
 
 # Assumed to be in ~/shared/ for convenience
-IILLUMINA_ADAPTERS = "~/shared/TruSeq2-PE.fa"
+IILLUMINA_ADAPTERS = os.path.abspath("shared/TruSeq2-PE.fa")
 # BWA index must be present here
 GENOME_REF = "~/shared/hg19.fa"
 
