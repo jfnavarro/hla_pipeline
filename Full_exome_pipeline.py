@@ -5,7 +5,10 @@ import re
 import datetime
 import multiprocessing
 import time
-import translate_dna
+
+#TODO finish this
+def translate_dna(seq):
+	return seq
 
 # All these programs must be in system or in PATH
 PICARD = 'java -Xmx32g picard.jar'
@@ -1600,8 +1603,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 				###############################################################
 				##Translate the ref and mut_cDNA and then extract the regions##
 				###############################################################
-				ref_FASTA = translate_dna.translate_dna(ref_cDNA_seq)
-				mut_FASTA = translate_dna.translate_dna(mut_cDNA_seq)
+				ref_FASTA = translate_dna(ref_cDNA_seq)
+				mut_FASTA = translate_dna(mut_cDNA_seq)
 				mut_stop = int(mut_FASTA.find('X'))
 				##########################################################
 				##Extract the regions depending upon where the position ##
@@ -1682,8 +1685,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 				###############################################
 				##Translate new cDNA and extract new epitopes##
 				###############################################
-				ref_FASTA = translate_dna.translate_dna(ref_cDNA_seq)
-				mut_FASTA = translate_dna.translate_dna(mut_cDNA_seq)
+				ref_FASTA = translate_dna(ref_cDNA_seq)
+				mut_FASTA = translate_dna(mut_cDNA_seq)
 				mut_stop = int(mut_FASTA.find('X'))
 				if position >= 13 and mut_stop > 0:
 					WT_25mer_temp = ref_FASTA[(position-13):position+12]
@@ -1751,8 +1754,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 				###############################################################
 				##Translate the ref and mut_cDNA and then extract the regions##
 				###############################################################
-				ref_FASTA = translate_dna.translate_dna(ref_cDNA_seq)
-				mut_FASTA = translate_dna.translate_dna(mut_cDNA_seq)
+				ref_FASTA = translate_dna(ref_cDNA_seq)
+				mut_FASTA = translate_dna(mut_cDNA_seq)
 				mut_stop = int(mut_FASTA.find('X'))
 				if position >= 13 :
 					WT_25mer_temp = ref_FASTA[(position-13):position+12]
@@ -1805,8 +1808,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 				###############################################################
 				##Translate the ref and mut_cDNA and then extract the regions##
 				###############################################################
-				ref_FASTA = translate_dna.translate_dna(ref_cDNA_seq)
-				mut_FASTA = translate_dna.translate_dna(mut_cDNA_seq)
+				ref_FASTA = translate_dna(ref_cDNA_seq)
+				mut_FASTA = translate_dna(mut_cDNA_seq)
 				mut_stop = int(mut_FASTA.find('X'))
 				if position >= 13 :
 					WT_25mer_temp = ref_FASTA[(position-13):position+12]
