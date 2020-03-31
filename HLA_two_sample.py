@@ -21,7 +21,7 @@ def HLA_pipeline(sample1_normal, sample2_normal, sample1_cancer, sample2_cancer,
                                                                                     BOWTIE2,
                                                                                     HLA_PATH,
                                                                                     threads)
-    p1 = subprocess.Popen(cmd1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    p2 = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    p1 = subprocess.Popen(cmd1, shell=True)
+    p2 = subprocess.Popen(cmd2, shell=True)
     p1.wait()
     p2.wait()
