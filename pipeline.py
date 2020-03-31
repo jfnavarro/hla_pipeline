@@ -32,17 +32,18 @@ tumor_type = args.tumor
 THREADS = multiprocessing.cpu_count() - 1
 
 # Assumed to be in ~/shared/ for convenience
-IILLUMINA_ADAPTERS = "~/shared/TruSeq-PE.fa"
+IILLUMINA_ADAPTERS = "~/shared/TruSeq2-PE.fa"
 # BWA index must be present here
 GENOME_REF = "~/shared/hg19.fa"
-
-# Move to output dir
-os.chdir(os.path.abspath(DIR))
 
 # These must be installed in the system or in PATH
 TRIPTOMATIC = 'java -jar trimmomatic.jar'
 BWA = 'bwa mem'
 SAMTOOLS = 'samtools'
+
+# Move to output dir
+os.makedirs(os.path.abspath(DIR), exist_ok=True)
+os.chdir(os.path.abspath(DIR))
 
 # TRIMMING
 print('Starting trimming')
