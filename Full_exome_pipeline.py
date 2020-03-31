@@ -73,8 +73,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	cmdT_mark = PICARD + ' MarkDuplicates I=' + sample1 + 'O=sample1_dedup.bam M=dedup_sample1.txt TMP_DIR=' + PICARD_TMP
 	cmdN_mark = PICARD + ' MarkDuplicates I=' + sample2 + 'O=sample2_dedup.bam M=dedup_sample2.txt TMP_DIR=' + PICARD_TMP
 	print('Marking duplicates')
-	p1 = subprocess.Popen(cmdT_mark, shell=True)
-	p2 = subprocess.Popen(cmdN_mark, shell=True)
+	p1 = subprocess.Popen(cmdT_mark, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	p2 = subprocess.Popen(cmdN_mark, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p1.wait()
 	p2.wait()
 	print('Tumor and normal bam files had their optical and PCR duplicates marked.')
@@ -85,8 +85,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	cmdN_RG = PICARD + ' AddOrReplaceReadGroups I=sample2_dedup.bam O=sample2_final.bam RGID=' + sample2 +\
 			  ' RGPL=Illumina RGLB=library RGPU=' + sample2 + ' RGSM=' + sample2 + ' RGCN=VHIO RGDS=' + tumor_type + ' TMP_DIR=' + PICARD_TMP
 	print('Adding headers')
-	p1 = subprocess.Popen(cmdT_RG, shell=True)
-	p2 = subprocess.Popen(cmdN_RG, shell=True)
+	p1 = subprocess.Popen(cmdT_RG, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	p2 = subprocess.Popen(cmdN_RG, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p1.wait()
 	p2.wait()
 	print('Tumor and normal bam files had read group information added.')
@@ -95,8 +95,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	cmdT_index = SAMTOOLS + ' index sample1_final.bam sample1_final.bai'
 	cmdN_index = SAMTOOLS + ' index sample2_final.bam sample2_final.bai'
 	print('Creating indexes')
-	p1 = subprocess.Popen(cmdT_index, shell=True)
-	p2 = subprocess.Popen(cmdN_index, shell=True)
+	p1 = subprocess.Popen(cmdT_index, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	p2 = subprocess.Popen(cmdN_index, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p1.wait()
 	p2.wait()
 	print('Tumor and normal final bam files were indexed.')
@@ -107,8 +107,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	cmdN_int = GATK + ' -T RealignerTargetCreator -I sample2_final.bam -R ' + genome +\
 			   ' -known ' + known_site1 + ' -known ' + known_site2 + ' -o sample2.intervals &> sample2_target.log'
 	print('Creating realignment target intervals')
-	p1 = subprocess.Popen(cmdT_int, shell=True)
-	p2 = subprocess.Popen(cmdN_int, shell=True)
+	p1 = subprocess.Popen(cmdT_int, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	p2 = subprocess.Popen(cmdN_int, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p1.wait()
 	p2.wait()
 	print('Indel target intervals were created for the tumor and normal samples.')
@@ -119,8 +119,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	cmdN_realign = GATK + ' -T IndelRealigner -R ' + genome + ' -I sample2_final.bam -targetIntervals sample2.intervals ' +\
 				   '-known ' +known_site1 + ' -known ' + known_site2 + ' -o sample2_realign.bam &> sample2_realign.log'
 	print('Starting realignments')
-	p1 = subprocess.Popen(cmdT_realign, shell=True)
-	p2 = subprocess.Popen(cmdN_realign, shell=True)
+	p1 = subprocess.Popen(cmdT_realign, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	p2 = subprocess.Popen(cmdN_realign, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p1.wait()
 	p2.wait()
 	print('Realignment around indels was performed on the tumor and normal samples.')
@@ -134,8 +134,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	cmd3 = GATK + ' -T PrintReads -R ' + genome + ' -I sample1_realign.bam ' + ' -BQSR sample1_recal_data.txt -o sample1_recal.bam'
 	cmd4 = GATK + ' -T PrintReads -R ' + genome + ' -I sample2_realign.bam ' + ' -BQSR sample2_recal_data.txt -o sample2_recal.bam'
 	print('Starting recalibration...')
-	p1 = subprocess.Popen(cmd1 + '; wait ; ' + cmd3, shell=True)
-	p2 = subprocess.Popen(cmd2 + '; wait ; ' + cmd4, shell=True)
+	p1 = subprocess.Popen(cmd1 + '; wait ; ' + cmd3, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	p2 = subprocess.Popen(cmd2 + '; wait ; ' + cmd4, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p1.wait()
 	p2.wait()
 	print('Recalibration was performed on the tumor and normal samples.')
@@ -152,23 +152,23 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	os.makedirs(PILEUP_DIR, exist_ok=True)
 	cmd1 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample1_recal.bam' + ' > ' + os.path.join(PILEUP_DIR, 'sample1.pileup')
 	cmd2 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample2_recal.bam' + ' > ' + os.path.join(PILEUP_DIR, 'sample2.pileup')
-	p1 = subprocess.Popen(cmd1, shell=True)
-	p2 = subprocess.Popen(cmd2, shell=True)
+	p1 = subprocess.Popen(cmd1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+	p2 = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	print('Pile-ups were computed for tumor and normal samples')
 
 	# Variant calling Mutect
 	cmd_mutect = MUTECT + ' --memory 16g -T MuTect --reference_sequence ' + genome + ' --dbsnp ' + snpsites +\
 				 ' --input_file:normal sample2_recal.bam --input_file:tumor sample1_recal.bam --vcf Mutect1.vcf'
-	p3 = subprocess.Popen(cmd_mutect, shell=True)
+	p3 = subprocess.Popen(cmd_mutect, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 	# Variant calling Strelka
 	cmd_Strelka = STRELKA + ' --normal=sample2_recal.bam --tumor=sample1_recal.bam --ref=' +\
 				  genome + ' --output-dir=Strelka_output ; cd Strelka_output ; make -j 4 ; cd..'
-	p4 = subprocess.Popen(cmd_Strelka, shell=True)
+	p4 = subprocess.Popen(cmd_Strelka, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 	# Variant calling Somatic Sniper
 	cmd_SomaticSniper = SSNIPER + ' -L -G -F vcf -f '+ genome + ' sample1_recal.bam sample2_recal.bam SS.vcf'
-	p6 = subprocess.Popen(cmd_SomaticSniper, shell=True)
+	p6 = subprocess.Popen(cmd_SomaticSniper, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 	# Wait till pileups are completed
 	while p1.poll() is None or p2.poll() is None:
@@ -178,7 +178,7 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	cmd_varscan = VARSCAN + ' somatic ' + os.path.join(PILEUP_DIR, 'sample2.pileup') +\
 				  ' ' + os.path.join(PILEUP_DIR, 'sample1.pileup') + ' . ' +\
 				  '--tumor-purity .5 --output-vcf 1 --min-reads2 2 --min-coverage 4 --min-var-freq .05 --strand-filter 0'
-	p7 = subprocess.Popen(cmd_varscan, shell=True)
+	p7 = subprocess.Popen(cmd_varscan, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 	print('Performing variant calling')
 	p3.wait()
@@ -406,7 +406,7 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	print('Combining variants')
 	cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf '\
 			   '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf -genotypeMergeOptions UNIQUIFY'
-	p_GATK = subprocess.Popen(cmd_GATK, shell=True)
+	p_GATK = subprocess.Popen(cmd_GATK, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p_GATK.wait()
 
 	####################################
@@ -415,9 +415,9 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	print('Running annovar')
 	cmd1 = 'convert2annovar.pl -format vcf4old combined_calls.vcf --withzyg -outfile snp.av'
 	cmd2 = 'table_annovar.pl snp.av ' + annovar_db + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
-	p1 = subprocess.Popen(cmd1, shell=True)
+	p1 = subprocess.Popen(cmd1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p1.wait()
-	p2 = subprocess.Popen(cmd2, shell=True)
+	p2 = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p2.wait()
 
 	######################################
@@ -1087,7 +1087,7 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	print('Combining indels variants')
 	cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered_indel.vcf ' +\
 			   '-V:strelka strelka_indel_filtered.vcf -o combined_indel_calls.vcf -genotypeMergeOptions UNIQUIFY '
-	p_GATK = subprocess.Popen(cmd_GATK, shell=True)
+	p_GATK = subprocess.Popen(cmd_GATK, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p_GATK.wait()
 
 	############################
@@ -1097,9 +1097,9 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 	print('Annotating combined indels with annovar')
 	cmd1 = 'convert2annovar.pl -format vcf4old combined_indel_calls.vcf --withzyg -outfile indel.av'
 	cmd2 = 'table_annovar.pl indel.av ' + annovar_db + ' -out indel.sum -remove -protocol ' + annovar_anno
-	p1 = subprocess.Popen(cmd1, shell=True)
+	p1 = subprocess.Popen(cmd1, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p1.wait()
-	p2 = subprocess.Popen(cmd2, shell=True)
+	p2 = subprocess.Popen(cmd2, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	p2.wait()
 
 	######################################
