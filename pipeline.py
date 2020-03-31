@@ -18,7 +18,7 @@ parser.add_argument('-s', '--sample',
 parser.add_argument('-t', '--tumor',
                     help='Tumor type. Default is NA', default='NA')
 parser.add_argument('-D', '--dir',
-                    help='Path to a location to store all information. Default is ./data/', default='./data')
+                    help='Path to a location to store all results. Default is ./data', default='./data')
 
 # Parse arguments
 args = parser.parse_args()
@@ -37,8 +37,8 @@ IILLUMINA_ADAPTERS = "~/shared/TruSeq2-PE.fa"
 GENOME_REF = "~/shared/hg19.fa"
 
 # These must be installed in the system or in PATH
-TRIPTOMATIC = 'java -jar trimmomatic.jar'
-BWA = 'bwa mem'
+TRIPTOMATIC = '~/shared/java -jar trimmomatic.jar'
+BWA = '~/shared/bwa mem'
 SAMTOOLS = 'samtools'
 
 # Move to output dir
@@ -143,6 +143,6 @@ print('Merging of tumor and normal aligned samples completed.')
 
 # Final pìpeline
 #Full_exome_pipeline("aligned_cancer_merged.bam", "aligned_normal_merged.bam ", tumor_type, GENOME_REF, sampleID)
-#HLA_pipeline(loc, sample1, sample2, HLA)
+#HLA_pipeline(loc, sample1, sample2, THREADS)
 
 
