@@ -37,7 +37,7 @@ IILLUMINA_ADAPTERS = "~/shared/TruSeq2-PE.fa"
 GENOME_REF = "~/shared/hg19.fa"
 
 # These must be installed in the system or in PATH
-TRIPTOMATIC = '~/shared/java -jar trimmomatic.jar'
+TRIPTOMATIC = 'java -jar ~/shared/trimmomatic.jar'
 BWA = '~/shared/bwa mem'
 SAMTOOLS = 'samtools'
 
