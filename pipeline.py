@@ -49,15 +49,15 @@ os.chdir(os.path.abspath(DIR))
 print('Starting trimming')
 cmd1 = '{} -threads {} PE -phred33 {} {} R1_normal.fastq.gz R1_normal_unpaired.fastq.gz '\
        'R2_normal.fastq.gz R2_normal_unpaired.fastq.gz '\
-       'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(THREADS,
-                                                                                        TRIPTOMATIC,
+       'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
+                                                                                        THREADS,
                                                                                         R1_NORMAL,
                                                                                         R2_NORMAL,
                                                                                         IILLUMINA_ADAPTERS)
 cmd2 = '{} -threads {} PE -phred33 {} {} R1_cancer.fastq.gz R1_cancer_unpaired.fastq.gz '\
        'R2_cancer.fastq.gz R2_cancer_unpaired.fastq.gz '\
-       'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(THREADS,
-                                                                                        TRIPTOMATIC,
+       'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
+                                                                                        THREADS,
                                                                                         R1_CANCER,
                                                                                         R2_CANCER,
                                                                                         IILLUMINA_ADAPTERS)
@@ -65,7 +65,7 @@ p1 = subprocess.Popen(cmd1, shell=True)
 p2 = subprocess.Popen(cmd2, shell=True)
 p1.wait()
 p2.wait()
-print('Trimnning of tumor and normal samples completed.')
+print('Trimming of tumor and normal samples completed.')
 
 # ALIGNMENT
 
