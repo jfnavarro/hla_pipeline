@@ -47,15 +47,17 @@ SAMTOOLS = 'samtools'
 
 # TRIMMING
 print('Starting trimming')
-cmd1 = '{} PE -phred33 {} {} R1_normal.fastq.gz R1_normal_unpaired.fastq.gz '\
+cmd1 = '{} -threads {} PE -phred33 {} {} R1_normal.fastq.gz R1_normal_unpaired.fastq.gz '\
        'R2_normal.fastq.gz R2_normal_unpaired.fastq.gz '\
-       'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
+       'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(THREADS,
+                                                                                        TRIPTOMATIC,
                                                                                         R1_NORMAL,
                                                                                         R2_NORMAL,
                                                                                         IILLUMINA_ADAPTERS)
-cmd2 = '{} PE -phred33 {} {} R1_cancer.fastq.gz R1_cancer_unpaired.fastq.gz '\
+cmd2 = '{} -threads {} PE -phred33 {} {} R1_cancer.fastq.gz R1_cancer_unpaired.fastq.gz '\
        'R2_cancer.fastq.gz R2_cancer_unpaired.fastq.gz '\
-       'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
+       'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(THREADS,
+                                                                                        TRIPTOMATIC,
                                                                                         R1_CANCER,
                                                                                         R2_CANCER,
                                                                                         IILLUMINA_ADAPTERS)
@@ -140,7 +142,7 @@ p2.wait()
 print('Merging of tumor and normal aligned samples completed.')
 
 # Final pìpeline
-Full_exome_pipeline("aligned_cancer_merged.bam", "aligned_normal_merged.bam ", tumor_type, GENOME_REF, sampleID)
-HLA_pipeline(loc, sample1, sample2, HLA)
+#Full_exome_pipeline("aligned_cancer_merged.bam", "aligned_normal_merged.bam ", tumor_type, GENOME_REF, sampleID)
+#HLA_pipeline(loc, sample1, sample2, HLA)
 
 
