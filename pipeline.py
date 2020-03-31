@@ -25,10 +25,10 @@ parser.add_argument('-D', '--dir',
 # Parse arguments
 args = parser.parse_args()
 DIR = args.dir
-R1_NORMAL = args.R1_NORMAL
-R2_NORMAL = args.R2_NORMAL
-R1_CANCER = args.R1_CANCER
-R2_CANCER = args.R2_CANCER
+R1_NORMAL = os.path.abspath(args.R1_NORMAL)
+R2_NORMAL = os.path.abspath(args.R2_NORMAL)
+R1_CANCER = os.path.abspath(args.R1_CANCER)
+R2_CANCER = os.path.abspath(args.R2_CANCER)
 sampleID = args.sample
 tumor_type = args.tumor
 IILLUMINA_ADAPTERS = os.path.abspath(args.adapter)
