@@ -69,14 +69,14 @@ p2.wait()
 print('Trimming of tumor and normal samples completed.')
 
 # ALIGNMENT
-
+print('Starting alignment')
 # Normal (paired)
 cmd1 = '{} -t {} {} R1_normal.fastq.gz R2_normal.fastq.gz | {} view -bS > normal_paired_aligned.bam'.format(BWA,
                                                                                                             THREADS,
                                                                                                             GENOME_REF,
                                                                                                             SAMTOOLS)
-cm2 = '{} sort -@ {} normal_paired_aligned.bam > normal_paired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                          THREADS)
+cm2 = '{} sort --threads {} normal_paired_aligned.bam > normal_paired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                 THREADS)
 p1 = subprocess.Popen(cmd1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 p1.wait()
 p2 = subprocess.Popen(cmd2, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -86,8 +86,8 @@ cmd1 = '{} -t {} {} R1_cancer.fastq.gz R2_cancer.fastq.gz | {} view -bS > cancer
                                                                                                             THREADS,
                                                                                                             GENOME_REF,
                                                                                                             SAMTOOLS)
-cm2 = '{} sort -@ {} cancer_paired_aligned.bam > cancer_paired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                          THREADS)
+cm2 = '{} sort --threads {} cancer_paired_aligned.bam > cancer_paired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                 THREADS)
 p1 = subprocess.Popen(cmd1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 p1.wait()
 p2 = subprocess.Popen(cmd2, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -98,8 +98,8 @@ cmd1 = '{} -t {} {} R1_normal_unpaired.fastq.gz | {} view -bS > R1_normal_unpair
                                                                                                        THREADS,
                                                                                                        GENOME_REF,
                                                                                                        SAMTOOLS)
-cm2 = '{} sort -@ {} R1_normal_unpaired_aligned.bam > R1_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                                    THREADS)
+cm2 = '{} sort --threads {} R1_normal_unpaired_aligned.bam > R1_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                           THREADS)
 p1 = subprocess.Popen(cmd1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 p1.wait()
 p2 = subprocess.Popen(cmd2, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -109,8 +109,8 @@ cmd1 = '{} -t {} {} R1_cancer_unpaired.fastq.gz | {} view -bS > R1_cancer_unpair
                                                                                                        THREADS,
                                                                                                        GENOME_REF,
                                                                                                        SAMTOOLS)
-cm2 = '{} sort -@ {} R1_cancer_unpaired_aligned.bam > R1_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                                    THREADS)
+cm2 = '{} sort --threads {} R1_cancer_unpaired_aligned.bam > R1_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                           THREADS)
 p1 = subprocess.Popen(cmd1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 p1.wait()
 p2 = subprocess.Popen(cmd2, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -121,8 +121,8 @@ cmd1 = '{} -t {} {} R2_normal_unpaired.fastq.gz | {} view -bS > R2_normal_unpair
                                                                                                        THREADS,
                                                                                                        GENOME_REF,
                                                                                                        SAMTOOLS)
-cm2 = '{} sort -@ {} R2_normal_unpaired_aligned.bam > R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                                    THREADS)
+cm2 = '{} sort --threads {} R2_normal_unpaired_aligned.bam > R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                           THREADS)
 p1 = subprocess.Popen(cmd1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 p1.wait()
 p2 = subprocess.Popen(cmd2, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -132,8 +132,8 @@ cmd1 = '{} -t {} {} R2_cancer_unpaired.fastq.gz | {} view -bS > R2_cancer_unpair
                                                                                                        THREADS,
                                                                                                        GENOME_REF,
                                                                                                        SAMTOOLS)
-cm2 = '{} sort -@ {} R2_cancer_unpaired_aligned.bam > R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                                    THREADS)
+cm2 = '{} sort --threads {} R2_cancer_unpaired_aligned.bam > R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                           THREADS)
 p1 = subprocess.Popen(cmd1, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 p1.wait()
 p2 = subprocess.Popen(cmd2, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
