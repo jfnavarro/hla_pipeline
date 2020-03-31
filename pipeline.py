@@ -14,7 +14,9 @@ parser.add_argument('R2_NORMAL', help='FASTQ file R2 (Normal)')
 parser.add_argument('R1_CANCER', help='FASTQ file R1 (Cancer)')
 parser.add_argument('R2_CANCER', help='FASTQ file R2 (Cancer)')
 parser.add_argument('-a', '--adapter',
-                    help='Path to the Illumina adapters FASTA file. Default TruSeq2-PE.fa', default='TruSeq2-PE.fa')
+                    help='Path to the Illumina adapters FASTA file.', required=True)
+parser.add_argument('-g', '--genome',
+                    help='Path to the reference Genome FASTA file (must contain BWA index)', required=True)
 parser.add_argument('-s', '--sample',
                     help='Name of the sample/experiment. Default is sample', default='sample')
 parser.add_argument('-t', '--tumor',
@@ -32,11 +34,8 @@ R2_CANCER = os.path.abspath(args.R2_CANCER)
 sampleID = args.sample
 tumor_type = args.tumor
 IILLUMINA_ADAPTERS = os.path.abspath(args.adapter)
+GENOME_REF = os.path.abspath(args.genome)
 THREADS = multiprocessing.cpu_count() - 1
-
-# Assumed to be in ~/shared/ for convenience
-# BWA index must be present here
-GENOME_REF = "~/shared/hg19.fa"
 
 # These must be installed in the system or in PATH
 TRIPTOMATIC = 'java -jar ~/shared/trimmomatic.jar'
