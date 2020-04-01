@@ -38,9 +38,10 @@ IILLUMINA_ADAPTERS = os.path.abspath(args.adapter)
 GENOME_REF = os.path.abspath(args.genome)
 THREADS = multiprocessing.cpu_count() - 1
 
-# These must be installed in the system or in PATH
+# These two must be located in HOME/shared
 TRIPTOMATIC = 'java -jar ~/shared/trimmomatic.jar'
 BWA = '~/shared/bwa mem'
+# These one must be installed in the system or in PATH
 SAMTOOLS = 'samtools'
 
 # Move to output dir
