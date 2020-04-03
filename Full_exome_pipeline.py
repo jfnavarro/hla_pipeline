@@ -122,19 +122,33 @@ def Full_exome_pipeline(sample1,
     sample1_ID = sampleID + "_Tumor"
     sample2_ID = sampleID + "_Normal"
 
+    # Add headers
+    cmdT_RG = PICARD + ' AddOrReplaceReadGroups I=' + sample1 + ' O=sample1_header.bam RGID=' + sampleID\
+              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sampleID + ' RGSM=' + sampleID + ' RGCN=' + SEQ_CENTER\
+	          + ' RGDS=' + tumor_type
+    cmdN_RG = PICARD + ' AddOrReplaceReadGroups I=' + sample2 + ' O=sample2_header.bam RGID=' + sampleID\
+              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sampleID + ' RGSM=' + sampleID + ' RGCN=' + SEQ_CENTER\
+	          + ' RGDS=' + tumor_type
+    print('Adding headers')
+    p1 = subprocess.Popen(cmdT_RG, shell=True)
+    p2 = subprocess.Popen(cmdN_RG, shell=True)
+    p1.wait()
+    p2.wait()
+    print('Tumor and normal bam files had read group information added.')
+
     # Mark duplicates
     print('Marking duplicates')
-    cmdT_mark = GATK + ' MarkDuplicatesSpark -I=' + sample1 + ' -O=sample1_dedup.bam -M=dedup_sample1.txt'
+    cmdT_mark = GATK + ' MarkDuplicatesSpark -I=sample1_header.bam -O=sample1_dedup.bam -M=dedup_sample1.txt'
     p = subprocess.Popen(cmdT_mark, shell=True)
     p.wait()
-    cmdN_mark = GATK + ' MarkDuplicatesSpark -I=' + sample2 + ' -O=sample2_dedup.bam -M=dedup_sample2.txt'
+    cmdN_mark = GATK + ' MarkDuplicatesSpark -I=sample2_header.bam -O=sample2_dedup.bam -M=dedup_sample2.txt'
     p = subprocess.Popen(cmdN_mark, shell=True)
     p.wait()
     print('Tumor and normal bam files had their optical and PCR duplicates marked.')
 
     # Create index
-    cmdT_index = SAMTOOLS + ' index sample1_final.bam sample1_final.bai'
-    cmdN_index = SAMTOOLS + ' index sample2_final.bam sample2_final.bai'
+    cmdT_index = SAMTOOLS + ' index sample1_dedup.bam sample1_final.bai'
+    cmdN_index = SAMTOOLS + ' index sample2_dedup.bam sample2_final.bai'
     print('Creating indexes')
     p1 = subprocess.Popen(cmdT_index, shell=True)
     p2 = subprocess.Popen(cmdN_index, shell=True)
@@ -144,12 +158,12 @@ def Full_exome_pipeline(sample1,
 
     # GATK base re-calibration
     print('Starting re-calibration')
-    cmd1 = GATK + ' BaseRecalibrator -I sample1_final.bam' + ' -R ' + genome + ' --known-sites ' + SNPSITES + \
+    cmd1 = GATK + ' BaseRecalibrator -I sample1_dedup.bam' + ' -R ' + genome + ' --known-sites ' + SNPSITES + \
            ' --known-sites ' + KNOWN_SITE1 + ' --known-sites ' + KNOWN_SITE2 + ' -O sample1_recal_data.txt'
-    cmd2 = GATK + ' BaseRecalibrator -I sample2_final.bam' + ' -R ' + genome + ' --known-sites ' + SNPSITES + \
+    cmd2 = GATK + ' BaseRecalibrator -I sample2_dedup.bam' + ' -R ' + genome + ' --known-sites ' + SNPSITES + \
            ' --known-sites ' + KNOWN_SITE1 + ' --known-sites ' + KNOWN_SITE2 + ' -O sample2_recal_data.txt'
-    cmd3 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample1_final.bam ' + ' --bqsr-recal-file sample1_recal_data.txt -O sample1_recal.bam'
-    cmd4 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample2_final.bam ' + ' --bqsr-recal-file sample2_recal_data.txt -O sample2_recal.bam'
+    cmd3 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample1_dedup.bam ' + ' --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'
+    cmd4 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample2_dedup.bam ' + ' --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'
     p1 = subprocess.Popen(cmd1, shell=True)
     p2 = subprocess.Popen(cmd2, shell=True)
     p1.wait()
@@ -162,37 +176,37 @@ def Full_exome_pipeline(sample1,
 
     # HLA predictions
     print('Performing HLA predictions')
-    HLA_PRG('sample1_recal.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
-    HLA_PRG('sample2_recal.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
+    HLA_PRG('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+    HLA_PRG('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
     print('HLA predictions completed for tumor and normal samples')
 
     # Variant calling (SAMTOOLS PILEUP)
     print('Computing pile-ups')
     PILEUP_DIR = os.path.join(WORKING_DIR, "pileups")
     os.makedirs(PILEUP_DIR, exist_ok=True)
-    cmd1 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample1_recal.bam' + ' > ' + os.path.join(
+    cmd1 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample1_final.bam' + ' > ' + os.path.join(
         PILEUP_DIR, 'sample1.pileup')
-    cmd2 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample2_recal.bam' + ' > ' + os.path.join(
+    cmd2 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample2_final.bam' + ' > ' + os.path.join(
         PILEUP_DIR, 'sample2.pileup')
     p1 = subprocess.Popen(cmd1, shell=True)
     p2 = subprocess.Popen(cmd2, shell=True)
     print('Pile-ups were computed for tumor and normal samples')
 
     # Variant calling Mutect2
-    cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_recal.bam -I sample2_recal.bam -normal sample2_recal.bam'\
+    cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal sample2_final.bam'\
                  + ' --germline-resource ' + SNPSITES
 
     p3 = subprocess.Popen(cmd_mutect, shell=True)
 
     # Variant calling Strelka2
-    cmd_Strelka = STRELKA + ' --normalBam sample2_recal.bam --tumorBam sample1_recal.bam --referenceFasta ' + genome + ' --runDir Strelka_output'
+    cmd_Strelka = STRELKA + ' --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta ' + genome + ' --runDir Strelka_output'
     p = subprocess.Popen(cmd_Strelka, shell=True)
     p.wait()
     cmd_Strelka2 = 'Strelka_output/runWorkflow.py -m local -j ' + THREADS
     p4 = subprocess.Popen(cmd_Strelka2, shell=True)
 
     # Variant calling Somatic Sniper
-    cmd_SomaticSniper = SSNIPER + ' -L -G -F vcf -f ' + genome + ' sample1_recal.bam sample2_recal.bam SS.vcf'
+    cmd_SomaticSniper = SSNIPER + ' -L -G -F vcf -f ' + genome + ' sample1_final.bam sample2_final.bam SS.vcf'
     p6 = subprocess.Popen(cmd_SomaticSniper, shell=True)
 
     # Wait till pileups are completed
