@@ -52,12 +52,12 @@ def Full_exome_pipeline(sample1,
 
     # Add headers
     print("Adding headers")
-    cmdT_RG = PICARD + ' AddOrReplaceReadGroups I=' + sample1 + ' O=sample1_header.bam RGID=' + sampleID\
-              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sampleID + ' RGSM=' + sampleID + ' RGCN=' + SEQ_CENTER\
+    cmdT_RG = PICARD + ' AddOrReplaceReadGroups I=' + sample1 + ' O=sample1_header.bam RGID=' + sample1_ID\
+              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sample1_ID + ' RGSM=' + sample1_ID + ' RGCN=' + SEQ_CENTER\
 	          + ' RGDS=' + tumor_type
     exec_command(cmdT_RG)
-    cmdN_RG = PICARD + ' AddOrReplaceReadGroups I=' + sample2 + ' O=sample2_header.bam RGID=' + sampleID\
-              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sampleID + ' RGSM=' + sampleID + ' RGCN=' + SEQ_CENTER\
+    cmdN_RG = PICARD + ' AddOrReplaceReadGroups I=' + sample2 + ' O=sample2_header.bam RGID=' + sample2_ID\
+              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sample2_ID + ' RGSM=' + sample2_ID + ' RGCN=' + SEQ_CENTER\
 	          + ' RGDS=' + tumor_type
     exec_command(cmdN_RG)
     print('Tumor and normal bam files had read group information added.')
@@ -78,8 +78,8 @@ def Full_exome_pipeline(sample1,
            ' --known-sites ' + KNOWN_SITE1 + ' --known-sites ' + KNOWN_SITE2 + ' -O sample2_recal_data.txt'
     exec_command(cmd1)
     exec_command(cmd2)
-    cmd3 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample1_dedup.bam ' + ' --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'
-    cmd4 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample2_dedup.bam ' + ' --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'
+    cmd3 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample1_dedup.bam' + ' --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'
+    cmd4 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample2_dedup.bam' + ' --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'
     exec_command(cmd3)
     exec_command(cmd4)
     print('Re-calibration was performed on the tumor and normal samples.')
@@ -102,8 +102,8 @@ def Full_exome_pipeline(sample1,
 
     print('Performing variant calling')
     # Variant calling Mutect2
-    cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal sample2_final.bam'\
-                 + ' --germline-resource ' + SNPSITES
+    cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal sample2 '\
+                 + '-O Mutect.vcf --germline-resource ' + SNPSITES
     exec_command(cmd_mutect)
 
     # Variant calling Strelka2
@@ -126,7 +126,7 @@ def Full_exome_pipeline(sample1,
     # Filtering Mutect snv calls
     print("Filtering Mutect SNV")
     filtered_vcf = open('mutect_filtered.vcf', 'w')
-    vcf = open('Mutect1.vcf')
+    vcf = open('Mutect.vcf')
     for line in vcf:
         if line.startswith('#') and not line.startswith('#CHROM'):
             filtered_vcf.write(line)
