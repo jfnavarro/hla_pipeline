@@ -25,8 +25,6 @@ tar -xvf annovar.latest.tar.gz
 mv annovar.latest ~/shared/annovar
 export ANNOVAR_PATH=~/shared/annovar
 
-export PATH="~/shared/annovar:PATH"
-
 cd ~/shared/
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/1000G_phase1.indels.hg19.sites.vcf.gz

@@ -119,8 +119,8 @@ def Full_exome_pipeline(sample1,
                         ):
     WORKING_DIR = os.path.abspath(os.getcwd())
 
-	sample1_ID = sampleID + "_Tumor"
-	sample2_ID = sampleID + "_Normal"
+    sample1_ID = sampleID + "_Tumor"
+    sample2_ID = sampleID + "_Normal"
 
     # Mark duplicates
     PICARD_TMP = os.path.join(WORKING_DIR, 'picard_tmp')
@@ -135,11 +135,11 @@ def Full_exome_pipeline(sample1,
     print('Tumor and normal bam files had their optical and PCR duplicates marked.')
 
     # Add headers
-    cmdT_RG = PICARD + ' AddOrReplaceReadGroups I=sample1_dedup.bam O=sample1_final.bam RGID=' + sample1_ID\
-              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sample1_ID + ' RGSM=' + sample1_ID + ' RGCN=' + SEQ_CENTER\
+    cmdT_RG = PICARD + ' AddOrReplaceReadGroups I=sample1_dedup.bam O=sample1_final.bam RGID=' + sampleID\
+              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sampleID + ' RGSM=' + sampleID + ' RGCN=' + SEQ_CENTER\
 	          + ' RGDS=' + tumor_type + ' TMP_DIR=' + PICARD_TMP
-    cmdN_RG = PICARD + ' AddOrReplaceReadGroups I=sample2_dedup.bam O=sample2_final.bam RGID=' + sample2_ID\
-              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sample2_ID + ' RGSM=' + sample2_ID + ' RGCN=' + SEQ_CENTER\
+    cmdN_RG = PICARD + ' AddOrReplaceReadGroups I=sample2_dedup.bam O=sample2_final.bam RGID=' + sampleID\
+              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sampleID + ' RGSM=' + sampleID + ' RGCN=' + SEQ_CENTER\
 	          + ' RGDS=' + tumor_type + ' TMP_DIR=' + PICARD_TMP
     print('Adding headers')
     p1 = subprocess.Popen(cmdT_RG, shell=True)
@@ -238,7 +238,7 @@ def Full_exome_pipeline(sample1,
 
     # Wait till pileups are completed
     p1.wait()
-	p2.wait()
+    p2.wait()
 
     # Variant calling VarScan
     cmd_varscan = VARSCAN + ' somatic ' + os.path.join(PILEUP_DIR, 'sample2.pileup') + \
