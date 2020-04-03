@@ -195,10 +195,10 @@ def Full_exome_pipeline(sample1,
     p2 = subprocess.Popen(cmd2, shell=True)
     p1.wait()
     p2.wait()
-	p3 = subprocess.Popen(cmd3, shell=True)
-	p4 = subprocess.Popen(cmd4, shell=True)
-	p3.wait()
-	p4.wait()
+    p3 = subprocess.Popen(cmd3, shell=True)
+    p4 = subprocess.Popen(cmd4, shell=True)
+    p3.wait()
+    p4.wait()
     print('Recalibration was performed on the tumor and normal samples.')
 
     # HLA predictions
