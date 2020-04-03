@@ -79,6 +79,9 @@ def exec_command(cmd):
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output, error = p.communicate()
     if p.returncode != 0:
-        print(output)
+        for line in output.split("\n"):
+            print(line.rstrip())
+        for line in error.split("\n"):
+            print(line.rstrip())
         print(error)
         sys.exit(-1)
