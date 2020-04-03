@@ -13,7 +13,7 @@ VARSCAN = 'varcan'
 STRELKA = '${STRELKA_PATH}/bin/configureStrelkaSomaticWorkflow.py'
 SAMTOOLS = 'samtools'
 SSNIPER = 'bam-somaticsniper'
-HLA_PRG = "HLA-LA.pl"
+HLA = "HLA-LA.pl"
 SAMTOOLS = 'samtools'
 
 # ANNOVAR location must be in $ANNOVAR
@@ -80,9 +80,9 @@ def translate_dna_to_protein(seq):
 
 def HLA_PRG(bamfile, sampleID, outfile, threads):
     dirID = "out_HLA"
-    cmd1 = HLA_PRG + ' --BAM {} --graph PRG_MHC_GRCh38_withIMGT --sampleID {} --maxTHREADS {}'.format(bamfile,
-                                                                                                      dirID,
-                                                                                                      threads)
+    cmd1 = HLA + ' --BAM {} --graph PRG_MHC_GRCh38_withIMGT --sampleID {} --maxTHREADS {}'.format(bamfile,
+                                                                                                  dirID,
+                                                                                                  threads)
     p = subprocess.Popen(cmd1, shell=True)
     p.wait()
 
