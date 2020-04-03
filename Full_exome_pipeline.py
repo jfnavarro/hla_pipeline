@@ -123,30 +123,14 @@ def Full_exome_pipeline(sample1,
     sample2_ID = sampleID + "_Normal"
 
     # Mark duplicates
-    PICARD_TMP = os.path.join(WORKING_DIR, 'picard_tmp')
-    os.makedirs(PICARD_TMP, exist_ok=True)
-    cmdT_mark = PICARD + ' MarkDuplicatesSpark  I=' + sample1 + ' O=sample1_dedup.bam M=dedup_sample1.txt TMP_DIR=' + PICARD_TMP
-    cmdN_mark = PICARD + ' MarkDuplicatesSpark  I=' + sample2 + ' O=sample2_dedup.bam M=dedup_sample2.txt TMP_DIR=' + PICARD_TMP
+    cmdT_mark = GATK + ' MarkDuplicatesSpark  I=' + sample1 + ' O=sample1_dedup.bam M=dedup_sample1.txt'
+    cmdN_mark = GATK + ' MarkDuplicatesSpark  I=' + sample2 + ' O=sample2_dedup.bam M=dedup_sample2.txt'
     print('Marking duplicates')
     p1 = subprocess.Popen(cmdT_mark, shell=True)
     p2 = subprocess.Popen(cmdN_mark, shell=True)
     p1.wait()
     p2.wait()
     print('Tumor and normal bam files had their optical and PCR duplicates marked.')
-
-    # Add headers
-    cmdT_RG = PICARD + ' AddOrReplaceReadGroups I=sample1_dedup.bam O=sample1_final.bam RGID=' + sampleID\
-              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sampleID + ' RGSM=' + sampleID + ' RGCN=' + SEQ_CENTER\
-	          + ' RGDS=' + tumor_type + ' TMP_DIR=' + PICARD_TMP
-    cmdN_RG = PICARD + ' AddOrReplaceReadGroups I=sample2_dedup.bam O=sample2_final.bam RGID=' + sampleID\
-              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sampleID + ' RGSM=' + sampleID + ' RGCN=' + SEQ_CENTER\
-	          + ' RGDS=' + tumor_type + ' TMP_DIR=' + PICARD_TMP
-    print('Adding headers')
-    p1 = subprocess.Popen(cmdT_RG, shell=True)
-    p2 = subprocess.Popen(cmdN_RG, shell=True)
-    p1.wait()
-    p2.wait()
-    print('Tumor and normal bam files had read group information added.')
 
     # Create index
     cmdT_index = SAMTOOLS + ' index sample1_final.bam sample1_final.bai'
