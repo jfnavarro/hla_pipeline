@@ -4,6 +4,7 @@ import argparse
 from common import *
 from Full_exome_pipeline import *
 from HLA_two_sample import *
+import multiprocessing
 
 parser=argparse.ArgumentParser(description='Jared pipeline (adjusted by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                prog='pipeline.py',
