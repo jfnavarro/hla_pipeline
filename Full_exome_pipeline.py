@@ -159,9 +159,9 @@ def Full_exome_pipeline(sample1,
     print('Tumor and normal final bam files were indexed.')
 
     # GATK create intervals
-    cmdT_int = GATK + ' -T RealignerTargetCreator -I sample1_final.bam -R ' + genome + \
+    cmdT_int = GATK + ' RealignerTargetCreator -I sample1_final.bam -R ' + genome + \
                ' -known ' + KNOWN_SITE1 + ' -known ' + KNOWN_SITE2 + ' -o sample1.intervals &> sample1_target.log'
-    cmdN_int = GATK + ' -T RealignerTargetCreator -I sample2_final.bam -R ' + genome + \
+    cmdN_int = GATK + ' RealignerTargetCreator -I sample2_final.bam -R ' + genome + \
                ' -known ' + KNOWN_SITE1 + ' -known ' + KNOWN_SITE2 + ' -o sample2.intervals &> sample2_target.log'
     print('Creating realignment target intervals')
     p1 = subprocess.Popen(cmdT_int, shell=True)
@@ -171,9 +171,9 @@ def Full_exome_pipeline(sample1,
     print('Indel target intervals were created for the tumor and normal samples.')
 
     # GATK re-align
-    cmdT_realign = GATK + ' -T IndelRealigner -R ' + genome + ' -I sample1_final.bam -targetIntervals sample1.intervals ' + \
+    cmdT_realign = GATK + ' IndelRealigner -R ' + genome + ' -I sample1_final.bam -targetIntervals sample1.intervals ' + \
                    '-known ' + KNOWN_SITE1 + ' -known ' + KNOWN_SITE2 + ' -o sample1_realign.bam &> sample1_realign.log'
-    cmdN_realign = GATK + ' -T IndelRealigner -R ' + genome + ' -I sample2_final.bam -targetIntervals sample2.intervals ' + \
+    cmdN_realign = GATK + ' IndelRealigner -R ' + genome + ' -I sample2_final.bam -targetIntervals sample2.intervals ' + \
                    '-known ' + KNOWN_SITE1 + ' -known ' + KNOWN_SITE2 + ' -o sample2_realign.bam &> sample2_realign.log'
     print('Starting realignments')
     p1 = subprocess.Popen(cmdT_realign, shell=True)
@@ -184,12 +184,12 @@ def Full_exome_pipeline(sample1,
 
     # GATK base re-calibration
     print('Starting re-calibration')
-    cmd1 = GATK + ' -T BaseRecalibrator -I sample1_realign.bam' + ' -R ' + genome + ' --knownSites ' + SNPSITES + \
+    cmd1 = GATK + ' BaseRecalibrator -I sample1_realign.bam' + ' -R ' + genome + ' --knownSites ' + SNPSITES + \
            ' --knownSites ' + KNOWN_SITE1 + ' --knownSites ' + KNOWN_SITE2 + ' -o sample1_recal_data.txt'
-    cmd2 = GATK + ' -T BaseRecalibrator -I sample2_realign.bam' + ' -R ' + genome + ' --knownSites ' + SNPSITES + \
+    cmd2 = GATK + ' BaseRecalibrator -I sample2_realign.bam' + ' -R ' + genome + ' --knownSites ' + SNPSITES + \
            ' --knownSites ' + KNOWN_SITE1 + ' --knownSites ' + KNOWN_SITE2 + ' -o sample2_recal_data.txt'
-    cmd3 = GATK + ' -T PrintReads -R ' + genome + ' -I sample1_realign.bam ' + ' -BQSR sample1_recal_data.txt -o sample1_recal.bam'
-    cmd4 = GATK + ' -T PrintReads -R ' + genome + ' -I sample2_realign.bam ' + ' -BQSR sample2_recal_data.txt -o sample2_recal.bam'
+    cmd3 = GATK + ' PrintReads -R ' + genome + ' -I sample1_realign.bam ' + ' -BQSR sample1_recal_data.txt -o sample1_recal.bam'
+    cmd4 = GATK + ' PrintReads -R ' + genome + ' -I sample2_realign.bam ' + ' -BQSR sample2_recal_data.txt -o sample2_recal.bam'
     p1 = subprocess.Popen(cmd1, shell=True)
     p2 = subprocess.Popen(cmd2, shell=True)
     p1.wait()
