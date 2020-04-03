@@ -54,7 +54,7 @@ def Full_exome_pipeline(sample1,
     exec_command(cmdT_RG)
     cmdN_RG = PICARD + ' AddOrReplaceReadGroups I=' + sample2 + ' O=sample2_header.bam RGID=' + sampleID\
               + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sampleID + ' RGSM=' + sampleID + ' RGCN=' + SEQ_CENTER\
-	          + ' RGDS=' + tumor_type)
+	          + ' RGDS=' + tumor_type
     exec_command(cmdN_RG)
     print('Tumor and normal bam files had read group information added.')
 
@@ -90,10 +90,8 @@ def Full_exome_pipeline(sample1,
     print('Computing pile-ups')
     PILEUP_DIR = os.path.join(WORKING_DIR, "pileups")
     os.makedirs(PILEUP_DIR, exist_ok=True)
-    cmd1 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample1_final.bam' + ' > ' + os.path.join(
-        PILEUP_DIR, 'sample1.pileup')
-    cmd2 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample2_final.bam' + ' > ' + os.path.join(
-        PILEUP_DIR, 'sample2.pileup')
+    cmd1 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample1_final.bam' + ' > ' + os.path.join(PILEUP_DIR, 'sample1.pileup')
+    cmd2 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample2_final.bam' + ' > ' + os.path.join(PILEUP_DIR, 'sample2.pileup')
     p1 = subprocess.Popen(cmd1, shell=True)
     p2 = subprocess.Popen(cmd2, shell=True)
     print('Pile-ups were computed for tumor and normal samples')
