@@ -22,6 +22,8 @@ parser.add_argument('--sample',
                     help='Name of the sample/experiment. Default is sample', default='sample')
 parser.add_argument('--tumor',
                     help='Tumor type. Default is NA', default='NA')
+parser.add_argument('--dir',
+                    help='Path to the output file', required=True)
 parser.add_argument('--known1',
                     help='Path to the file with Mill and 1000G gold standards (GATK bundle h19)', required=True)
 parser.add_argument('--known2',

@@ -1,5 +1,10 @@
 mkdir -p ~/shared
 
+conda create alena
+source activate alena
+
+pip install pandas
+
 conda install hla-la
 cd ~/shared
 wget http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz
