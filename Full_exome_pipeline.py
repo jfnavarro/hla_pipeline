@@ -7,10 +7,8 @@ from re import sub
 from common import *
 
 def HLA_PRG(bamfile, sampleID, outfile, threads):
-    print("HLA working dir " + HLA_WORKDIR)
-    HLA_GRAPH = "{}/graphs/PRG_MHC_GRCh38_withIMGT".format(HLA_WORKDIR)
     cmd1 = HLA + ' --BAM {} --workingDir {} --graph {} --sampleID {}'\
-           + ' --maxTHREADS {}'.format(bamfile, HLA_WORKDIR, HLA_GRAPH, sampleID, threads)
+           + ' --maxTHREADS {}'.format(bamfile, HLA_WORKDIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
     p = subprocess.Popen(cmd1, shell=True)
     p.wait()
 
@@ -26,7 +24,11 @@ def HLA_PRG(bamfile, sampleID, outfile, threads):
     today = datetime.now().strftime('%B_%d_%Y')
     a = open(outfile, 'w')
     for x in sorted(allele_dict):
-        a.write('{}\t{}\tExome {}\t{}\t{}\t{}\tPRG-HLA-LA\t-\t-\n'.format(MRN, sampleID, today, x, allele_dict[x][0],
+        a.write('{}\t{}\tExome {}\t{}\t{}\t{}\tPRG-HLA-LA\t-\t-\n'.format(MRN,
+                                                                          sampleID,
+                                                                          today,
+                                                                          x,
+                                                                          allele_dict[x][0],
                                                                           allele_dict[x][1]))
     a.close()
 

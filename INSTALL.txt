@@ -12,7 +12,9 @@ mkdir -p HLA-PA/graphs
 tar -xvf PRG_MHC_GRCh38_withIMGT.tar.gz
 mv PRG_MHC_GRCh38_withIMGT HLA-PA/graphs
 ~/anaconda3/envs/alena/opt/hla-la/bin/HLA-LA --action prepareGraph --PRG_graph_dir HLA-LA/graphs/PRG_MH
-export HLA_WORKDIR=~/shared/HLA-PA
+mkdir ~/anaconda3/envs/alena/opt/hla-la/graphs
+mv ~/shared/HLA-LA/graphs/PRG_MHC_GRCh38_withIMGT ~/anaconda3/envs/alena/opt/hla-la/graphs/
+export HLA_WORKDIR=~/shared/HLA-LA
 
 conda install gatk4
 conda install bwa

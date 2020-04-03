@@ -5,11 +5,11 @@ import sys
 PICARD = 'picard'
 GATK = 'gatk'
 VARSCAN = 'varcan'
-STRELKA = os.path.join(os.environ['STRELKA_PATH'], 'bin', 'configureStrelkaSomaticWorkflow.py')
+STRELKA = os.path.join(os.path.abspath(os.environ['STRELKA_PATH']), 'bin', 'configureStrelkaSomaticWorkflow.py')
 SAMTOOLS = 'samtools'
 SSNIPER = 'bam-somaticsniper'
 HLA = "HLA-LA.pl"
-HLA_WORKDIR = os.environ["HLA_WORKDIR"]
+HLA_WORKDIR = os.path.abspath(os.environ["HLA_WORKDIR"])
 SAMTOOLS = 'samtools'
 
 # ANNOVAR location must be in $ANNOVAR
