@@ -5,7 +5,7 @@ import sys
 PICARD = 'picard'
 GATK = 'gatk'
 VARSCAN = 'varcan'
-STRELKA = os.path.join(os.path.abspath(os.environ['STRELKA_PATH']), 'bin', 'configureStrelkaSomaticWorkflow.py')
+STRELKA = os.path.abspath(os.path.join(os.environ['STRELKA_PATH'], 'bin', 'configureStrelkaSomaticWorkflow.py'))
 SAMTOOLS = 'samtools'
 SSNIPER = 'bam-somaticsniper'
 HLA = "HLA-LA.pl"
@@ -79,9 +79,8 @@ def exec_command(cmd):
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output, error = p.communicate()
     if p.returncode != 0:
-        for line in output.encode().split("\n"):
+        for line in output.decode("utf-8").split("\n"):
             print(line.rstrip())
-        for line in error.encode().split("\n"):
+        for line in error.decode("utf-8").split("\n"):
             print(line.rstrip())
-        print(error)
         sys.exit(-1)

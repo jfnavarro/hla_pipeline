@@ -102,8 +102,8 @@ def Full_exome_pipeline(sample1,
 
     print('Performing variant calling')
     # Variant calling Mutect2
-    cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal G001_Normal '\
-                 + '-O Mutect.vcf --germline-resource ' + SNPSITES
+    cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal ' + sample2_ID\
+                 + ' -O Mutect.vcf --germline-resource ' + SNPSITES
     exec_command(cmd_mutect)
 
     # Variant calling Strelka2
@@ -306,8 +306,7 @@ def Full_exome_pipeline(sample1,
     print('Combining variants')
     cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf ' \
 			   '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf -genotypeMergeOptions UNIQUIFY'
-    p_GATK = subprocess.Popen(cmd_GATK, shell=True)
-    p_GATK.wait()
+    exec_command(cmd_GATK)
 
     # Run annovar to annotate variants
     print('Running annovar')
