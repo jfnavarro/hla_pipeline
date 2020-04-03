@@ -126,7 +126,7 @@ def Full_exome_pipeline(sample1,
     print('Marking duplicates')
     cmdT_mark = GATK + ' MarkDuplicatesSpark -I=' + sample1 + ' -O=sample1_dedup.bam -M=dedup_sample1.txt'
     p = subprocess.Popen(cmdT_mark, shell=True)
-    p1.wait()
+    p.wait()
     cmdN_mark = GATK + ' MarkDuplicatesSpark -I=' + sample2 + ' -O=sample2_dedup.bam -M=dedup_sample2.txt'
     p = subprocess.Popen(cmdN_mark, shell=True)
     p.wait()
