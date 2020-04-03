@@ -37,6 +37,8 @@ wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/dbsnp_138.hg19
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.fasta.gz
 gunzip ucsc.hg19.fasta.gz
 bwa index hg19
+samtools faidx hg19.fa
+gatk CreateSequenceDictionary -R=hg19.fa -O=hg19.dict
 
 cd ~/Alena/
 git clone hla_pipeline
