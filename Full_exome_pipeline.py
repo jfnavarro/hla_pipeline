@@ -7,6 +7,7 @@ from re import sub
 from common import *
 
 def HLA_PRG(bamfile, sampleID, outfile, threads):
+    print(HLA_WORKDIR)
     cmd1 = HLA + ' --BAM {} --workingDir {} --graph HLA_WORKDIR/graphs/PRG_MHC_GRCh38_withIMGT --sampleID {}'\
            + ' --maxTHREADS {}'.format(bamfile, HLA_WORKDIR, sampleID, threads)
     p = subprocess.Popen(cmd1, shell=True)
