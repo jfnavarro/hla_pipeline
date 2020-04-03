@@ -184,13 +184,12 @@ def Full_exome_pipeline(sample1,
 
     # GATK base re-calibration
     print('Starting re-calibration')
-    cmd1 = GATK + ' -T BaseRecalibrator -I sample1_realign.bam' + ' -R ' + genome + ' -knownSites ' + SNPSITES + \
-           ' -knownSites ' + KNOWN_SITE1 + ' -knownSites ' + KNOWN_SITE2 + ' -o sample1_recal_data.txt'
-    cmd2 = GATK + ' -T BaseRecalibrator -I sample2_realign.bam' + ' -R ' + genome + ' -knownSites ' + SNPSITES + \
-           ' -knownSites ' + KNOWN_SITE1 + ' -knownSites ' + KNOWN_SITE2 + ' -o sample2_recal_data.txt'
+    cmd1 = GATK + ' -T BaseRecalibrator -I sample1_realign.bam' + ' -R ' + genome + ' --knownSites ' + SNPSITES + \
+           ' --knownSites ' + KNOWN_SITE1 + ' --knownSites ' + KNOWN_SITE2 + ' -o sample1_recal_data.txt'
+    cmd2 = GATK + ' -T BaseRecalibrator -I sample2_realign.bam' + ' -R ' + genome + ' --knownSites ' + SNPSITES + \
+           ' --knownSites ' + KNOWN_SITE1 + ' --knownSites ' + KNOWN_SITE2 + ' -o sample2_recal_data.txt'
     cmd3 = GATK + ' -T PrintReads -R ' + genome + ' -I sample1_realign.bam ' + ' -BQSR sample1_recal_data.txt -o sample1_recal.bam'
     cmd4 = GATK + ' -T PrintReads -R ' + genome + ' -I sample2_realign.bam ' + ' -BQSR sample2_recal_data.txt -o sample2_recal.bam'
-    print('Starting recalibration...')
     p1 = subprocess.Popen(cmd1, shell=True)
     p2 = subprocess.Popen(cmd2, shell=True)
     p1.wait()
