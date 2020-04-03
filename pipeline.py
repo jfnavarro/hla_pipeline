@@ -14,16 +14,24 @@ parser.add_argument('R1_NORMAL', help='FASTQ file R1 (Normal)')
 parser.add_argument('R2_NORMAL', help='FASTQ file R2 (Normal)')
 parser.add_argument('R1_CANCER', help='FASTQ file R1 (Cancer)')
 parser.add_argument('R2_CANCER', help='FASTQ file R2 (Cancer)')
-parser.add_argument('-a', '--adapter',
+parser.add_argument('--adapter',
                     help='Path to the Illumina adapters FASTA file.', required=True)
-parser.add_argument('-g', '--genome',
+parser.add_argument('--genome',
                     help='Path to the reference Genome FASTA file (must contain BWA index)', required=True)
-parser.add_argument('-s', '--sample',
+parser.add_argument('--sample',
                     help='Name of the sample/experiment. Default is sample', default='sample')
-parser.add_argument('-t', '--tumor',
+parser.add_argument('--tumor',
                     help='Tumor type. Default is NA', default='NA')
-parser.add_argument('-D', '--dir',
-                    help='Path to a location to store all results. Default is ./data', default='./data')
+parser.add_argument('--known1',
+                    help='Path to the file with Mill and 1000G gold standards (GATK bundle h19)', required=True)
+parser.add_argument('--known2',
+                    help='Path to the file with 1000G phase indels (GATK bundle h19)', required=True)
+parser.add_argument('--snpsites',
+                    help='Path to the file with the SNPs (GATK buldle hg19)', required=True)
+parser.add_argument('--fastaAA',
+                    help='Path to the file with the dictionary of FASTA to AA', required=True)
+parser.add_argument('--fastacDNA',
+                    help='Path to the file with the dictionary of FASTA to cDNA', required=True)
 
 # Parse arguments
 args = parser.parse_args()
@@ -37,12 +45,15 @@ tumor_type = args.tumor
 IILLUMINA_ADAPTERS = os.path.abspath(args.adapter)
 GENOME_REF = os.path.abspath(args.genome)
 THREADS = multiprocessing.cpu_count() - 1
+FASTA_AA_DICT = os.path.abspath(args.fastaAA)
+FASTA_cDNA = os.path.abspath(args.fastacDNA)
+KNOWN_SITE1 = os.path.abspath(args.known1)
+KNOWN_SITE2 = os.path.abspath(args.known2)
+SNPSITES = os.path.abspath(args.snpsites)
 
-# These two must be located in HOME/shared
-TRIPTOMATIC = 'java -jar ~/shared/trimmomatic.jar'
-BWA = '~/shared/bwa mem'
-# These one must be installed in the system or in PATH
-SAMTOOLS = 'samtools'
+# Recommend to install with Anaconda
+TRIPTOMATIC = 'trimmomatic'
+BWA = 'bwa mem'
 
 # Move to output dir
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -164,7 +175,17 @@ exec_command(cmd)
 print('Merging of tumor and normal aligned samples completed.')
 
 # Final pìpeline
-#Full_exome_pipeline("aligned_cancer_merged.bam", "aligned_normal_merged.bam ", tumor_type, GENOME_REF, sampleID)
+Full_exome_pipeline('aligned_cancer_merged.bam',
+                    'aligned_normal_merged.bam',
+                    tumor_type,
+                    GENOME_REF,
+                    sampleID,
+                    THREADS,
+                    FASTA_AA_DICT,
+                    FASTA_cDNA,
+                    KNOWN_SITE1,
+                    KNOWN_SITE2,
+                    SNPSITES)
 #HLA_pipeline(loc, sample1, sample2, THREADS)
 
 

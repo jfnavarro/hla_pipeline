@@ -1,0 +1,41 @@
+mkdir -p ~/shared
+
+conda install hla-la
+cd ~/shared
+wget http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz
+mkdir -p HLA-PA/graphs
+tar -xvf PRG_MHC_GRCh38_withIMGT.tar.gz
+mv PRG_MHC_GRCh38_withIMGT HLA-PA/graphs
+~/anaconda3/envs/alena/opt/hla-la/bin/HLA-LA --action prepareGraph --PRG_graph_dir HLA-LA/graphs/PRG_MH
+
+conda install gatk4
+conda install bwa
+conda install samtools
+conda install picard
+conda install trimmomatic
+conda install varscan
+
+wget https://github.com/Illumina/strelka/releases/download/v2.9.10/strelka-2.9.10.centos6_x86_64.tar.bz2
+tar -xjf strelka-2.9.10.centos6_x86_64.tar.bz2
+mv strelka-2.9.10.centos6_x86_64 ~/shared/strelka
+export STRELKA_PATH=~/shared/strelka
+
+wget http://www.openbioinformatics.org/annovar/download/0wgxR2rIVP/annovar.latest.tar.gz
+tar -xvf annovar.latest.tar.gz
+mv annovar.latest ~/shared/annovar
+export ANNOVAR_PATH=~/shared/annovar
+
+export PATH="~/shared/annovar:PATH"
+
+cd ~/shared/
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/1000G_phase1.indels.hg19.sites.vcf.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/dbsnp_138.hg19.vcf.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.fasta.gz
+gunzip ucsc.hg19.fasta.gz
+bwa index hg19
+
+cd ~/Alena/
+git clone hla_pipeline
+cp hla_pipeline/shared/* ~/shared/
+

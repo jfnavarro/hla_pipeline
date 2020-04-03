@@ -7,27 +7,18 @@ import multiprocessing
 import time
 from re import sub
 
-
-# All these programs must be in system or in PATH
-PICARD = 'java -Xmx32g picard.jar'
+PICARD = 'picard'
+GATK = 'gatk'
+VARSCAN = 'varcan'
+STRELKA = '${STRELKA_PATH}/bin/configureStrelkaSomaticWorkflow.py'
 SAMTOOLS = 'samtools'
-GATK = 'java -Xmx64g GenomeAnalysisTK.jar'
-MUTECT = 'muTect'
-STRELKA = 'configureStrelkaWorkflow.pl'
 SSNIPER = 'bam-somaticsniper'
-VARSCAN = 'java -Xmx32g -jar VarScan.jar'
-HLA_PRG = "HLA-PRG-LA.pl"
-# ANOVAR location must be in PATH
+HLA_PRG = "HLA-LA.pl"
+SAMTOOLS = 'samtools'
+
+# ANNOVAR location must be in $ANNOVAR
 annovar_db = 'humandb -buildver hg19'
 annovar_anno = 'refGene,knownGene,ensGene,snp138NonFlagged,1000g2012apr_all,1000g2012apr_eur,1000g2012apr_amr,1000g2012apr_asn,1000g2012apr_afr,cosmic70 -operation g,g,g,f,f,f,f,f,f,f -nastring NA'
-# All these files will be assumed to be in HOME/shared for convenience
-SNP_ANNO = "~/shared/snp.sum.hg19_multianno.txt"
-INDEL_ANNO = "~/shared/indel.sum.hg19_multianno.txt'"
-FASTA_AA_DICT = "~/shared/FASTA_AA.dict"
-FASTA_cDNA = "~/shared/FASTA_cDNA.dict"
-known_site1 = '~/shared/Mills_and_1000G_gold_standard.indels.b37.vcf'
-known_site2 = '~/shared/1000G_phase1.indels.b37.vcf'
-snpsites = '~/shared/dbsnp_139.b37.vcf.gz'
 
 MRN = "MRN"
 SEQ_CENTER = "VHIO"
@@ -87,12 +78,11 @@ def translate_dna_to_protein(seq):
             protein += FASTA_AA_DICT[codon]
     return protein
 
-def HLA_PRG(bamfile, sampleID, outfile):
-    cpu_count = multiprocessing.cpu_count() - 1
+def HLA_PRG(bamfile, sampleID, outfile, threads):
     dirID = "out_HLA"
-    cmd1 = HLA_PRG + ' --BAM {} --graph PRG_MHC_GRCh38_withIMGT --sampleID {} --maxThreads {}'.format(bamfile,
+    cmd1 = HLA_PRG + ' --BAM {} --graph PRG_MHC_GRCh38_withIMGT --sampleID {} --maxTHREADS {}'.format(bamfile,
                                                                                                       dirID,
-                                                                                                      cpu_count)
+                                                                                                      threads)
     p = subprocess.Popen(cmd1, shell=True)
     p.wait()
 
@@ -115,7 +105,18 @@ def HLA_PRG(bamfile, sampleID, outfile):
 
 # Sample 1 cancer, sample 2 normal
 # Genome must be hg19
-def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
+def Full_exome_pipeline(sample1,
+                        sample2,
+                        tumor_type,
+                        genome,
+                        sampleID,
+                        THREADS,
+                        FASTA_AA_DICT,
+                        FASTA_cDNA,
+                        KNOWN_SITE1,
+                        KNOWN_SITE2,
+                        SNPSITES
+                        ):
     WORKING_DIR = os.path.abspath(os.getcwd())
 
 	sample1_ID = sampleID + "_Tumor"
@@ -159,9 +160,9 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 
     # GATK create intervals
     cmdT_int = GATK + ' -T RealignerTargetCreator -I sample1_final.bam -R ' + genome + \
-               ' -known ' + known_site1 + ' -known ' + known_site2 + ' -o sample1.intervals &> sample1_target.log'
+               ' -known ' + KNOWN_SITE1 + ' -known ' + KNOWN_SITE2 + ' -o sample1.intervals &> sample1_target.log'
     cmdN_int = GATK + ' -T RealignerTargetCreator -I sample2_final.bam -R ' + genome + \
-               ' -known ' + known_site1 + ' -known ' + known_site2 + ' -o sample2.intervals &> sample2_target.log'
+               ' -known ' + KNOWN_SITE1 + ' -known ' + KNOWN_SITE2 + ' -o sample2.intervals &> sample2_target.log'
     print('Creating realignment target intervals')
     p1 = subprocess.Popen(cmdT_int, shell=True)
     p2 = subprocess.Popen(cmdN_int, shell=True)
@@ -171,9 +172,9 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 
     # GATK re-align
     cmdT_realign = GATK + ' -T IndelRealigner -R ' + genome + ' -I sample1_final.bam -targetIntervals sample1.intervals ' + \
-                   '-known ' + known_site1 + ' -known ' + known_site2 + ' -o sample1_realign.bam &> sample1_realign.log'
+                   '-known ' + KNOWN_SITE1 + ' -known ' + KNOWN_SITE2 + ' -o sample1_realign.bam &> sample1_realign.log'
     cmdN_realign = GATK + ' -T IndelRealigner -R ' + genome + ' -I sample2_final.bam -targetIntervals sample2.intervals ' + \
-                   '-known ' + known_site1 + ' -known ' + known_site2 + ' -o sample2_realign.bam &> sample2_realign.log'
+                   '-known ' + KNOWN_SITE1 + ' -known ' + KNOWN_SITE2 + ' -o sample2_realign.bam &> sample2_realign.log'
     print('Starting realignments')
     p1 = subprocess.Popen(cmdT_realign, shell=True)
     p2 = subprocess.Popen(cmdN_realign, shell=True)
@@ -183,10 +184,10 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 
     # GATK base re-calibration
     print('Starting re-calibration')
-    cmd1 = GATK + ' -T BaseRecalibrator -I sample1_realign.bam' + ' -R ' + genome + ' -knownSites ' + snpsites + \
-           ' -knownSites ' + known_site1 + ' -knownSites ' + known_site2 + ' -o sample1_recal_data.txt'
-    cmd2 = GATK + ' -T BaseRecalibrator -I sample2_realign.bam' + ' -R ' + genome + ' -knownSites ' + snpsites + \
-           ' -knownSites ' + known_site1 + ' -knownSites ' + known_site2 + ' -o sample2_recal_data.txt'
+    cmd1 = GATK + ' -T BaseRecalibrator -I sample1_realign.bam' + ' -R ' + genome + ' -knownSites ' + SNPSITES + \
+           ' -knownSites ' + KNOWN_SITE1 + ' -knownSites ' + KNOWN_SITE2 + ' -o sample1_recal_data.txt'
+    cmd2 = GATK + ' -T BaseRecalibrator -I sample2_realign.bam' + ' -R ' + genome + ' -knownSites ' + SNPSITES + \
+           ' -knownSites ' + KNOWN_SITE1 + ' -knownSites ' + KNOWN_SITE2 + ' -o sample2_recal_data.txt'
     cmd3 = GATK + ' -T PrintReads -R ' + genome + ' -I sample1_realign.bam ' + ' -BQSR sample1_recal_data.txt -o sample1_recal.bam'
     cmd4 = GATK + ' -T PrintReads -R ' + genome + ' -I sample2_realign.bam ' + ' -BQSR sample2_recal_data.txt -o sample2_recal.bam'
     print('Starting recalibration...')
@@ -202,8 +203,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 
     # HLA predictions
     print('Performing HLA predictions')
-    HLA_PRG('sample1_recal.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt')
-    HLA_PRG('sample2_recal.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt')
+    HLA_PRG('sample1_recal.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+    HLA_PRG('sample2_recal.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
     print('HLA predictions completed for tumor and normal samples')
 
     # Variant calling (SAMTOOLS PILEUP)
@@ -218,15 +219,18 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
     p2 = subprocess.Popen(cmd2, shell=True)
     print('Pile-ups were computed for tumor and normal samples')
 
-    # Variant calling Mutect
-    cmd_mutect = MUTECT + ' --memory 16g -T MuTect --reference_sequence ' + genome + ' --dbsnp ' + snpsites + \
-                 ' --input_file:normal sample2_recal.bam --input_file:tumor sample1_recal.bam --vcf Mutect1.vcf'
+    # Variant calling Mutect2
+    cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_recal.bam -I sample2_recal.bam -normal sample2_recal.bam'\
+                 + ' --germline-resource ' + SNPSITES
+
     p3 = subprocess.Popen(cmd_mutect, shell=True)
 
-    # Variant calling Strelka
-    cmd_Strelka = STRELKA + ' --normal=sample2_recal.bam --tumor=sample1_recal.bam --ref=' + \
-                  genome + ' --output-dir=Strelka_output ; cd Strelka_output ; make -j 4 ; cd..'
-    p4 = subprocess.Popen(cmd_Strelka, shell=True)
+    # Variant calling Strelka2
+    cmd_Strelka = STRELKA + ' --normalBam sample2_recal.bam --tumorBam sample1_recal.bam --referenceFasta ' + genome + ' --runDir Strelka_output'
+    p = subprocess.Popen(cmd_Strelka, shell=True)
+    p.wait()
+    cmd_Strelka2 = 'Strelka_output/runWorkflow.py -m local -j ' + THREADS
+    p4 = subprocess.Popen(cmd_Strelka2, shell=True)
 
     # Variant calling Somatic Sniper
     cmd_SomaticSniper = SSNIPER + ' -L -G -F vcf -f ' + genome + ' sample1_recal.bam sample2_recal.bam SS.vcf'
@@ -239,7 +243,7 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
     # Variant calling VarScan
     cmd_varscan = VARSCAN + ' somatic ' + os.path.join(PILEUP_DIR, 'sample2.pileup') + \
                   ' ' + os.path.join(PILEUP_DIR, 'sample1.pileup') + ' . ' + \
-                  '--tumor-purity .5 --output-vcf 1 --min-reads2 2 --min-coverage 4 --min-var-freq .05 --strand-filter 0'
+                  '--tumor-purity .5 --output-vcf 1 --min-coverage 4 --min-var-freq .05 --strand-filter 0'
     p7 = subprocess.Popen(cmd_varscan, shell=True)
 
     print('Performing variant calling')
@@ -437,8 +441,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 
     # Run annovar to annotate variants
     print('Running annovar')
-    cmd1 = 'convert2annovar.pl -format vcf4old combined_calls.vcf --withzyg -outfile snp.av'
-    cmd2 = 'table_annovar.pl snp.av ' + annovar_db + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
+    cmd1 = '$ANNOVAR_PATH/convert2annovar.pl -format vcf4old combined_calls.vcf --withzyg -outfile snp.av'
+    cmd2 = '$ANNOVAR_PATH/table_annovar.pl snp.av ' + annovar_db + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
     p1 = subprocess.Popen(cmd1, shell=True)
     p1.wait()
     p2 = subprocess.Popen(cmd2, shell=True)
@@ -690,7 +694,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 
     # Generate final sheet with coverage
     print("Formatting coverage and generating final sheet")
-    nonsyn_snv = open(SNP_ANNO)
+    # This must be generated somewhere, probably annovar
+    nonsyn_snv = open('snp.sum.hg19_multianno.txt')
     nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
     all_file = open('all_other_mutations.txt', 'w')
     date = datetime.datetime.now().replace(microsecond=0)
@@ -1045,8 +1050,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
 
     # Annotate with Annovar
     print('Annotating combined indels with annovar')
-    cmd1 = 'convert2annovar.pl -format vcf4old combined_indel_calls.vcf --withzyg -outfile indel.av'
-    cmd2 = 'table_annovar.pl indel.av ' + annovar_db + ' -out indel.sum -remove -protocol ' + annovar_anno
+    cmd1 = '$ANNOVAR_PATH/convert2annovar.pl -format vcf4old combined_indel_calls.vcf --withzyg -outfile indel.av'
+    cmd2 = '$ANNOVAR_PATH/table_annovar.pl indel.av ' + annovar_db + ' -out indel.sum -remove -protocol ' + annovar_anno
     p1 = subprocess.Popen(cmd1, shell=True)
     p1.wait()
     p2 = subprocess.Popen(cmd2, shell=True)
@@ -1170,7 +1175,8 @@ def Full_exome_pipeline(sample1, sample2, tumor_type, genome, sampleID):
     vcf.close()
 
     # Generate final coverage sheet
-    nonsyn_snv = open(INDEL_ANNO)
+    # THIS must be generated somwhere, perhaps annovar
+    nonsyn_snv = open('indel.sum.hg19_multianno.txt')
     nonsyn_file = open('nonsyn_SQL_insert.txt', 'a')
     all_file = open('all_other_mutations.txt', 'a')
     date_trunc = datetime.datetime.now().date()
