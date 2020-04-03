@@ -125,8 +125,8 @@ def Full_exome_pipeline(sample1,
     # Mark duplicates
     PICARD_TMP = os.path.join(WORKING_DIR, 'picard_tmp')
     os.makedirs(PICARD_TMP, exist_ok=True)
-    cmdT_mark = PICARD + ' MarkDuplicates I=' + sample1 + 'O=sample1_dedup.bam M=dedup_sample1.txt TMP_DIR=' + PICARD_TMP
-    cmdN_mark = PICARD + ' MarkDuplicates I=' + sample2 + 'O=sample2_dedup.bam M=dedup_sample2.txt TMP_DIR=' + PICARD_TMP
+    cmdT_mark = PICARD + ' MarkDuplicates I=' + sample1 + ' O=sample1_dedup.bam M=dedup_sample1.txt TMP_DIR=' + PICARD_TMP
+    cmdN_mark = PICARD + ' MarkDuplicates I=' + sample2 + ' O=sample2_dedup.bam M=dedup_sample2.txt TMP_DIR=' + PICARD_TMP
     print('Marking duplicates')
     p1 = subprocess.Popen(cmdT_mark, shell=True)
     p2 = subprocess.Popen(cmdN_mark, shell=True)
