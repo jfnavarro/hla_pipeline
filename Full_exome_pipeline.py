@@ -7,13 +7,13 @@ from re import sub
 from common import *
 
 def HLA_PRG(bamfile, sampleID, outfile, threads):
-    cmd1 = HLA + ' --BAM {} --workingDir {} --graph {} --sampleID {}'\
-           + ' --maxTHREADS {}'.format(bamfile, HLA_WORKDIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
-    p = subprocess.Popen(cmd1, shell=True)
-    p.wait()
+    OUT_DIR = "out_hla"
+    cmd = HLA + ' --BAM {} --workingDir {} --graph {} --sampleID {}'\
+          + ' --maxTHREADS {}'.format(bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
+    exec_command(cmd)
 
     # create a dictionary to store the output for each allele
-    hla = pd.read_table(os.path.join(HLA_WORKDIR, sampleID, 'hla', 'R1_bestguess_G.txt'), sep='\t')
+    hla = pd.read_table(os.path.join(OUT_DIR, sampleID, 'hla', 'R1_bestguess_G.txt'), sep='\t')
     allele_dict = {}
     hla = hla.groupby('Locus')
     for k, g in hla:
@@ -82,57 +82,46 @@ def Full_exome_pipeline(sample1,
     cmd4 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample2_dedup.bam ' + ' --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'
     exec_command(cmd3)
     exec_command(cmd4)
-    print('Recalibration was performed on the tumor and normal samples.')
+    print('Re-calibration was performed on the tumor and normal samples.')
 
     # HLA predictions
-    print('Performing HLA predictions')
-    HLA_PRG('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
-    HLA_PRG('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
-    print('HLA predictions completed for tumor and normal samples')
+    #print('Performing HLA predictions')
+    #HLA_PRG('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+    #HLA_PRG('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
+    #print('HLA predictions completed for tumor and normal samples')
 
     # Variant calling (SAMTOOLS PILEUP)
     print('Computing pile-ups')
     PILEUP_DIR = os.path.join(WORKING_DIR, "pileups")
     os.makedirs(PILEUP_DIR, exist_ok=True)
     cmd1 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample1_final.bam' + ' > ' + os.path.join(PILEUP_DIR, 'sample1.pileup')
+    exec_command(cmd1)
     cmd2 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample2_final.bam' + ' > ' + os.path.join(PILEUP_DIR, 'sample2.pileup')
-    p1 = subprocess.Popen(cmd1, shell=True)
-    p2 = subprocess.Popen(cmd2, shell=True)
+    exec_command(cmd2)
     print('Pile-ups were computed for tumor and normal samples')
 
+    print('Performing variant calling')
     # Variant calling Mutect2
     cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal sample2_final.bam'\
                  + ' --germline-resource ' + SNPSITES
-
-    p3 = subprocess.Popen(cmd_mutect, shell=True)
+    exec_command(cmd_mutect)
 
     # Variant calling Strelka2
     cmd_Strelka = STRELKA + ' --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta ' + genome + ' --runDir Strelka_output'
-    p = subprocess.Popen(cmd_Strelka, shell=True)
-    p.wait()
+    exec_command(cmd_Strelka)
     cmd_Strelka2 = 'Strelka_output/runWorkflow.py -m local -j ' + THREADS
-    p4 = subprocess.Popen(cmd_Strelka2, shell=True)
+    exec_command(cmd_Strelka2)
 
     # Variant calling Somatic Sniper
     cmd_SomaticSniper = SSNIPER + ' -L -G -F vcf -f ' + genome + ' sample1_final.bam sample2_final.bam SS.vcf'
-    p6 = subprocess.Popen(cmd_SomaticSniper, shell=True)
-
-    # Wait till pileups are completed
-    p1.wait()
-    p2.wait()
+    exec_command(cmd_SomaticSniper)
 
     # Variant calling VarScan
     cmd_varscan = VARSCAN + ' somatic ' + os.path.join(PILEUP_DIR, 'sample2.pileup') + \
                   ' ' + os.path.join(PILEUP_DIR, 'sample1.pileup') + ' . ' + \
                   '--tumor-purity .5 --output-vcf 1 --min-coverage 4 --min-var-freq .05 --strand-filter 0'
-    p7 = subprocess.Popen(cmd_varscan, shell=True)
-
-    print('Performing variant calling')
-    p3.wait()
-    p4.wait()
-    p6.wait()
-    p7.wait()
-    print('Done calling with Varscan, Mutect, SomaticSniper & Strelka.')
+    exec_command(cmd_varscan)
+    print('Done calling with Varscan, Mutect2, SomaticSniper & Strelka.')
 
     # Filtering Mutect snv calls
     print("Filtering Mutect SNV")
@@ -322,12 +311,10 @@ def Full_exome_pipeline(sample1,
 
     # Run annovar to annotate variants
     print('Running annovar')
-    cmd1 = '$ANNOVAR_PATH/convert2annovar.pl -format vcf4old combined_calls.vcf --withzyg -outfile snp.av'
-    cmd2 = '$ANNOVAR_PATH/table_annovar.pl snp.av ' + annovar_db + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
-    p1 = subprocess.Popen(cmd1, shell=True)
-    p1.wait()
-    p2 = subprocess.Popen(cmd2, shell=True)
-    p2.wait()
+    cmd1 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_calls.vcf --withzyg -outfile snp.av'
+    exec_command(cmd1)
+    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' snp.av ' + annovar_db + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
+    exec_command(cmd2)
 
     # Extract coverage info from vcf file and add to annotation data
     print("Extracting coverage from combined VCF")

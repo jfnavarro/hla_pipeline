@@ -9,10 +9,10 @@ STRELKA = os.path.join(os.path.abspath(os.environ['STRELKA_PATH']), 'bin', 'conf
 SAMTOOLS = 'samtools'
 SSNIPER = 'bam-somaticsniper'
 HLA = "HLA-LA.pl"
-HLA_WORKDIR = os.path.abspath(os.environ["HLA_WORKDIR"])
 SAMTOOLS = 'samtools'
 
 # ANNOVAR location must be in $ANNOVAR
+ANNOVAR_PATH = os.path.abspath(os.environ['ANNOVAR_PATH'])
 annovar_db = 'humandb -buildver hg19'
 annovar_anno = 'refGene,knownGene,ensGene,snp138NonFlagged,1000g2012apr_all,1000g2012apr_eur,1000g2012apr_amr,1000g2012apr_asn,1000g2012apr_afr,cosmic70 -operation g,g,g,f,f,f,f,f,f,f -nastring NA'
 
@@ -75,6 +75,7 @@ def translate_dna_to_protein(seq):
     return protein
 
 def exec_command(cmd):
+    print(cmd)
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output, error = p.communicate()
     if p.returncode != 0:

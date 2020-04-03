@@ -14,7 +14,6 @@ mv PRG_MHC_GRCh38_withIMGT HLA-PA/graphs
 ~/anaconda3/envs/alena/opt/hla-la/bin/HLA-LA --action prepareGraph --PRG_graph_dir HLA-LA/graphs/PRG_MH
 mkdir ~/anaconda3/envs/alena/opt/hla-la/graphs
 mv ~/shared/HLA-LA/graphs/PRG_MHC_GRCh38_withIMGT ~/anaconda3/envs/alena/opt/hla-la/graphs/
-export HLA_WORKDIR=~/shared/HLA-LA
 
 conda install gatk4
 conda install bwa
@@ -55,4 +54,4 @@ gatk CreateSequenceDictionary -R=hg19.fa -O=hg19.dict
 cd ~/Alena/
 git clone hla_pipeline
 cp hla_pipeline/shared/* ~/shared/
-
+cp hla_pipeline/configureStrelkaSomaticWorkflow.py.ini ~/shared/strelka/bin/
