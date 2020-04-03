@@ -166,11 +166,11 @@ print('Aligment of tumor and normal samples completed.')
 # Merge aligned files
 print('Merging aligned files')
 
-cmd = '{} merge aligned_normal_merged.bam normal_paired_aligned_sorted.bam '\
+cmd = '{} merge -f aligned_normal_merged.bam normal_paired_aligned_sorted.bam '\
        'R1_normal_unpaired_aligned_sorted.bam R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
 exec_command(cmd)
 
-cmd = '{} merge aligned_cancer_merged.bam cancer_paired_aligned_sorted.bam '\
+cmd = '{} merge -f aligned_cancer_merged.bam cancer_paired_aligned_sorted.bam '\
        'R1_cancer_unpaired_aligned_sorted.bam R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
 exec_command(cmd)
 
