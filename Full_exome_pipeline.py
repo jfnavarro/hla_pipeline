@@ -102,7 +102,7 @@ def Full_exome_pipeline(sample1,
 
     print('Performing variant calling')
     # Variant calling Mutect2
-    cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal sample2 '\
+    cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal G001_Normal '\
                  + '-O Mutect.vcf --germline-resource ' + SNPSITES
     exec_command(cmd_mutect)
 
