@@ -1,9 +1,7 @@
 #! /usr/bin/env python
 
 import argparse
-import os
-import sys
-import multiprocessing
+from common import *
 from Full_exome_pipeline import *
 from HLA_two_sample import *
 
@@ -61,13 +59,7 @@ BWA = 'bwa mem'
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
 
-def exec_command(cmd):
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    output, error = p.communicate()
-    if p.returncode != 0:
-        print(output)
-        print(error)
-        sys.exit(-1)
+
 
 # TRIMMING
 print('Starting trimming')

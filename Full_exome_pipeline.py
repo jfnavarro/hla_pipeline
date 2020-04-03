@@ -3,91 +3,17 @@ import subprocess
 import pandas as pd
 import re
 import datetime
-import multiprocessing
-import time
 from re import sub
-
-PICARD = 'picard'
-GATK = 'gatk'
-VARSCAN = 'varcan'
-STRELKA = '${STRELKA_PATH}/bin/configureStrelkaSomaticWorkflow.py'
-SAMTOOLS = 'samtools'
-SSNIPER = 'bam-somaticsniper'
-HLA = "HLA-LA.pl"
-SAMTOOLS = 'samtools'
-
-# ANNOVAR location must be in $ANNOVAR
-annovar_db = 'humandb -buildver hg19'
-annovar_anno = 'refGene,knownGene,ensGene,snp138NonFlagged,1000g2012apr_all,1000g2012apr_eur,1000g2012apr_amr,1000g2012apr_asn,1000g2012apr_afr,cosmic70 -operation g,g,g,f,f,f,f,f,f,f -nastring NA'
-
-MRN = "MRN"
-SEQ_CENTER = "VHIO"
-LIBRARY = "Library"
-SOURCE = "Source"
-SAMPLE_NOTE = "Sample"
-RESECTION_DATE = "Na"
-RUN_DATE = "Na"
-SEQUENCER = "Na"
-KIT = "Na"
-NOTE = "Na"
-INDEX = "Na"
-
-FASTA_AA_DICT = {
-    'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
-    'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
-    'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K',
-    'AGC':'S', 'AGT':'S', 'AGA':'R', 'AGG':'R',
-    'CTA':'L', 'CTC':'L', 'CTG':'L', 'CTT':'L',
-    'CCA':'P', 'CCC':'P', 'CCG':'P', 'CCT':'P',
-    'CAC':'H', 'CAT':'H', 'CAA':'Q', 'CAG':'Q',
-    'CGA':'R', 'CGC':'R', 'CGG':'R', 'CGT':'R',
-    'GTA':'V', 'GTC':'V', 'GTG':'V', 'GTT':'V',
-    'GCA':'A', 'GCC':'A', 'GCG':'A', 'GCT':'A',
-    'GAC':'D', 'GAT':'D', 'GAA':'E', 'GAG':'E',
-    'GGA':'G', 'GGC':'G', 'GGG':'G', 'GGT':'G',
-    'TCA':'S', 'TCC':'S', 'TCG':'S', 'TCT':'S',
-    'TTC':'F', 'TTT':'F', 'TTA':'L', 'TTG':'L',
-    'TAC':'Y', 'TAT':'Y', 'TAA':'_', 'TAG':'_',
-    'TGC':'C', 'TGT':'C', 'TGA':'_', 'TGG':'W',
-}
-
-FASTA_cDNA = {'A':'A', 'G':'G', 'C':'C', 'T':'U'}
-
-def index_column_substring(your_list, substring):
-    for i, s in enumerate(your_list):
-        if substring in s:
-            return i
-    return -1
-
-def translate_dna(seq):
-    rna = ""
-    # Generate the RNA string
-    for i in seq:
-        # Replace all occurrences of T with U
-        if i == "T":
-            rna += "U"
-        else:
-            rna += i
-    return rna
-
-def translate_dna_to_protein(seq):
-    protein = ""
-    if len(seq) % 3 == 0:
-        for i in range(0, len(seq), 3):
-            codon = seq[i:i + 3]
-            protein += FASTA_AA_DICT[codon]
-    return protein
+from common import *
 
 def HLA_PRG(bamfile, sampleID, outfile, threads):
-    dirID = "out_HLA"
-    cmd1 = HLA + ' --BAM {} --graph PRG_MHC_GRCh38_withIMGT --sampleID {} --maxTHREADS {}'.format(bamfile,
-                                                                                                  dirID,
-                                                                                                  threads)
+    cmd1 = HLA + ' --BAM {} --workingDir {} --graph HLA_WORKDIR/graphs/PRG_MHC_GRCh38_withIMGT --sampleID {}'\
+           ' --maxTHREADS {}'.format(bamfile, HLA_WORKDIR, sampleID, threads)
     p = subprocess.Popen(cmd1, shell=True)
     p.wait()
 
     # create a dictionary to store the output for each allele
-    hla = pd.read_table(os.path.join(dirID, 'hla', 'R1_bestguess_G.txt'), sep='\t')
+    hla = pd.read_table(os.path.join(HLA_WORKDIR, sampleID, 'hla', 'R1_bestguess_G.txt'), sep='\t')
     allele_dict = {}
     hla = hla.groupby('Locus')
     for k, g in hla:
@@ -102,9 +28,7 @@ def HLA_PRG(bamfile, sampleID, outfile, threads):
                                                                           allele_dict[x][1]))
     a.close()
 
-
 # Sample 1 cancer, sample 2 normal
-# Genome must be hg19
 def Full_exome_pipeline(sample1,
                         sample2,
                         tumor_type,
@@ -123,38 +47,24 @@ def Full_exome_pipeline(sample1,
     sample2_ID = sampleID + "_Normal"
 
     # Add headers
+    print("Adding headers")
     cmdT_RG = PICARD + ' AddOrReplaceReadGroups I=' + sample1 + ' O=sample1_header.bam RGID=' + sampleID\
               + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sampleID + ' RGSM=' + sampleID + ' RGCN=' + SEQ_CENTER\
 	          + ' RGDS=' + tumor_type
+    exec_command(cmdT_RG)
     cmdN_RG = PICARD + ' AddOrReplaceReadGroups I=' + sample2 + ' O=sample2_header.bam RGID=' + sampleID\
               + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sampleID + ' RGSM=' + sampleID + ' RGCN=' + SEQ_CENTER\
-	          + ' RGDS=' + tumor_type
-    print('Adding headers')
-    p1 = subprocess.Popen(cmdT_RG, shell=True)
-    p2 = subprocess.Popen(cmdN_RG, shell=True)
-    p1.wait()
-    p2.wait()
+	          + ' RGDS=' + tumor_type)
+    exec_command(cmdN_RG)
     print('Tumor and normal bam files had read group information added.')
 
     # Mark duplicates
     print('Marking duplicates')
     cmdT_mark = GATK + ' MarkDuplicatesSpark -I=sample1_header.bam -O=sample1_dedup.bam -M=dedup_sample1.txt'
-    p = subprocess.Popen(cmdT_mark, shell=True)
-    p.wait()
+    exec_command(cmdT_mark)
     cmdN_mark = GATK + ' MarkDuplicatesSpark -I=sample2_header.bam -O=sample2_dedup.bam -M=dedup_sample2.txt'
-    p = subprocess.Popen(cmdN_mark, shell=True)
-    p.wait()
+    exec_command(cmdN_mark)
     print('Tumor and normal bam files had their optical and PCR duplicates marked.')
-
-    # Create index
-    cmdT_index = SAMTOOLS + ' index sample1_dedup.bam sample1_final.bai'
-    cmdN_index = SAMTOOLS + ' index sample2_dedup.bam sample2_final.bai'
-    print('Creating indexes')
-    p1 = subprocess.Popen(cmdT_index, shell=True)
-    p2 = subprocess.Popen(cmdN_index, shell=True)
-    p1.wait()
-    p2.wait()
-    print('Tumor and normal final bam files were indexed.')
 
     # GATK base re-calibration
     print('Starting re-calibration')
@@ -162,16 +72,12 @@ def Full_exome_pipeline(sample1,
            ' --known-sites ' + KNOWN_SITE1 + ' --known-sites ' + KNOWN_SITE2 + ' -O sample1_recal_data.txt'
     cmd2 = GATK + ' BaseRecalibrator -I sample2_dedup.bam' + ' -R ' + genome + ' --known-sites ' + SNPSITES + \
            ' --known-sites ' + KNOWN_SITE1 + ' --known-sites ' + KNOWN_SITE2 + ' -O sample2_recal_data.txt'
+    exec_command(cmd1)
+    exec_command(cmd2)
     cmd3 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample1_dedup.bam ' + ' --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'
     cmd4 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample2_dedup.bam ' + ' --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'
-    p1 = subprocess.Popen(cmd1, shell=True)
-    p2 = subprocess.Popen(cmd2, shell=True)
-    p1.wait()
-    p2.wait()
-    p3 = subprocess.Popen(cmd3, shell=True)
-    p4 = subprocess.Popen(cmd4, shell=True)
-    p3.wait()
-    p4.wait()
+    exec_command(cmd3)
+    exec_command(cmd4)
     print('Recalibration was performed on the tumor and normal samples.')
 
     # HLA predictions

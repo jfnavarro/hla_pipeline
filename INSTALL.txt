@@ -12,6 +12,7 @@ mkdir -p HLA-PA/graphs
 tar -xvf PRG_MHC_GRCh38_withIMGT.tar.gz
 mv PRG_MHC_GRCh38_withIMGT HLA-PA/graphs
 ~/anaconda3/envs/alena/opt/hla-la/bin/HLA-LA --action prepareGraph --PRG_graph_dir HLA-LA/graphs/PRG_MH
+export HLA_WORKDIR=~/shared/HLA-PA
 
 conda install gatk4
 conda install bwa
@@ -32,8 +33,17 @@ export ANNOVAR_PATH=~/shared/annovar
 
 cd ~/shared/
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz
+gunzip Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz
+gatk IndexFeatureFile -I Mills_and_1000G_gold_standard.indels.hg19.sites.vcf
+
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/1000G_phase1.indels.hg19.sites.vcf.gz
+gunzip 1000G_phase1.indels.hg19.sites.vcf.gz
+gatk IndexFeatureFile -I 1000G_phase1.indels.hg19.sites.vcf
+
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/dbsnp_138.hg19.vcf.gz
+gunzip dbsnp_138.hg19.vcf.gz
+gatk IndexFeatureFile -I dbsnp_138.hg19.vcf
+
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.fasta.gz
 gunzip ucsc.hg19.fasta.gz
 bwa index hg19
