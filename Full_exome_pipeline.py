@@ -123,13 +123,13 @@ def Full_exome_pipeline(sample1,
     sample2_ID = sampleID + "_Normal"
 
     # Mark duplicates
-    cmdT_mark = GATK + ' MarkDuplicatesSpark -I=' + sample1 + ' -O=sample1_dedup.bam -M=dedup_sample1.txt'
-    cmdN_mark = GATK + ' MarkDuplicatesSpark -I=' + sample2 + ' -O=sample2_dedup.bam -M=dedup_sample2.txt'
     print('Marking duplicates')
-    p1 = subprocess.Popen(cmdT_mark, shell=True)
-    p2 = subprocess.Popen(cmdN_mark, shell=True)
+    cmdT_mark = GATK + ' MarkDuplicatesSpark -I=' + sample1 + ' -O=sample1_dedup.bam -M=dedup_sample1.txt'
+    p = subprocess.Popen(cmdT_mark, shell=True)
     p1.wait()
-    p2.wait()
+    cmdN_mark = GATK + ' MarkDuplicatesSpark -I=' + sample2 + ' -O=sample2_dedup.bam -M=dedup_sample2.txt'
+    p = subprocess.Popen(cmdN_mark, shell=True)
+    p.wait()
     print('Tumor and normal bam files had their optical and PCR duplicates marked.')
 
     # Create index
