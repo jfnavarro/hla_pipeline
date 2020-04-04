@@ -4,7 +4,7 @@ import sys
 
 PICARD = 'picard'
 GATK = 'gatk'
-VARSCAN = 'varcan'
+VARSCAN = 'varscan'
 STRELKA = os.path.join(os.environ['STRELKA_PATH'], 'bin', 'configureStrelkaSomaticWorkflow.py')
 SAMTOOLS = 'samtools'
 SSNIPER = 'bam-somaticsniper'

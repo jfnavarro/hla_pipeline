@@ -51,6 +51,9 @@ bwa index hg19
 samtools faidx hg19.fa
 gatk CreateSequenceDictionary -R=hg19.fa -O=hg19.dict
 
+wget https://hgdownload.soe.ucsc.edu/gbdb/hg19/gnomAD/vcf/gnomad.exomes.r2.0.2.sites.vcf.gz
+wget https://hgdownload.soe.ucsc.edu/gbdb/hg19/gnomAD/vcf/gnomad.exomes.r2.0.2.sites.vcf.gz.tbi
+
 cd ~/Alena/
 git clone hla_pipeline
 cp hla_pipeline/shared/* ~/shared/

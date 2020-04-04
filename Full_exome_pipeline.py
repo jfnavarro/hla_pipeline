@@ -107,8 +107,6 @@ def Full_exome_pipeline(sample1,
     exec_command(cmd_mutect)
 
     # Variant calling Strelka2
-    if os.path.isdir('Strelka_output'):
-        os.remove("Strelka_output")
     cmd_Strelka = STRELKA + ' --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta ' + genome + ' --runDir Strelka_output'
     exec_command(cmd_Strelka)
     cmd_Strelka2 = 'Strelka_output/runWorkflow.py -m local -j {}'.format(THREADS)
