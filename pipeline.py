@@ -24,11 +24,13 @@ parser.add_argument('--tumor',
 parser.add_argument('--dir',
                     help='Path to the output file', required=True)
 parser.add_argument('--known1',
-                    help='Path to the file with Mill and 1000G gold standards (GATK bundle h19)', required=True)
+                    help='Path to the file with Mill and 1000G gold standards (GATK bundle)', required=True)
 parser.add_argument('--known2',
-                    help='Path to the file with 1000G phase indels (GATK bundle h19)', required=True)
+                    help='Path to the file with 1000G phase indels (GATK bundle)', required=True)
 parser.add_argument('--snpsites',
-                    help='Path to the file with the SNPs (GATK buldle hg19)', required=True)
+                    help='Path to the file with the SNPs (GATK buldle)', required=True)
+parser.add_argument('--germline',
+                    help='Path to the file with the germline resources Nomad (GATK buldle)', required=True)
 parser.add_argument('--fastaAA',
                     help='Path to the file with the dictionary of FASTA to AA', required=True)
 parser.add_argument('--fastacDNA',
@@ -51,6 +53,7 @@ FASTA_cDNA = os.path.abspath(args.fastacDNA)
 KNOWN_SITE1 = os.path.abspath(args.known1)
 KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
+GERMLINE = os.path.abspath(args.germline)
 
 # Recommend to install with Anaconda
 TRIPTOMATIC = 'trimmomatic'
@@ -59,8 +62,6 @@ BWA = 'bwa mem'
 # Move to output dir
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
-
-
 
 # TRIMMING
 print('Starting trimming')
@@ -180,7 +181,8 @@ Full_exome_pipeline('aligned_cancer_merged.bam',
                     FASTA_cDNA,
                     KNOWN_SITE1,
                     KNOWN_SITE2,
-                    SNPSITES)
+                    SNPSITES,
+                    GERMLINE)
 #HLA_pipeline(loc, sample1, sample2, THREADS)
 
 

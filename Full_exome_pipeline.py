@@ -43,8 +43,8 @@ def Full_exome_pipeline(sample1,
                         FASTA_cDNA,
                         KNOWN_SITE1,
                         KNOWN_SITE2,
-                        SNPSITES
-                        ):
+                        SNPSITES,
+                        GERMLINE):
     WORKING_DIR = os.path.abspath(os.getcwd())
 
     sample1_ID = sampleID + "_Tumor"
@@ -103,7 +103,7 @@ def Full_exome_pipeline(sample1,
     print('Performing variant calling')
     # Variant calling Mutect2
     cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal ' + sample2_ID\
-                 + ' -O Mutect.vcf --germline-resource ' + SNPSITES
+                 + ' -O Mutect.vcf --germline-resource ' + GERMLINE
     exec_command(cmd_mutect)
 
     # Variant calling Strelka2
