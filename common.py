@@ -5,14 +5,14 @@ import sys
 PICARD = 'picard'
 GATK = 'gatk'
 VARSCAN = 'varcan'
-STRELKA = os.path.abspath(os.path.join(os.environ['STRELKA_PATH'], 'bin', 'configureStrelkaSomaticWorkflow.py')) 
+STRELKA = os.path.join(os.environ['STRELKA_PATH'], 'bin', 'configureStrelkaSomaticWorkflow.py')
 SAMTOOLS = 'samtools'
 SSNIPER = 'bam-somaticsniper'
 HLA = "HLA-LA.pl"
 SAMTOOLS = 'samtools'
 
 # ANNOVAR location must be in $ANNOVAR
-ANNOVAR_PATH = os.path.abspath(os.environ['ANNOVAR_PATH'])
+ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
 annovar_db = 'humandb -buildver hg19'
 annovar_anno = 'refGene,knownGene,ensGene,snp138NonFlagged,1000g2012apr_all,1000g2012apr_eur,1000g2012apr_amr,1000g2012apr_asn,1000g2012apr_afr,cosmic70 -operation g,g,g,f,f,f,f,f,f,f -nastring NA'
 
