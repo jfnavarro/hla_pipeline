@@ -109,7 +109,7 @@ def Full_exome_pipeline(sample1,
     # Variant calling Strelka2
     cmd_Strelka = STRELKA + ' --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta ' + genome + ' --runDir Strelka_output'
     exec_command(cmd_Strelka)
-    cmd_Strelka2 = 'Strelka_output/runWorkflow.py -m local -j ' + THREADS
+    cmd_Strelka2 = 'Strelka_output/runWorkflow.py -m local -j {}'.format(THREADS)
     exec_command(cmd_Strelka2)
 
     # Variant calling Somatic Sniper
