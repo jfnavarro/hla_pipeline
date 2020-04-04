@@ -306,6 +306,7 @@ def Full_exome_pipeline(sample1,
     print('Combining variants')
     cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf ' \
 			   '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf -genotypeMergeOptions UNIQUIFY'
+
     exec_command(cmd_GATK)
 
     # Run annovar to annotate variants
