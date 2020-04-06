@@ -60,6 +60,8 @@ TRIPTOMATIC = 'trimmomatic'
 BWA = 'bwa mem'
 
 # Move to output dir
+if os.path.isdir(os.path.abspath(DIR)):
+    os.rmdir(os.path.abspath(DIR))
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
 

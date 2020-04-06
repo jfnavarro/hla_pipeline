@@ -1359,7 +1359,6 @@ def Full_exome_pipeline(sample1,
                 elif re.search(r'_', cDNA_strip):
                     cDNA_pos = cDNA_strip[int(cDNA_strip.find('.')) + 1:int(cDNA_strip.find('_'))]
                     ins = cDNA_strip[int(cDNA_strip.find('ins')) + 3:]
-
                 mut_cDNA_left = ref_cDNA_seq[0: int(cDNA_pos)]
                 mut_cDNA_right = ref_cDNA_seq[int(cDNA_pos):]
                 mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
