@@ -5,6 +5,7 @@ from common import *
 from Full_exome_pipeline import *
 from HLA_two_sample import *
 import multiprocessing
+import shutil
 
 parser=argparse.ArgumentParser(description='Jared pipeline (adjusted by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                prog='pipeline.py',
@@ -61,7 +62,7 @@ BWA = 'bwa mem'
 
 # Move to output dir
 if os.path.isdir(os.path.abspath(DIR)):
-    os.rmdir(os.path.abspath(DIR))
+    shutil.rmtree(os.path.abspath(DIR), ignore_errors=True)
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
 
