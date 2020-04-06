@@ -34,25 +34,29 @@ export ANNOVAR_PATH=~/shared/annovar
 
 cd ~/shared/
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz
-gunzip Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz
-gatk IndexFeatureFile -I Mills_and_1000G_gold_standard.indels.hg19.sites.vcf
-
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz.tbi
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/1000G_phase1.indels.hg19.sites.vcf.gz
-gunzip 1000G_phase1.indels.hg19.sites.vcf.gz
-gatk IndexFeatureFile -I 1000G_phase1.indels.hg19.sites.vcf
-
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/dbsnp_138.hg19.vcf.gz
-gunzip dbsnp_138.hg19.vcf.gz
-gatk IndexFeatureFile -I dbsnp_138.hg19.vcf
-
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/1000G_phase1.indels.hg19.sites.vcf.gz.tbi
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/dbsnp_138.hg19.vcf.gz.tbi
+gsutil cp gs://gatk-best-practices/somatic-b37/af-only-gnomad.raw.sites.vcf .
+gsutil cp gs://gatk-best-practices/somatic-b37/af-only-gnomad.raw.sites.vcf.idx
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.fasta.gz
-gunzip ucsc.hg19.fasta.gz
-bwa index hg19
-samtools faidx hg19.fa
-gatk CreateSequenceDictionary -R=hg19.fa -O=hg19.dict
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.dict.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.fasta.fai.gz
+bwa index ucsc.hg19.fasta.gz
 
-wget https://hgdownload.soe.ucsc.edu/gbdb/hg19/gnomAD/vcf/gnomad.exomes.r2.0.2.sites.vcf.gz
-wget https://hgdownload.soe.ucsc.edu/gbdb/hg19/gnomAD/vcf/gnomad.exomes.r2.0.2.sites.vcf.gz.tbi
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/1000G_phase1.indels.b37.vcf.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/1000G_phase1.indels.b37.vcf.idx.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/dbsnp_138.b37.vcf.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/dbsnp_138.b37.vcf.idx.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/Mills_and_1000G_gold_standard.indels.b37.vcf.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/Mills_and_1000G_gold_standard.indels.b37.vcf.idx.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/Mutect2/af-only-gnomad.raw.sites.b37.vcf.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/Mutect2/af-only-gnomad.raw.sites.b37.vcf.gz.tbi
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.fasta.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.dict.gz
+wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.fasta.fai.gz
+bwa index human_g1k_v37_decoy.fasta.gz
 
 cd ~/Alena/
 git clone hla_pipeline

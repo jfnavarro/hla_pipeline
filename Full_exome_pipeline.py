@@ -72,9 +72,9 @@ def Full_exome_pipeline(sample1,
 
     # GATK base re-calibration
     print('Starting re-calibration')
-    cmd1 = GATK + ' BaseRecalibrator -I sample1_dedup.bam' + ' -R ' + genome + ' --known-sites ' + SNPSITES + \
+    cmd1 = GATK + ' BaseRecalibratorSpark -I sample1_dedup.bam' + ' -R ' + genome + ' --known-sites ' + SNPSITES + \
            ' --known-sites ' + KNOWN_SITE1 + ' --known-sites ' + KNOWN_SITE2 + ' -O sample1_recal_data.txt'
-    cmd2 = GATK + ' BaseRecalibrator -I sample2_dedup.bam' + ' -R ' + genome + ' --known-sites ' + SNPSITES + \
+    cmd2 = GATK + ' BaseRecalibratorSpark -I sample2_dedup.bam' + ' -R ' + genome + ' --known-sites ' + SNPSITES + \
            ' --known-sites ' + KNOWN_SITE1 + ' --known-sites ' + KNOWN_SITE2 + ' -O sample2_recal_data.txt'
     exec_command(cmd1)
     exec_command(cmd2)
@@ -103,8 +103,10 @@ def Full_exome_pipeline(sample1,
     print('Performing variant calling')
     # Variant calling Mutect2
     cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal ' + sample2_ID\
-                 + ' -O Mutect.vcf --germline-resource ' + GERMLINE
+                 + ' -O Mutect_unfiltered.vcf --germline-resource ' + GERMLINE
     exec_command(cmd_mutect)
+    cmd_mutect2 = GATK + ' FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf'
+    exec_command(cmd_mutect2)
 
     # Variant calling Strelka2
     cmd_Strelka = STRELKA + ' --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta ' + genome + ' --runDir Strelka_output'
