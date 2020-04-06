@@ -105,7 +105,7 @@ def Full_exome_pipeline(sample1,
     cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal ' + sample2_ID\
                  + ' -O Mutect_unfiltered.vcf --germline-resource ' + GERMLINE
     exec_command(cmd_mutect)
-    cmd_mutect2 = GATK + ' FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf'
+    cmd_mutect2 = GATK + ' FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf -R ' + genome
     exec_command(cmd_mutect2)
 
     # Variant calling Strelka2
@@ -306,9 +306,11 @@ def Full_exome_pipeline(sample1,
 
     # Use GATK to combine all of the variants from various callers
     print('Combining variants')
-    cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf ' \
-			   '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf -genotypeMergeOptions UNIQUIFY'
-
+    # CombineVariants is not available in GATK 4
+    #cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf ' \
+	#		   '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf -genotypeMergeOptions UNIQUIFY'
+    cmd_GATK = PICARD + ' MergeVcfs I=varscan_filtered.vcf I=mutect_filtered.vcf I=strelka_filtered.vcf I=somaticsniper_filtered.vcf O=combined_calls.vcf'
+    #cmd_GATK = 'bcftools merge varscan_filtered.vcf mutect_filtered.vcf strelka_filtered.vcf somaticsniper_filtered.vcf -O=combined_calls.vcf'
     exec_command(cmd_GATK)
 
     # Run annovar to annotate variants
