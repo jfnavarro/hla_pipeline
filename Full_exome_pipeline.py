@@ -315,10 +315,13 @@ def Full_exome_pipeline(sample1,
 
     # Run annovar to annotate variants
     print('Running annovar')
-    cmd1 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_calls.vcf --withzyg -outfile snp.av'
+    # Make sure the format is hg19 for Annovar
+    cmd1 = 'sed \'s/^/chr/\' combined_calls.vcf | sed \'s/^chr#/#/\' | sed \'s/chrMT/chrM/\' > combined_calls.vcf'
     exec_command(cmd1)
-    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' snp.av ' + annovar_db + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
+    cmd2 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_calls.vcf --withzyg -outfile snp.av'
     exec_command(cmd2)
+    cmd3 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' snp.av ' + annovar_db + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
+    exec_command(cmd3)
 
     # Extract coverage info from vcf file and add to annotation data
     print("Extracting coverage from combined VCF")
@@ -566,7 +569,6 @@ def Full_exome_pipeline(sample1,
 
     # Generate final sheet with coverage
     print("Formatting coverage and generating final sheet")
-    # This must be generated somewhere, probably annovar
     nonsyn_snv = open('snp.sum.hg19_multianno.txt')
     nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
     all_file = open('all_other_mutations.txt', 'w')
@@ -915,19 +917,21 @@ def Full_exome_pipeline(sample1,
 
     # Combine with GATK
     print('Combining indels variants')
-    cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered_indel.vcf ' + \
-               '-V:strelka strelka_indel_filtered.vcf -o combined_indel_calls.vcf -genotypeMergeOptions UNIQUIFY'
-    p_GATK = subprocess.Popen(cmd_GATK, shell=True)
-    p_GATK.wait()
+    #cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered_indel.vcf ' + \
+    #           '-V:strelka strelka_indel_filtered.vcf -o combined_indel_calls.vcf -genotypeMergeOptions UNIQUIFY'
+    cmd_GATK = PICARD + ' MergeVcfs I=varscan_filtered_indel.vcf I=strelka_indel_filtered.vcf O=combined_indel_calls.vcf'
+    #cmd_GATK = 'bcftools merge varscan_filtered_indel.vcf strelka_indel_filtered.vcf -O=combined_indel_calls.vcf'
+    exec_command(cmd_GATK)
 
     # Annotate with Annovar
     print('Annotating combined indels with annovar')
-    cmd1 = '$ANNOVAR_PATH/convert2annovar.pl -format vcf4old combined_indel_calls.vcf --withzyg -outfile indel.av'
-    cmd2 = '$ANNOVAR_PATH/table_annovar.pl indel.av ' + annovar_db + ' -out indel.sum -remove -protocol ' + annovar_anno
-    p1 = subprocess.Popen(cmd1, shell=True)
-    p1.wait()
-    p2 = subprocess.Popen(cmd2, shell=True)
-    p2.wait()
+    # Make sure the format is hg19 for Annovar
+    cmd1 = 'sed \'s/^/chr/\' combined_indel_calls.vcf | sed \'s/^chr#/#/\' | sed \'s/chrMT/chrM/\' > combined_indel_calls.vcf'
+    exec_command(cmd1)
+    cmd2 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_indel_calls.vcf --withzyg -outfile indel.av'
+    exec_command(cmd2)
+    cmd3 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' indel.av ' + annovar_db + ' -out indel.sum' + ' -remove -protocol ' + annovar_anno
+    exec_command(cmd3)
 
     # Extract coverage info from vcf file
     print("Extracting coverage info")
@@ -1047,7 +1051,6 @@ def Full_exome_pipeline(sample1,
     vcf.close()
 
     # Generate final coverage sheet
-    # THIS must be generated somwhere, perhaps annovar
     nonsyn_snv = open('indel.sum.hg19_multianno.txt')
     nonsyn_file = open('nonsyn_SQL_insert.txt', 'a')
     all_file = open('all_other_mutations.txt', 'a')
