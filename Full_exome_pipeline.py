@@ -120,7 +120,7 @@ def Full_exome_pipeline(sample1,
 
     # Variant calling VarScan
     cmd_varscan = VARSCAN + ' somatic ' + os.path.join(PILEUP_DIR, 'sample2.pileup') + \
-                  ' ' + os.path.join(PILEUP_DIR, 'sample1.pileup') + ' . ' + \
+                  ' ' + os.path.join(PILEUP_DIR, 'sample1.pileup') + ' varscan ' + \
                   '--tumor-purity .5 --output-vcf 1 --min-coverage 4 --min-var-freq .05 --strand-filter 0'
     exec_command(cmd_varscan)
     print('Done calling with Varscan, Mutect2, SomaticSniper & Strelka.')
@@ -134,18 +134,20 @@ def Full_exome_pipeline(sample1,
             filtered_vcf.write(line)
         elif line.startswith('#CHROM'):
             headers = line.strip().split('\t')
-            Tmut = headers.index("sample1")
-            Nmut = headers.index("sample2")
+            Tmut = headers.index(sample1_ID)
+            Nmut = headers.index(sample2_ID)
             filtered_vcf.write(line)
         elif not line.startswith('#'):
             columns = line.strip().split('\t')
             Filter = columns[6]
             if re.search('PASS', Filter):
-                normal_coverage = int(line.split('\t')[Nmut].split(':')[1].split(',')[0]) + int(line.split('\t')[Nmut].split(':')[1].split(',')[1])
-                tumor_coverage = int(line.split('\t')[Tmut].split(':')[1].split(',')[0]) + int(line.split('\t')[Tmut].split(':')[1].split(',')[1])
-                tumor_var_depth = int(line.split('\t')[Tmut].split(':')[1].split(',')[1])
-                tumor_var_freq = float(float(line.split('\t')[Tmut].split(':')[4]) * 100)
-                normal_var_freq = float(float(line.split('\t')[Nmut].split(':')[4]) * 100)
+                n_split = columns[Nmut].split(':')[1].split(',')
+                t_split = columns[Tmut].split(':')[1].split(',')
+                normal_coverage = int(n_split[0]) + int(n_split[1])
+                tumor_coverage = int(t_split[0]) + int(t_split[1])
+                tumor_var_depth = int(columns[Tmut].split(':')[1].split(',')[1])
+                tumor_var_freq = float(float(columns[Tmut].split(':')[4]) * 100)
+                normal_var_freq = float(float(columns[Nmut].split(':')[4]) * 100)
                 if normal_var_freq != 0:
                     t2n_ratio = float(tumor_var_freq) / float(normal_var_freq)
                 else:
@@ -158,7 +160,7 @@ def Full_exome_pipeline(sample1,
     # Filtering Strelka snv calls and adding GT information
     print("Filtering Strelka SNV")
     filtered_vcf = open('strelka_filtered.vcf', 'w')
-    vcf = open('Strelka_output/results/passed.somatic.snvs.vcf')
+    vcf = open('Strelka_output/results/variants/somatic.snvs.vcf.gz')
     for line in vcf:
         if line.startswith('#') and not re.search('##FORMAT=<ID=DP,', line) and not line.startswith('#CHROM'):
             filtered_vcf.write(line)
@@ -176,23 +178,25 @@ def Full_exome_pipeline(sample1,
             Filter = columns[6]
             INFO = columns[7]
             Format = columns[8]
-            Normal = columns[9]
-            Tumor = columns[10]
+            Normal = columns[Nst]
+            Tumor = columns[Tst]
             if re.search('PASS', Filter):
+                n_split = Normal.split(':')
+                t_split = Tumor.split(':')
                 if alt == 'A':
-                    normal_variant_depth = int(line.split('\t')[Nst].split(':')[4].split(',')[0])
-                    tumor_variant_depth = int(line.split('\t')[Tst].split(':')[4].split(',')[0])
+                    normal_variant_depth = int(n_split[4].split(',')[0])
+                    tumor_variant_depth = int(t_split[4].split(',')[0])
                 elif alt == 'C':
-                    normal_variant_depth = int(line.split('\t')[Nst].split(':')[5].split(',')[0])
-                    tumor_variant_depth = int(line.split('\t')[Tst].split(':')[5].split(',')[0])
+                    normal_variant_depth = int(n_split[5].split(',')[0])
+                    tumor_variant_depth = int(t_split[5].split(',')[0])
                 elif alt == 'G':
-                    normal_variant_depth = int(line.split('\t')[Nst].split(':')[6].split(',')[0])
-                    tumor_variant_depth = int(line.split('\t')[Tst].split(':')[6].split(',')[0])
+                    normal_variant_depth = int(n_split[6].split(',')[0])
+                    tumor_variant_depth = int(t_split[6].split(',')[0])
                 elif alt == 'T':
-                    normal_variant_depth = int(line.split('\t')[Nst].split(':')[7].split(',')[0])
-                    tumor_variant_depth = int(line.split('\t')[Tst].split(':')[7].split(',')[0])
-                n_cov = int(line.split('\t')[Nst].split(':')[0])
-                t_cov = int(line.split('\t')[Tst].split(':')[0])
+                    normal_variant_depth = int(n_split[7].split(',')[0])
+                    tumor_variant_depth = int(t_split[7].split(',')[0])
+                n_cov = int(n_split[0])
+                t_cov = int(t_split[0])
                 T_freq = float((tumor_variant_depth / t_cov) * 100)
                 if normal_variant_depth != 0:
                     N_freq = float(normal_variant_depth / n_cov)
@@ -253,11 +257,14 @@ def Full_exome_pipeline(sample1,
             Nss = headers.index('NORMAL')
             filtered_vcf.write(line)
         elif not line.startswith('#'):
-            normal_coverage = int(line.split('\t')[Nss].split(':')[2])
-            tumor_coverage = int(line.split('\t')[Tss].split(':')[2])
-            somatic_status = int(line.split('\t')[Tss].split(':')[11])
-            variant_count = int(line.split('\t')[Tss].split(':')[3].split(',')[2]) + int(line.split('\t')[Tss].split(':')[3].split(',')[3])
-            normal_variant_count = int(line.split('\t')[Nss].split(':')[3].split(',')[2]) + int(line.split('\t')[Nss].split(':')[3].split(',')[3])
+            columns = line.strip().split('\t')
+            n_split = columns[Nss].split(':')
+            t_split = columns[Tss].split(':')
+            normal_coverage = int(n_split[2])
+            tumor_coverage = int(t_split[2])
+            somatic_status = int(t_split[11])
+            variant_count = int(t_split[3].split(',')[2]) + int(t_split[3].split(',')[3])
+            normal_variant_count = int(n_split[3].split(',')[2]) + int(n_split[3].split(',')[3])
             Tumor_variant_freq = float((variant_count / tumor_coverage) * 100)
             if normal_variant_count != 0:
                 normal_freq = float((normal_variant_count / normal_coverage) * 100)
@@ -271,10 +278,9 @@ def Full_exome_pipeline(sample1,
     filtered_vcf.close()
 
     # Filter Varscan SNV calls
-    #########################################################'
     print("Filering Varscan SNV")
     filtered_vcf = open('varscan_filtered.vcf', 'w')
-    vcf = open('snp.vcf')
+    vcf = open('varscan.snp')
     for line in vcf:
         if line.startswith('#') and re.search(r'DP4', line):
             new_DP4 = line.replace(
@@ -289,14 +295,16 @@ def Full_exome_pipeline(sample1,
             Nvs = headers.index('NORMAL')
             filtered_vcf.write(line)
         elif re.search(r'SOMATIC', line, re.IGNORECASE):
-            normal_coverage = int(line.split('\t')[Nvs].split(':')[2])
-            tumor_coverage = int(line.split('\t')[Tvs].split(':')[2])
-            tumor_var_depth = int(line.split('\t')[Tvs].split(':')[4])
-            tumor_var_freq = float(line.split('\t')[Tvs].split(':')[5].replace('%', ''))
-            normal_var_freq = float(line.split('\t')[Nvs].split(':')[5].replace('%', ''))
-            p_value = float(line.split('\t')[7].split(';')[-1].replace('SPV=', ''))
-            if float(line.split('\t')[Nvs].split(':')[5].replace('%', '')) != 0:
-                t2n_ratio = float(line.split('\t')[Tvs].split(':')[5].replace('%', '')) / float(line.split('\t')[Nvs].split(':')[5].replace('%', ''))
+            columns = line.strip().split('\t')
+            n_split = columns[Nvs].split(':')
+            t_split = columns[Tvs].split(':')
+            normal_coverage = int(n_split[2])
+            tumor_coverage = int(t_split[2])
+            tumor_var_depth = int(t_split[4])
+            tumor_var_freq = float(t_split[5].replace('%', ''))
+            normal_var_freq = float(n_split[5].replace('%', ''))
+            if normal_var_freq != 0:
+                t2n_ratio = tumor_var_freq / normal_var_freq
             else:
                 t2n_ratio = 5
             if normal_coverage >= 10 and tumor_coverage >= 10 and tumor_var_depth >= 3 and t2n_ratio >= 5 and tumor_var_freq >= 2.5:
@@ -833,7 +841,7 @@ def Full_exome_pipeline(sample1,
     # Search for Indels now
     print("Filtering Strelka indels")
     filtered_vcf = open('strelka_indel_filtered.vcf', 'w')
-    vcf = open('Strelka_output/results/passed.somatic.indels.vcf')
+    vcf = open('Strelka_output/results/variants/somatic.indels.vcf.gz')
     for line in vcf:
         if line.startswith('#') and not re.search('##FORMAT=<ID=DP,', line) and not line.startswith('#CHROM'):
             filtered_vcf.write(line)
@@ -885,7 +893,7 @@ def Full_exome_pipeline(sample1,
     # Filter Varscan for Indels
     print("Filtering Varscan indels")
     filtered_vcf = open('varscan_filtered_indel.vcf', 'w')
-    vcf = open('indel.vcf')
+    vcf = open('varscan.indel')
     for line in vcf:
         if line.startswith('#') and re.search(r'DP4', line):
             new_DP4 = line.replace(

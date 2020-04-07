@@ -23,7 +23,7 @@ parser.add_argument('--sample',
 parser.add_argument('--tumor',
                     help='Tumor type. Default is NA', default='NA')
 parser.add_argument('--dir',
-                    help='Path to the output file', required=True)
+                    help='Path to the output files', required=True)
 parser.add_argument('--known1',
                     help='Path to the file with Mill and 1000G gold standards (GATK bundle)', required=True)
 parser.add_argument('--known2',
@@ -62,6 +62,7 @@ BWA = 'bwa mem'
 
 # Move to output dir
 if os.path.isdir(os.path.abspath(DIR)):
+    print("Output dir already exists, removing it...")
     shutil.rmtree(os.path.abspath(DIR), ignore_errors=True)
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
