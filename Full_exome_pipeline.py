@@ -283,7 +283,7 @@ def Full_exome_pipeline(sample1,
         if line.startswith('#') and re.search(r'DP4', line):
             # Ugly hack so CombinaVariants works
             new_DP4 = line.replace(
-                'ID=DP4,Number=1,Type=String,Description="Strand read counts: ref/fwd, ref/rev, var/fwd, var/rev',
+                'ID=DP4,Number=1,Type=String,Description="Strand read counts: ref/fwd, ref/rev, var/fwd, var/rev"',
                 'ID=DP4,Number=4,Type=Integer,Description="# high-quality ref-forward bases, ref-reverse, alt-forward and alt-reverse bases"')
             filtered_vcf.write(new_DP4)
         elif line.startswith('#') and not line.startswith('#CHROM'):
@@ -786,7 +786,7 @@ def Full_exome_pipeline(sample1,
     for line in vcf:
         if line.startswith('#') and re.search(r'DP4', line):
             new_DP4 = line.replace(
-                'ID=DP4,Number=1,Type=String,Description="Strand read counts: ref/fwd, ref/rev, var/fwd, var/rev',
+                'ID=DP4,Number=1,Type=String,Description="Strand read counts: ref/fwd, ref/rev, var/fwd, var/rev"',
                 'ID=DP4,Number=4,Type=Integer,Description="# high-quality ref-forward bases, ref-reverse, alt-forward and alt-reverse bases"')
             filtered_vcf.write(new_DP4)
         elif line.startswith('#') and not re.search(r'DP4', line) and not line.startswith('#CHROM'):
