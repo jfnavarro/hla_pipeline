@@ -327,7 +327,7 @@ def Full_exome_pipeline(sample1,
     #TODO ensure GHRC37 works with annovar (hg19)
     cmd1 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'
     exec_command(cmd1)
-    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' snp.av ' + annovar_db + ' -thread ' + str(THREADS) + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
+    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' snp.av ' + annovar_db + ' -thread ' + str(THREADS) + ' -out snp.sum -remove -protocol ' + annovar_anno
     exec_command(cmd2)
 
     # Extract coverage info from vcf file and add to annotation data
@@ -830,7 +830,7 @@ def Full_exome_pipeline(sample1,
     exec_command(cmd1)
     cmd1 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_indel_calls.vcf --withzyg --comment --includeinfo -outfile indel.av'
     exec_command(cmd1)
-    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' indel.av ' + annovar_db + ' -thread ' + str(THREADS) + ' -out indel.sum' + ' -remove -protocol ' + annovar_anno
+    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' indel.av ' + annovar_db + ' -thread ' + str(THREADS) + ' -out indel.sum -remove -protocol ' + annovar_anno
     exec_command(cmd2)
 
     # Extract coverage info from vcf file
