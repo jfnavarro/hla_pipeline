@@ -3,6 +3,7 @@ import subprocess
 import pandas as pd
 import re
 import datetime
+import gzip
 from re import sub
 from common import *
 
@@ -148,12 +149,13 @@ def Full_exome_pipeline(sample1,
                 tumor_coverage = int(t_split[0]) + int(t_split[1])
                 tumor_var_depth = int(t_split[1])
                 # AF variable
-                tumor_var_freq = float(float(columns[Tmut].split(':')[3]) * 100)
-                normal_var_freq = float(float(columns[Nmut].split(':')[3]) * 100)
+                tumor_var_freq = float(float(columns[Tmut].split(':')[2]) * 100)
+                normal_var_freq = float(float(columns[Nmut].split(':')[2]) * 100)
                 if normal_var_freq != 0:
                     t2n_ratio = float(tumor_var_freq) / float(normal_var_freq)
                 else:
                     t2n_ratio = 5
+                #NOTE this filter seems to too strict with Mutect2 (where variants are already filtered)
                 if normal_coverage >= 10 and tumor_coverage >= 10 and tumor_var_freq >= 2.5 and tumor_var_depth >= 3 and t2n_ratio >= 5:
                     filtered_vcf.write(line)
     filtered_vcf.close()
@@ -161,8 +163,9 @@ def Full_exome_pipeline(sample1,
 
     # Filtering Strelka snv calls and adding GT information
     print("Filtering Strelka SNV")
+    alt_index = {'A': 4, 'C': 5, 'G': 6, 'T': 7}
     filtered_vcf = open('strelka_filtered.vcf', 'w')
-    vcf = open('Strelka_output/results/variants/somatic.snvs.vcf.gz')
+    vcf = gzip.open('Strelka_output/results/variants/somatic.snvs.vcf.gz', 'rt')
     for line in vcf:
         if line.startswith('#') and not re.search('##FORMAT=<ID=DP,', line) and not line.startswith('#CHROM'):
             filtered_vcf.write(line)
@@ -185,21 +188,12 @@ def Full_exome_pipeline(sample1,
             if re.search('PASS', Filter):
                 n_split = Normal.split(':')
                 t_split = Tumor.split(':')
-                if alt == 'A':
-                    normal_variant_depth = int(n_split[4].split(',')[0])
-                    tumor_variant_depth = int(t_split[4].split(',')[0])
-                elif alt == 'C':
-                    normal_variant_depth = int(n_split[5].split(',')[0])
-                    tumor_variant_depth = int(t_split[5].split(',')[0])
-                elif alt == 'G':
-                    normal_variant_depth = int(n_split[6].split(',')[0])
-                    tumor_variant_depth = int(t_split[6].split(',')[0])
-                elif alt == 'T':
-                    normal_variant_depth = int(n_split[7].split(',')[0])
-                    tumor_variant_depth = int(t_split[7].split(',')[0])
+                normal_variant_depth = int(n_split[alt_index[alt]].split(',')[0])
+                tumor_variant_depth = int(t_split[alt_index[alt]].split(',')[0])
                 n_cov = int(n_split[0])
                 t_cov = int(t_split[0])
                 T_freq = float((tumor_variant_depth / t_cov) * 100)
+                # NOTE too strict filters
                 # Authors of Strelka recommend to compute allele frequency like this:
                 # refCounts = Value of FORMAT column $REF + “U” (e.g. if REF="A" then use the value in FOMRAT/AU)
                 # altCounts = Value of FORMAT column $ALT + “U” (e.g. if ALT="T" then use the value in FOMRAT/TU)
@@ -286,35 +280,31 @@ def Full_exome_pipeline(sample1,
     filtered_vcf = open('varscan_filtered.vcf', 'w')
     vcf = open('varscan.snp.vcf')
     for line in vcf:
-        if line.startswith('#') and re.search(r'DP4', line):
-            new_DP4 = line.replace(
-                'ID=DP4,Number=1,Type=String,Description="Strand read counts: ref/fwd, ref/rev, var/fwd, var/rev',
-                'ID=DP4,Number=4,Type=Integer,Description="# high-quality ref-forward bases, ref-reverse, alt-forward and alt-reverse bases"')
-            filtered_vcf.write(new_DP4)
-        elif line.startswith('#') and not re.search(r'DP4', line) and not line.startswith('#CHROM'):
+        if line.startswith('#') and not line.startswith('#CHROM'):
             filtered_vcf.write(line)
         elif line.startswith('#CHROM'):
             headers = line.strip().split('\t')
             Tvs = headers.index('TUMOR')
             Nvs = headers.index('NORMAL')
+            filtered_vcf.write(line)
+        elif not line.startswith('#'):
+            columns = line.strip().split('\t')
             Filter = columns[6]
             INFO = columns[7]
-            filtered_vcf.write(line)
-        elif re.search(r'SOMATIC', INFO, re.IGNORECASE) and re.search('PASS', Filter):
-            columns = line.strip().split('\t')
-            n_split = columns[Nvs].split(':')
-            t_split = columns[Tvs].split(':')
-            normal_coverage = int(n_split[2])
-            tumor_coverage = int(t_split[2])
-            tumor_var_depth = int(t_split[4])
-            tumor_var_freq = float(t_split[5].replace('%', ''))
-            normal_var_freq = float(n_split[5].replace('%', ''))
-            if normal_var_freq != 0:
-                t2n_ratio = tumor_var_freq / normal_var_freq
-            else:
-                t2n_ratio = 5
-            if normal_coverage >= 10 and tumor_coverage >= 10 and tumor_var_depth >= 3 and t2n_ratio >= 5 and tumor_var_freq >= 2.5:
-                filtered_vcf.write(line)
+            if re.search(r'SOMATIC', INFO) and re.search('PASS', Filter):
+                n_split = columns[Nvs].split(':')
+                t_split = columns[Tvs].split(':')
+                normal_coverage = int(n_split[2])
+                tumor_coverage = int(t_split[2])
+                tumor_var_depth = int(t_split[4])
+                tumor_var_freq = float(t_split[5].replace('%', ''))
+                normal_var_freq = float(n_split[5].replace('%', ''))
+                if normal_var_freq != 0:
+                    t2n_ratio = tumor_var_freq / normal_var_freq
+                else:
+                    t2n_ratio = 5
+                if normal_coverage >= 10 and tumor_coverage >= 10 and tumor_var_depth >= 3 and t2n_ratio >= 5 and tumor_var_freq >= 2.5:
+                    filtered_vcf.write(line)
     vcf.close()
     filtered_vcf.close()
 
@@ -735,7 +725,7 @@ def Full_exome_pipeline(sample1,
     # Search for Indels now
     print("Filtering Strelka indels")
     filtered_vcf = open('strelka_indel_filtered.vcf', 'w')
-    vcf = open('Strelka_output/results/variants/somatic.indels.vcf.gz')
+    vcf = gzip.open('Strelka_output/results/variants/somatic.indels.vcf.gz', 'rt')
     for line in vcf:
         if line.startswith('#') and not re.search('##FORMAT=<ID=DP,', line) and not line.startswith('#CHROM'):
             filtered_vcf.write(line)
