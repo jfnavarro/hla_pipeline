@@ -323,13 +323,11 @@ def Full_exome_pipeline(sample1,
 
     # Run annovar to annotate variants
     print('Running annovar')
-    # Make sure the format is hg19 for Annovar
-    cmd1 = 'sed \'s/^/chr/\' combined_calls.vcf | sed \'s/^chr#/#/\' | sed \'s/chrMT/chrM/\' > combined_calls.vcf'
+    #TODO ensure GHRC37 works with annovar (hg19)
+    cmd1 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'
     exec_command(cmd1)
-    cmd2 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_calls.vcf --withzyg -outfile snp.av'
+    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' snp.av ' + annovar_db + ' -thread ' + THREADS + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
     exec_command(cmd2)
-    cmd3 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' snp.av ' + annovar_db + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
-    exec_command(cmd3)
 
     # Extract coverage info from vcf file and add to annotation data
     print("Extracting coverage from combined VCF")
@@ -524,8 +522,7 @@ def Full_exome_pipeline(sample1,
     date_trunc = datetime.datetime.now().date()
     first_line = True
     for line in nonsyn_snv:
-        if first_line:
-            first_line = False
+        if line.startswith('#') or line.startswith("Chr"):
             continue
         columns = line.strip().split('\t')
         Chr = columns[0]
@@ -748,22 +745,27 @@ def Full_exome_pipeline(sample1,
             Filter = columns[6]
             INFO = columns[7]
             Format = columns[8]
-            Normal = columns[9]
-            Tumor = columns[10]
+            Normal = columns[Nst]
+            Tumor = columns[Tst]
             if re.search('PASS', Filter):
-                normal_variant_depth = int(line.split('\t')[Nst].split(':')[3].split(',')[1])
-                tumor_variant_depth = int(line.split('\t')[Tst].split(':')[3].split(',')[1])
-                n_cov = int(line.split('\t')[Nst].split(':')[0])
-                t_cov = int(line.split('\t')[Tst].split(':')[0])
+                n_split = columns[Nst].split(':')
+                t_split = columns[Tst].split(':')
+                normal_variant_depth = int(n_split[3].split(',')[1])
+                tumor_variant_depth = int(t_split[3].split(',')[1])
+                n_cov = int(n_split[0])
+                t_cov = int(t_split[0])
                 T_freq = float((tumor_variant_depth / t_cov) * 100)
+                # Authors of Strelka recommend to compute allele frequency like this:
+                # refCounts = Value of FORMAT column $REF + “U” (e.g. if REF="A" then use the value in FOMRAT/AU)
+                # altCounts = Value of FORMAT column $ALT + “U” (e.g. if ALT="T" then use the value in FOMRAT/TU)
+                # tier1RefCounts = First comma-delimited value from $refCounts
+                # tier1AltCounts = First comma-delimited value from $altCounts
+                # Somatic allele frequency is $tier1AltCounts / ($tier1AltCounts + $tier1RefCounts)
                 if normal_variant_depth != 0:
                     N_freq = float(normal_variant_depth / n_cov)
-                else:
-                    N_freq = 0
-                if N_freq == 0:
-                    t2n_ratio = 5
-                else:
                     t2n_ratio = T_freq / N_freq
+                else:
+                    t2n_ratio = 5
                 if n_cov >= 10 and t_cov >= 10 and tumor_variant_depth >= 3 and T_freq >= 5 and t2n_ratio >= 5:
                     Format = 'GT:' + Format
                     INFO_split = INFO.split(';')
@@ -774,7 +776,8 @@ def Full_exome_pipeline(sample1,
                         Tumor_GT = '0/1'
                     else:
                         Tumor_GT = '1/1'
-                    filtered_vcf.write(str('\t'.join(columns[0:8])) + '\t' + Format + '\t' + Normal_GT + ':' + Normal + '\t' + Tumor_GT + ':' + Tumor + '\n')
+                    filtered_vcf.write(str('\t'.join(columns[
+                                                     0:8])) + '\t' + Format + '\t' + Normal_GT + ':' + Normal + '\t' + Tumor_GT + ':' + Tumor + '\n')
     vcf.close()
     filtered_vcf.close()
 
@@ -795,19 +798,24 @@ def Full_exome_pipeline(sample1,
             Tvs = headers.index('TUMOR')
             Nvs = headers.index('NORMAL')
             filtered_vcf.write(line)
-        elif re.search(r'SOMATIC', line, re.IGNORECASE):
-            normal_coverage = int(line.split('\t')[Nvs].split(':')[2])
-            tumor_coverage = int(line.split('\t')[Tvs].split(':')[2])
-            tumor_var_depth = int(line.split('\t')[Tvs].split(':')[4])
-            tumor_var_freq = float(line.split('\t')[Tvs].split(':')[5].replace('%', ''))
-            normal_var_freq = float(line.split('\t')[Nvs].split(':')[5].replace('%', ''))
-            p_value = float(line.split('\t')[7].split(';')[-1].replace('SPV=', ''))
-            if float(line.split('\t')[Nvs].split(':')[5].replace('%', '')) != 0:
-                t2n_ratio = float(line.split('\t')[Tvs].split(':')[5].replace('%', '')) / float(line.split('\t')[Nvs].split(':')[5].replace('%', ''))
-            else:
-                t2n_ratio = 5
-            if normal_coverage >= 10 and tumor_coverage >= 10 and tumor_var_depth >= 3 and t2n_ratio >= 5 and tumor_var_freq >= 2.5:
-                filtered_vcf.write(line)
+        elif not line.startswith('#'):
+            columns = line.strip().split('\t')
+            Filter = columns[6]
+            INFO = columns[7]
+            if re.search(r'SOMATIC', INFO) and re.search('PASS', Filter):
+                n_split = columns[Nvs].split(':')
+                t_split = columns[Tvs].split(':')
+                normal_coverage = int(n_split[2])
+                tumor_coverage = int(t_split[2])
+                tumor_var_depth = int(t_split[4])
+                tumor_var_freq = float(t_split[5].replace('%', ''))
+                normal_var_freq = float(n_split[5].replace('%', ''))
+                if normal_var_freq != 0:
+                    t2n_ratio = tumor_var_freq / normal_var_freq
+                else:
+                    t2n_ratio = 5
+                if normal_coverage >= 10 and tumor_coverage >= 10 and tumor_var_depth >= 3 and t2n_ratio >= 5 and tumor_var_freq >= 2.5:
+                    filtered_vcf.write(line)
     vcf.close()
     filtered_vcf.close()
 
@@ -820,13 +828,12 @@ def Full_exome_pipeline(sample1,
 
     # Annotate with Annovar
     print('Annotating combined indels with annovar')
-    # Make sure the format is hg19 for Annovar
-    cmd1 = 'sed \'s/^/chr/\' combined_indel_calls.vcf | sed \'s/^chr#/#/\' | sed \'s/chrMT/chrM/\' > combined_indel_calls.vcf'
+    #TODO make sure that GRHC37 genomes work with annovar (hg19)
     exec_command(cmd1)
-    cmd2 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_indel_calls.vcf --withzyg -outfile indel.av'
+    cmd1 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_indel_calls.vcf --withzyg --comment --includeinfo -outfile indel.av'
+    exec_command(cmd1)
+    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' indel.av ' + annovar_db + ' -thread ' + THREADS + ' -out indel.sum' + ' -remove -protocol ' + annovar_anno
     exec_command(cmd2)
-    cmd3 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' indel.av ' + annovar_db + ' -out indel.sum' + ' -remove -protocol ' + annovar_anno
-    exec_command(cmd3)
 
     # Extract coverage info from vcf file
     print("Extracting coverage info")

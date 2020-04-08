@@ -14,8 +14,8 @@ SAMTOOLS = 'samtools'
 
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
-annovar_db = 'humandb -buildver hg19'
-annovar_anno = 'refGene,knownGene,ensGene,snp138NonFlagged,1000g2012apr_all,1000g2012apr_eur,1000g2012apr_amr,1000g2012apr_asn,1000g2012apr_afr,cosmic70 -operation g,g,g,f,f,f,f,f,f,f -nastring NA'
+annovar_db = os.path.join(ANNOVAR_PATH, 'humandb') + ' -buildver hg19'
+annovar_anno = 'refGene,knownGene,ensGene,snp138NonFlagged,ALL.sites.2015_08,EUR.sites.2015_08,AMR.sites.2015_08,EAS.sites.2015_08,AFR.sites.2015_08,cosmic70 -operation g,g,g,f,f,f,f,f,f,f -nastring NA'
 
 MRN = "MRN"
 SEQ_CENTER = "VHIO"

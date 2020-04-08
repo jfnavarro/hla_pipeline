@@ -30,6 +30,14 @@ export STRELKA_PATH=~/shared/strelka
 wget http://www.openbioinformatics.org/annovar/download/0wgxR2rIVP/annovar.latest.tar.gz
 tar -xvf annovar.latest.tar.gz
 mv annovar.latest ~/shared/annovar
+cd ~/shared/annovar
+./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar knownGene humandb/
+./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar ensGene humandb/
+./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar snp138NonFlagged humandb/
+./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar 1000g2015aug humandb/
+./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar cosmic70 humandb/
+wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/kgXref.txt.gz humandb/hg19_kgXref.txt.gz
+gunzip humandb/hg19_kgXref.txt.gz
 export ANNOVAR_PATH=~/shared/annovar
 
 cd ~/shared/
