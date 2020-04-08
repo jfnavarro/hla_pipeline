@@ -61,4 +61,6 @@ bwa index human_g1k_v37_decoy.fasta.gz
 cd ~/Alena/
 git clone hla_pipeline
 cp hla_pipeline/shared/* ~/shared/
-cp hla_pipeline/configureStrelkaSomaticWorkflow.py.ini ~/shared/strelka/bin/
+# un-comment this to over-write Strelka´s settings with Jared´s ones
+#cp hla_pipeline/configureStrelkaSomaticWorkflow.py.ini ~/shared/strelka/bin/
+export GATK3=~/shared/gatk3-8.jar

@@ -4,6 +4,7 @@ import sys
 
 PICARD = 'picard'
 GATK = 'gatk'
+GATK3 = 'java -jar ' + os.path.join(os.environ['GATK3_PATH'])
 VARSCAN = 'varscan'
 STRELKA = os.path.join(os.environ['STRELKA_PATH'], 'bin', 'configureStrelkaSomaticWorkflow.py')
 SAMTOOLS = 'samtools'

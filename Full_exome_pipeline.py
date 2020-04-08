@@ -155,7 +155,7 @@ def Full_exome_pipeline(sample1,
                     t2n_ratio = float(tumor_var_freq) / float(normal_var_freq)
                 else:
                     t2n_ratio = 5
-                #NOTE this filter seems to too strict with Mutect2 (where variants are already filtered)
+                # NOTE this filter seems to too strict with Mutect2 (where variants are already filtered)
                 if normal_coverage >= 10 and tumor_coverage >= 10 and tumor_var_freq >= 2.5 and tumor_var_depth >= 3 and t2n_ratio >= 5:
                     filtered_vcf.write(line)
     filtered_vcf.close()
@@ -280,7 +280,13 @@ def Full_exome_pipeline(sample1,
     filtered_vcf = open('varscan_filtered.vcf', 'w')
     vcf = open('varscan.snp.vcf')
     for line in vcf:
-        if line.startswith('#') and not line.startswith('#CHROM'):
+        if line.startswith('#') and re.search(r'DP4', line):
+            # Ugly hack so CombinaVariants works
+            new_DP4 = line.replace(
+                'ID=DP4,Number=1,Type=String,Description="Strand read counts: ref/fwd, ref/rev, var/fwd, var/rev',
+                'ID=DP4,Number=4,Type=Integer,Description="# high-quality ref-forward bases, ref-reverse, alt-forward and alt-reverse bases"')
+            filtered_vcf.write(new_DP4)
+        elif line.startswith('#') and not line.startswith('#CHROM'):
             filtered_vcf.write(line)
         elif line.startswith('#CHROM'):
             headers = line.strip().split('\t')
@@ -310,11 +316,9 @@ def Full_exome_pipeline(sample1,
 
     # Use GATK to combine all of the variants from various callers
     print('Combining variants')
-    # CombineVariants is not available in GATK 4
-    #cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf ' \
-	#		   '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf -genotypeMergeOptions UNIQUIFY'
-    cmd_GATK = PICARD + ' MergeVcfs I=varscan_filtered.vcf I=mutect_filtered.vcf I=strelka_filtered.vcf I=somaticsniper_filtered.vcf O=combined_calls.vcf'
-    #cmd_GATK = 'bcftools merge varscan_filtered.vcf mutect_filtered.vcf strelka_filtered.vcf somaticsniper_filtered.vcf -O=combined_calls.vcf'
+    # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
+    cmd_GATK = GATK3 + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf ' \
+			   '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf -genotypeMergeOptions UNIQUIFY'
     exec_command(cmd_GATK)
 
     # Run annovar to annotate variants
@@ -809,10 +813,9 @@ def Full_exome_pipeline(sample1,
 
     # Combine with GATK
     print('Combining indels variants')
-    #cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered_indel.vcf ' + \
-    #           '-V:strelka strelka_indel_filtered.vcf -o combined_indel_calls.vcf -genotypeMergeOptions UNIQUIFY'
-    cmd_GATK = PICARD + ' MergeVcfs I=varscan_filtered_indel.vcf I=strelka_indel_filtered.vcf O=combined_indel_calls.vcf'
-    #cmd_GATK = 'bcftools merge varscan_filtered_indel.vcf strelka_indel_filtered.vcf -O=combined_indel_calls.vcf'
+    # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
+    cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered_indel.vcf ' + \
+               '-V:strelka strelka_indel_filtered.vcf -o combined_indel_calls.vcf -genotypeMergeOptions UNIQUIFY'
     exec_command(cmd_GATK)
 
     # Annotate with Annovar
