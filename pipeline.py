@@ -36,6 +36,8 @@ parser.add_argument('--fastaAA',
                     help='Path to the file with the dictionary of FASTA to AA', required=True)
 parser.add_argument('--fastacDNA',
                     help='Path to the file with the dictionary of FASTA to cDNA', required=True)
+parser.add_argument('--exomes',
+                    help='Path to the BED files containing the target exomes from the library kit', default=None, required=False)
 
 # Parse arguments
 args = parser.parse_args()
@@ -55,6 +57,7 @@ KNOWN_SITE1 = os.path.abspath(args.known1)
 KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
 GERMLINE = os.path.abspath(args.germline)
+INTERVAL = os.path.abspath(args.exomes) if args.exomes else None
 
 # Recommend to install with Anaconda
 TRIPTOMATIC = 'trimmomatic'
@@ -186,7 +189,8 @@ Full_exome_pipeline('aligned_cancer_merged.bam',
                     KNOWN_SITE1,
                     KNOWN_SITE2,
                     SNPSITES,
-                    GERMLINE)
+                    GERMLINE,
+                    INTERVAL)
 #HLA_pipeline(loc, sample1, sample2, THREADS)
 
 

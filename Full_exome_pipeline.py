@@ -45,7 +45,8 @@ def Full_exome_pipeline(sample1,
                         KNOWN_SITE1,
                         KNOWN_SITE2,
                         SNPSITES,
-                        GERMLINE):
+                        GERMLINE,
+                        INTERVAL=None):
     WORKING_DIR = os.path.abspath(os.getcwd())
 
     sample1_ID = sampleID + "_Tumor"
@@ -326,7 +327,7 @@ def Full_exome_pipeline(sample1,
     #TODO ensure GHRC37 works with annovar (hg19)
     cmd1 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'
     exec_command(cmd1)
-    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' snp.av ' + annovar_db + ' -thread ' + THREADS + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
+    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' snp.av ' + annovar_db + ' -thread ' + str(THREADS) + ' -out snp.sum' + ' -remove -protocol ' + annovar_anno
     exec_command(cmd2)
 
     # Extract coverage info from vcf file and add to annotation data
@@ -774,8 +775,7 @@ def Full_exome_pipeline(sample1,
                         Tumor_GT = '0/1'
                     else:
                         Tumor_GT = '1/1'
-                    filtered_vcf.write(str('\t'.join(columns[
-                                                     0:8])) + '\t' + Format + '\t' + Normal_GT + ':' + Normal + '\t' + Tumor_GT + ':' + Tumor + '\n')
+                    filtered_vcf.write(str('\t'.join(columns[0:8])) + '\t' + Format + '\t' + Normal_GT + ':' + Normal + '\t' + Tumor_GT + ':' + Tumor + '\n')
     vcf.close()
     filtered_vcf.close()
 
@@ -830,7 +830,7 @@ def Full_exome_pipeline(sample1,
     exec_command(cmd1)
     cmd1 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_indel_calls.vcf --withzyg --comment --includeinfo -outfile indel.av'
     exec_command(cmd1)
-    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' indel.av ' + annovar_db + ' -thread ' + THREADS + ' -out indel.sum' + ' -remove -protocol ' + annovar_anno
+    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' indel.av ' + annovar_db + ' -thread ' + str(THREADS) + ' -out indel.sum' + ' -remove -protocol ' + annovar_anno
     exec_command(cmd2)
 
     # Extract coverage info from vcf file
@@ -1310,3 +1310,18 @@ def Full_exome_pipeline(sample1,
                                    + '\t' + WT_25mer + '\t' + Mut_25mer + '\t' + str(variant_key) + ' ' + transcriptID + '\n')
     print('Epitopes have been created...')
     input_file.close()
+
+    # Collect the hybridization stats using picards tool CollectHsMetrics
+    if INTERVAL:
+        print("Collecting HS metrics")
+        cmd1 = PICARD + ' CollectHsMetrics I=sample1_final.bam TI=' + INTERVAL \
+               + ' BI=' + INTERVAL + ' R=' + genome + ' O=sample1_target_coverage.txt'
+        exec_command(cmd1)
+        cmd2 = PICARD + ' CollectHsMetrics I=sample2_final.bam TI=' + INTERVAL \
+               + ' BI=' + INTERVAL + ' R=' + genome + ' O=sample2_target_coverage.txt'
+        exec_command(cmd2)
+
+    print("COMPLETED!")
+
+
+
