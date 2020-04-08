@@ -519,8 +519,6 @@ def Full_exome_pipeline(sample1,
     nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
     all_file = open('all_other_mutations.txt', 'w')
     date = datetime.datetime.now().replace(microsecond=0)
-    date_trunc = datetime.datetime.now().date()
-    first_line = True
     for line in nonsyn_snv:
         if line.startswith('#') or line.startswith("Chr"):
             continue
@@ -850,10 +848,17 @@ def Full_exome_pipeline(sample1,
             columns = line.split('\t')
             chrm = columns[0]
             pos = columns[1]
-            ref = columns[3]
-            alt = columns[4]
             info = columns[7]
             DictID = chrm + ':' + pos
+            trfor = '.'
+            trrev = '.'
+            tvfor = '.'
+            tvrev = '.'
+            nrfor = '.'
+            nrrev = '.'
+            nvfor = '.'
+            nvrev = '.'
+            p_val = '.'
             callers = info.strip().split(';')[-1].replace('set=', '')
             if re.search('Intersection', callers) or re.search('varscan', callers):
                 if callers == 'Intersection':
@@ -871,147 +876,116 @@ def Full_exome_pipeline(sample1,
                 form = columns[8].split(':')
                 DP4 = form.index('DP4')
                 Freq = form.index('FREQ')
-                trfor = int(columns[varscanT].split(':')[DP4].split(',')[0])
-                trrev = int(columns[varscanT].split(':')[DP4].split(',')[1])
-                tvfor = int(columns[varscanT].split(':')[DP4].split(',')[2])
-                tvrev = int(columns[varscanT].split(':')[DP4].split(',')[3])
+                t_split = columns[varscanT].split(':')
+                n_split = columns[varscanN].split(':')
+                trfor = int(t_split[DP4].split(',')[0])
+                trrev = int(t_split[DP4].split(',')[1])
+                tvfor = int(t_split[DP4].split(',')[2])
+                tvrev = int(t_split[DP4].split(',')[3])
                 tumor_read1 = trfor + trrev
                 tumor_read2 = tvfor + tvrev
                 tcov = trfor + trrev + tvfor + tvrev
-                tfreq = columns[varscanT].split(':')[Freq]
-                nrfor = int(columns[varscanN].split(':')[DP4].split(',')[0])
-                nrrev = int(columns[varscanN].split(':')[DP4].split(',')[1])
-                nvfor = int(columns[varscanN].split(':')[DP4].split(',')[2])
-                nvrev = int(columns[varscanN].split(':')[DP4].split(',')[3])
+                tfreq = t_split[Freq]
+                nrfor = int(n_split[DP4].split(',')[0])
+                nrrev = int(n_split[DP4].split(',')[1])
+                nvfor = int(n_split[DP4].split(',')[2])
+                nvrev = int(n_split[DP4].split(',')[3])
                 normal_read1 = nrfor + nrrev
                 normal_read2 = nvfor + nvrev
                 ncov = nrfor + nrrev + nvfor + nvrev
-                nfreq = columns[varscanN].split(':')[Freq]
-                vcf_cov_dict[chrm + ':' + pos] = {}
-                vcf_cov_dict[chrm + ':' + pos]['pval'] = p_val
-                vcf_cov_dict[chrm + ':' + pos]['Note'] = str(caller_count) + ':' + callers
-                vcf_cov_dict[chrm + ':' + pos]['trfor'] = trfor
-                vcf_cov_dict[chrm + ':' + pos]['trrev'] = trrev
-                vcf_cov_dict[chrm + ':' + pos]['tvfor'] = tvfor
-                vcf_cov_dict[chrm + ':' + pos]['tvrev'] = tvrev
-                vcf_cov_dict[chrm + ':' + pos]['nrfor'] = nrfor
-                vcf_cov_dict[chrm + ':' + pos]['nrrev'] = nrrev
-                vcf_cov_dict[chrm + ':' + pos]['nvfor'] = nvfor
-                vcf_cov_dict[chrm + ':' + pos]['nvrev'] = nvrev
-                vcf_cov_dict[chrm + ':' + pos]['tumor_read1'] = tumor_read1
-                vcf_cov_dict[chrm + ':' + pos]['tumor_read2'] = tumor_read2
-                vcf_cov_dict[chrm + ':' + pos]['normal_read1'] = normal_read1
-                vcf_cov_dict[chrm + ':' + pos]['normal_read2'] = normal_read2
-                vcf_cov_dict[chrm + ':' + pos]['tumor_coverage'] = tcov
-                vcf_cov_dict[chrm + ':' + pos]['tumor_freq'] = tfreq
-                vcf_cov_dict[chrm + ':' + pos]['normal_coverage'] = ncov
-                vcf_cov_dict[chrm + ':' + pos]['normal_freq'] = nfreq
+                nfreq = n_split[Freq]
             elif re.search('strelka', callers):
                 caller_count = callers.count('-') + 1
                 form = columns[8].split(':')
                 DP = form.index('DP')
                 TIR = form.index('TIR')
-                trfor = '.'
-                trrev = '.'
-                tvfor = '.'
-                tvrev = '.'
-                nrfor = '.'
-                nrrev = '.'
-                nvfor = '.'
-                nvrev = '.'
-                p_val = '.'
-                normal_read2 = int(line.split('\t')[strelkaN].split(':')[TIR].split(',')[1])
-                tumor_read2 = int(line.split('\t')[strelkaT].split(':')[TIR].split(',')[1])
-                n_cov = int(line.split('\t')[strelkaN].split(':')[DP])
-                t_cov = int(line.split('\t')[strelkaT].split(':')[DP])
-                T_freq = float((tumor_read2 / t_cov) * 100)
+                t_split = columns[strelkaT].split(':')
+                n_split = columns[strelkaN].split(':')
+                normal_read2 = int(n_split[TIR].split(',')[1])
+                tumor_read2 = int(t_split[TIR].split(',')[1])
+                n_cov = int(n_split[DP])
+                t_cov = int(t_split[DP])
+                tfreq = float((tumor_read2 / t_cov) * 100)
                 if normal_read2 != 0:
-                    N_freq = float(normal_read2 / n_cov)
+                    nfreq = float(normal_read2 / n_cov)
                 else:
-                    N_freq = 0
+                    nfreq = 0
                 tumor_read1 = t_cov - tumor_read2
                 normal_read1 = n_cov - normal_read2
-                vcf_cov_dict[chrm + ':' + pos] = {}
-                vcf_cov_dict[chrm + ':' + pos]['Note'] = str(caller_count) + ':' + callers
-                vcf_cov_dict[chrm + ':' + pos]['pval'] = '.'
-                vcf_cov_dict[chrm + ':' + pos]['trfor'] = trfor
-                vcf_cov_dict[chrm + ':' + pos]['trrev'] = trrev
-                vcf_cov_dict[chrm + ':' + pos]['tvfor'] = tvfor
-                vcf_cov_dict[chrm + ':' + pos]['tvrev'] = tvrev
-                vcf_cov_dict[chrm + ':' + pos]['nrfor'] = nrfor
-                vcf_cov_dict[chrm + ':' + pos]['nrrev'] = nrrev
-                vcf_cov_dict[chrm + ':' + pos]['nvfor'] = nvfor
-                vcf_cov_dict[chrm + ':' + pos]['nvrev'] = nvrev
-                vcf_cov_dict[chrm + ':' + pos]['tumor_read1'] = tumor_read1
-                vcf_cov_dict[chrm + ':' + pos]['tumor_read2'] = tumor_read2
-                vcf_cov_dict[chrm + ':' + pos]['normal_read1'] = normal_read1
-                vcf_cov_dict[chrm + ':' + pos]['normal_read2'] = normal_read2
-                vcf_cov_dict[chrm + ':' + pos]['tumor_coverage'] = tcov
-                vcf_cov_dict[chrm + ':' + pos]['tumor_freq'] = tfreq
-                vcf_cov_dict[chrm + ':' + pos]['normal_coverage'] = ncov
-                vcf_cov_dict[chrm + ':' + pos]['normal_freq'] = nfreq
+            vcf_cov_dict[DictID] = {}
+            vcf_cov_dict[DictID]['pval'] = p_val
+            vcf_cov_dict[DictID]['Note'] = str(caller_count) + ':' + callers
+            vcf_cov_dict[DictID]['trfor'] = trfor
+            vcf_cov_dict[DictID]['trrev'] = trrev
+            vcf_cov_dict[DictID]['tvfor'] = tvfor
+            vcf_cov_dict[DictID]['tvrev'] = tvrev
+            vcf_cov_dict[DictID]['nrfor'] = nrfor
+            vcf_cov_dict[DictID]['nrrev'] = nrrev
+            vcf_cov_dict[DictID]['nvfor'] = nvfor
+            vcf_cov_dict[DictID]['nvrev'] = nvrev
+            vcf_cov_dict[DictID]['tumor_read1'] = tumor_read1
+            vcf_cov_dict[DictID]['tumor_read2'] = tumor_read2
+            vcf_cov_dict[DictID]['normal_read1'] = normal_read1
+            vcf_cov_dict[DictID]['normal_read2'] = normal_read2
+            vcf_cov_dict[DictID]['tumor_coverage'] = tcov
+            vcf_cov_dict[DictID]['tumor_freq'] = tfreq
+            vcf_cov_dict[DictID]['normal_coverage'] = ncov
+            vcf_cov_dict[DictID]['normal_freq'] = nfreq
     vcf.close()
 
     # Generate final coverage sheet
     nonsyn_snv = open('indel.sum.hg19_multianno.txt')
     nonsyn_file = open('nonsyn_SQL_insert.txt', 'a')
     all_file = open('all_other_mutations.txt', 'a')
-    date_trunc = datetime.datetime.now().date()
-    first_line = True
     for line in nonsyn_snv:
-        if first_line:
-            first_line = False
+        if line.startswith('#') or line.startswith("Chr"):
             continue
         columns = line.strip().split('\t')
-        if (re.search(r'nonsynonymous', columns[8]) or re.search(r'frame', columns[8]) or re.search(r'stop', columns[8]) \
-                or re.search(r'nonsynonymous', columns[13]) or re.search(r'frame', columns[13]) or re.search(r'stop', columns[13]) \
-                or re.search(r'nonsynonymous', columns[18]) or re.search(r'frame', columns[18]) or re.search(r'stop', columns[18])):
-            Chr = columns[0]
-            start = columns[1]
-            end = columns[2]
-            ref = columns[3]
-            alt = columns[4]
-            if re.search('-', alt):
-                ID = Chr + ':' + str(int(start) - 1)
-            else:
-                ID = Chr + ':' + start
-            ref_gene_detail = columns[7]
-            known_gene_detail = columns[12]
-            ens_gene_detail = columns[17]
-            COSMIC = columns[26]
-            mrn = MRN
-            seq_center = SEQ_CENTER
-            gDNA = 'chr' + Chr + ':' + start
-            tumor_type = tumor_type
-            source = SOURCE
-            sample_note = SAMPLE_NOTE
-            variant_key = str(Chr) + ':' + str(start) + '-' + str(end) + ' ' + str(ref) + '>' + str(alt)
-            if ref_gene_detail != 'NA':
-                columns[9] = columns[7]
-            if known_gene_detail != 'NA':
-                columns[14] = columns[12]
-            if ens_gene_detail != 'NA':
-                columns[19] = columns[17]
-            p_val = vcf_cov_dict[ID]['pval']
-            Note = vcf_cov_dict[ID]['Note']
-            trfor = vcf_cov_dict[ID]['trfor']
-            trrev = vcf_cov_dict[ID]['trrev']
-            tvfor = vcf_cov_dict[ID]['tvfor']
-            tvrev = vcf_cov_dict[ID]['tvrev']
-            nrfor = vcf_cov_dict[ID]['nrfor']
-            nrrev = vcf_cov_dict[ID]['nrrev']
-            nvfor = vcf_cov_dict[ID]['nvfor']
-            nvrev = vcf_cov_dict[ID]['nvrev']
-            tumor_read1 = vcf_cov_dict[ID]['tumor_read1']
-            tumor_read2 = vcf_cov_dict[ID]['tumor_read2']
-            normal_read1 = vcf_cov_dict[ID]['normal_read1']
-            normal_read2 = vcf_cov_dict[ID]['normal_read2']
-            tcov = vcf_cov_dict[ID]['tumor_coverage']
-            tfreq = vcf_cov_dict[ID]['tumor_freq']
-            ncov = vcf_cov_dict[ID]['normal_coverage']
-            nfreq = vcf_cov_dict[ID]['normal_freq']
-            nonsyn_file.write(
-                str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str('\t'.join(columns[0:5])) \
+        Chr = columns[0]
+        start = columns[1]
+        end = columns[2]
+        ref = columns[3]
+        alt = columns[4]
+        if re.search('-', alt):
+            ID = Chr + ':' + str(int(start) - 1)
+        else:
+            ID = Chr + ':' + start
+        ref_gene_detail = columns[7]
+        known_gene_detail = columns[12]
+        ens_gene_detail = columns[17]
+        COSMIC = columns[26]
+        mrn = MRN
+        seq_center = SEQ_CENTER
+        gDNA = 'chr' + Chr + ':' + start
+        tumor_type = tumor_type
+        source = SOURCE
+        sample_note = SAMPLE_NOTE
+        variant_key = str(Chr) + ':' + str(start) + '-' + str(end) + ' ' + str(ref) + '>' + str(alt)
+        if ref_gene_detail != 'NA':
+            columns[9] = columns[7]
+        if known_gene_detail != 'NA':
+            columns[14] = columns[12]
+        if ens_gene_detail != 'NA':
+            columns[19] = columns[17]
+        p_val = vcf_cov_dict[ID]['pval']
+        Note = vcf_cov_dict[ID]['Note']
+        trfor = vcf_cov_dict[ID]['trfor']
+        trrev = vcf_cov_dict[ID]['trrev']
+        tvfor = vcf_cov_dict[ID]['tvfor']
+        tvrev = vcf_cov_dict[ID]['tvrev']
+        nrfor = vcf_cov_dict[ID]['nrfor']
+        nrrev = vcf_cov_dict[ID]['nrrev']
+        nvfor = vcf_cov_dict[ID]['nvfor']
+        nvrev = vcf_cov_dict[ID]['nvrev']
+        tumor_read1 = vcf_cov_dict[ID]['tumor_read1']
+        tumor_read2 = vcf_cov_dict[ID]['tumor_read2']
+        normal_read1 = vcf_cov_dict[ID]['normal_read1']
+        normal_read2 = vcf_cov_dict[ID]['normal_read2']
+        tcov = vcf_cov_dict[ID]['tumor_coverage']
+        tfreq = vcf_cov_dict[ID]['tumor_freq']
+        ncov = vcf_cov_dict[ID]['normal_coverage']
+        nfreq = vcf_cov_dict[ID]['normal_freq']
+        str = str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str('\t'.join(columns[0:5])) \
                 + '\t-\t-\t' + str(columns[20]) + '\t' + str(tumor_read1) + '\t' + str(tumor_read2) \
                 + '\t' + str('\t'.join(columns[5:7])) + '\t' + str('\t'.join(columns[8:12])) \
                 + '\t' + str('\t'.join(columns[13:17])) + '\t' + str('\t'.join(columns[18:20])) \
@@ -1022,64 +996,13 @@ def Full_exome_pipeline(sample1,
                 + '\t' + str(Note) + '\t' + str(gDNA) + '\t' + str(tumor_type) + '\t' + str(source) \
                 + '\t' + str(sample_note) + ' ' + str(source) + ' ' + str(seq_center) + '\t' + str(tcov) \
                 + '\t' + str(ncov) + '\t' + str(sample_note) + '\t' + str(variant_key) + '\t' + str(COSMIC) \
-                + '\t' + str(date) + '\t' + RESECTION_DATE + '\t' + RUN_DATE + '\t' + SEQUENCER + '\t' + KIT + '\t' + NOTE + '\t' + INDEX + '\n')
+                + '\t' + str(date) + '\t' + RESECTION_DATE + '\t' + RUN_DATE + '\t' + SEQUENCER + '\t' + KIT + '\t' + NOTE + '\t' + INDEX + '\n'
+        if (re.search(r'nonsynonymous', columns[8]) or re.search(r'frame', columns[8]) or re.search(r'stop', columns[8]) \
+                or re.search(r'nonsynonymous', columns[13]) or re.search(r'frame', columns[13]) or re.search(r'stop', columns[13]) \
+                or re.search(r'nonsynonymous', columns[18]) or re.search(r'frame', columns[18]) or re.search(r'stop', columns[18])):
+            nonsyn_file.write(str)
         else:
-            Chr = columns[0]
-            start = columns[1]
-            end = columns[2]
-            ref = columns[3]
-            alt = columns[4]
-            if re.search('-', alt):
-                ID = Chr + ':' + str(int(start) - 1)
-            else:
-                ID = Chr + ':' + start
-            ref_gene_detail = columns[7]
-            known_gene_detail = columns[12]
-            ens_gene_detail = columns[17]
-            COSMIC = columns[26]
-            mrn = MRN
-            seq_center = SEQ_CENTER
-            gDNA = 'chr' + Chr + ':' + start
-            tumor_type = tumor_type
-            source = SOURCE
-            sample_note = SAMPLE_NOTE
-            variant_key = str(Chr) + ':' + str(start) + '-' + str(end) + ' ' + str(ref) + '>' + str(alt)
-            if ref_gene_detail != 'NA':
-                columns[9] = columns[7]
-            if known_gene_detail != 'NA':
-                columns[14] = columns[12]
-            if ens_gene_detail != 'NA':
-                columns[19] = columns[17]
-            p_val = vcf_cov_dict[ID]['pval']
-            Note = vcf_cov_dict[ID]['Note']
-            trfor = vcf_cov_dict[ID]['trfor']
-            trrev = vcf_cov_dict[ID]['trrev']
-            tvfor = vcf_cov_dict[ID]['tvfor']
-            tvrev = vcf_cov_dict[ID]['tvrev']
-            nrfor = vcf_cov_dict[ID]['nrfor']
-            nrrev = vcf_cov_dict[ID]['nrrev']
-            nvfor = vcf_cov_dict[ID]['nvfor']
-            nvrev = vcf_cov_dict[ID]['nvrev']
-            tumor_read1 = vcf_cov_dict[ID]['tumor_read1']
-            tumor_read2 = vcf_cov_dict[ID]['tumor_read2']
-            normal_read1 = vcf_cov_dict[ID]['normal_read1']
-            normal_read2 = vcf_cov_dict[ID]['normal_read2']
-            tcov = vcf_cov_dict[ID]['tumor_coverage']
-            tfreq = vcf_cov_dict[ID]['tumor_freq']
-            ncov = vcf_cov_dict[ID]['normal_coverage']
-            nfreq = vcf_cov_dict[ID]['normal_freq']
-            all_file.write(
-                str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str('\t'.join(columns[0:5])) \
-                + '\t-\t-\t' + str(columns[20]) + '\t' + str(tumor_read1) + '\t' + str(tumor_read2) \
-                + '\t' + str('\t'.join(columns[5:7])) + '\t' + str('\t'.join(columns[8:12])) + '\t' + str('\t'.join(columns[13:17])) \
-                + '\t' + str('\t'.join(columns[18:20])) + '\t' + str('\t'.join(columns[21:26])) + '\t' + str(normal_read1) \
-                + '\t' + str(normal_read2) + '\t' + str(trfor) + '\t' + str(trrev) + '\t' + str(tvfor) + '\t' + str(tvrev) \
-                + '\t' + str(nrfor) + '\t' + str(nrrev) + '\t' + str(nvfor) + '\t' + str(nfreq) + '\t' + str(nvrev) \
-                + '\t' + str(tfreq) + '\tSomatic\t' + str(p_val) + '\t' + str(sampleID) + ' chr' + str(Chr) + ':' + str(start) \
-                + '\t' + str(Note) + '\t' + str(gDNA) + '\t' + str(tumor_type) + '\t' + str(source) + '\t' + str(sample_note) \
-                + ' ' + str(source) + ' ' + str(seq_center) + '\t' + str(tcov) + '\t' + str(ncov) + '\t' + str(sample_note) \
-                + '\t' + str(variant_key) + '\t' + str(COSMIC) + '\t' + str(date) + '\t' + RESECTION_DATE + '\t' + RUN_DATE \
-                + '\t' + SEQUENCER + '\t' + KIT + '\t' + NOTE + '\t' + INDEX + '\n')
+            all_file.write(str)
     nonsyn_snv.close()
     nonsyn_file.close()
     all_file.close()
@@ -1106,15 +1029,12 @@ def Full_exome_pipeline(sample1,
         ref = columns[6]
         alt = columns[7]
         func_ref_gene = columns[13]
-        gene_ref_gene = columns[14]
         exonic_func_ref = columns[15]
         AA_change_refGene = columns[16].split(',')
         func_UCSC_gene = columns[17]
-        gene_UCSC_gene = columns[18]
         exonic_func_UCSC = columns[19]
         AA_change_UCSCGene = columns[20].split(',')
         func_ens_gene = columns[21]
-        gene_ens_gene = columns[22]
         exonic_func_ens = columns[23]
         AA_change_ensGene = columns[24].split(',')
         if re.search(r'nonsynonymous', exonic_func_ref) or re.search(r'frame', exonic_func_ref):
@@ -1160,7 +1080,6 @@ def Full_exome_pipeline(sample1,
     for line in input_file:
         columns = line.rstrip('\n').split('\t')
         if len(columns) > 21:
-            source = columns[3].strip()
             variant_key = columns[9].strip()
             ref = columns[13].strip()
             alt = columns[14].strip()

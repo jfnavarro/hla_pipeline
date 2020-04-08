@@ -71,4 +71,4 @@ git clone hla_pipeline
 cp hla_pipeline/shared/* ~/shared/
 # un-comment this to over-write Strelka´s settings with Jared´s ones
 #cp hla_pipeline/configureStrelkaSomaticWorkflow.py.ini ~/shared/strelka/bin/
-export GATK3=~/shared/gatk3-8.jar
+export GATK3_PATH=~/shared/gatk3-8.jar
