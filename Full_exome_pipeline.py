@@ -92,9 +92,9 @@ def Full_exome_pipeline(sample1,
 
     # Variant calling (Samtools pile-ups)
     print('Computing pile-ups')
-    cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample1_final.bam' + ' > sample1.pileup'.format(SAMTOOLS, genome)
+    cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample1_final.bam > sample1.pileup'.format(SAMTOOLS, genome)
     exec_command(cmd)
-    cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample2_final.bam' + ' > sample2.pileup'.format(SAMTOOLS, genome)
+    cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample2_final.bam > sample2.pileup'.format(SAMTOOLS, genome)
     exec_command(cmd)
     print('Pile-ups were computed for tumor and normal samples')
 
@@ -1108,6 +1108,9 @@ def Full_exome_pipeline(sample1,
             transcriptID = columns[18].strip()
             cDNA_raw = columns[20].strip()
             errors = ''
+            WT_25mer = ' '
+            Mut_25mer = ' '
+            position = ' '
             protein_raw = columns[21].replace(' ', '')
             # Nonsynonymous point mutations to 25 mers
             if exonic_func == 'nonsynonymous SNV' and re.search(r'^p\.', protein_raw):
@@ -1138,8 +1141,6 @@ def Full_exome_pipeline(sample1,
                     errors += 'Ref in AA_seq doesn\'t match file Ref'
                     WT_25mer = ''
                     Mut_25mer = ''
-                epitope_file.write(str('\t'.join(columns[0:])) + '\t' + str(position) + '\t' + errors +\
-                                   '\t' + WT_25mer + '\t' + Mut_25mer + '\t' + str(variant_key) + ' ' + transcriptID + '\n')
             # 1st frameshift deletions
             elif exonic_func == 'frameshift deletion' and re.search(r'^p\.', protein_raw):
                 protein_strip = protein_raw.strip()
@@ -1185,8 +1186,6 @@ def Full_exome_pipeline(sample1,
                     errors += ' can not code for this mutated AA_position '
                     WT_25mer = ''
                     Mut_25mer = ''
-                epitope_file.write(str('\t'.join(columns[0:])) + '\t' + str(position) + '\t' + errors +\
-                                   '\t' + WT_25mer + '\t' + Mut_25mer + '\t' + str(variant_key) + ' ' + transcriptID + '\n')
             # 2nd frameshift insertions
             elif exonic_func == 'frameshift insertion' and re.search(r'^p\.', protein_raw):
                 protein_strip = protein_raw.strip()
@@ -1240,8 +1239,6 @@ def Full_exome_pipeline(sample1,
                     errors += ' No ATG start codon for this transcript cDNA'
                 if position == 1:
                     errors += ' mutation occurs in start codon'
-                epitope_file.write(str('\t'.join(columns[0:])) + '\t' + str(position) + '\t' + errors\
-                                   + '\t' + WT_25mer + '\t' + Mut_25mer + '\t' + str(variant_key) + ' ' + transcriptID + '\n')
             # 3rd nonframeshift deletions to 25mers
             elif exonic_func == 'nonframeshift deletion' and re.search(r'^p\.', protein_raw):
                 protein_strip = protein_raw.strip()
@@ -1285,8 +1282,6 @@ def Full_exome_pipeline(sample1,
                     errors += ' No ATG start codon for this transcript cDNA'
                 if position == 1:
                     errors += ' mutation occurs in start codon'
-                epitope_file.write(str('\t'.join(columns[0:])) + '\t' + str(position) + '\t' + errors\
-                                   + '\t' + WT_25mer + '\t' + Mut_25mer + '\t' + str(variant_key) + ' ' + transcriptID + '\n')
             # 4th nonframeshift insertions to 25mers
             elif exonic_func == 'nonframeshift insertion' and re.search(r'^p\.', protein_raw):
                 protein_strip = protein_raw.strip()
@@ -1327,20 +1322,29 @@ def Full_exome_pipeline(sample1,
                     errors += ' No ATG start codon for this transcript cDNA'
                 if position == 1:
                     errors += 'mutation occurs in start codon'
-                epitope_file.write(str('\t'.join(columns[0:])) + '\t' + str(position) + '\t' + errors\
-                                   + '\t' + WT_25mer + '\t' + Mut_25mer + '\t' + str(variant_key) + ' ' + transcriptID + '\n')
+            epitope_file.write('{}\t{}\t{}\t{}\t{}\t{}\{}\n'.format('\t'.join(columns[0:]),
+                                                                    str(position),
+                                                                    errors,
+                                                                    WT_25mer,
+                                                                    Mut_25mer,
+                                                                    str(variant_key),
+                                                                    transcriptID))
     print('Epitopes have been created...')
     input_file.close()
 
     # Collect the hybridization stats using picards tool CollectHsMetrics
     if INTERVAL:
         print("Collecting HS metrics")
-        cmd1 = PICARD + ' CollectHsMetrics I=sample1_final.bam TI=' + INTERVAL \
-               + ' BI=' + INTERVAL + ' R=' + genome + ' O=sample1_target_coverage.txt'
-        exec_command(cmd1)
-        cmd2 = PICARD + ' CollectHsMetrics I=sample2_final.bam TI=' + INTERVAL \
-               + ' BI=' + INTERVAL + ' R=' + genome + ' O=sample2_target_coverage.txt'
-        exec_command(cmd2)
+        cmd = '{} CollectHsMetrics I=sample1_final.bam TI={} BI={} R={} O=sample1_target_coverage.txt'.format(PICARD,
+                                                                                                              INTERVAL,
+                                                                                                              INTERVAL,
+                                                                                                              genome)
+        exec_command(cmd)
+        cmd = '{} CollectHsMetrics I=sample2_final.bam TI={} BI={} R={} O=sample2_target_coverage.txt'.format(PICARD,
+                                                                                                              INTERVAL,
+                                                                                                              INTERVAL,
+                                                                                                              genome)
+        exec_command(cmd)
 
     print("COMPLETED!")
 
