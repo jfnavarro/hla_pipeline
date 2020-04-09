@@ -100,8 +100,8 @@ def Full_exome_pipeline(sample1,
 
     print('Performing variant calling')
     # Variant calling Mutect2
-    cmd = GATK + '{} Mutect2 -R {} -I sample1_final.bam -I sample2_final.bam -normal {} -O Mutect_unfiltered.vcf'\
-                 ' --germline-resource {}'.format(GATK, genome, sample2_ID, GERMLINE)
+    cmd = '{} Mutect2 -R {} -I sample1_final.bam -I sample2_final.bam -normal {} -O Mutect_unfiltered.vcf'\
+          ' --germline-resource {}'.format(GATK, genome, sample2_ID, GERMLINE)
     exec_command(cmd)
     cmd = '{} FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf -R {}'.format(GATK, genome)
     exec_command(cmd)
@@ -1006,24 +1006,24 @@ def Full_exome_pipeline(sample1,
         tfreq = vcf_cov_dict[ID]['tumor_freq']
         ncov = vcf_cov_dict[ID]['normal_coverage']
         nfreq = vcf_cov_dict[ID]['normal_freq']
-        str = str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str('\t'.join(columns[0:5])) \
-                + '\t-\t-\t' + str(columns[20]) + '\t' + str(tumor_read1) + '\t' + str(tumor_read2) \
-                + '\t' + str('\t'.join(columns[5:7])) + '\t' + str('\t'.join(columns[8:12])) \
-                + '\t' + str('\t'.join(columns[13:17])) + '\t' + str('\t'.join(columns[18:20])) \
-                + '\t' + str('\t'.join(columns[21:26])) + '\t' + str(normal_read1) + '\t' + str(normal_read2) \
-                + '\t' + str(trfor) + '\t' + str(trrev) + '\t' + str(tvfor) + '\t' + str(tvrev) + '\t' + str(nrfor) \
-                + '\t' + str(nrrev) + '\t' + str(nvfor) + '\t' + str(nfreq) + '\t' + str(nvrev) + '\t' + str(tfreq) \
-                + '\tSomatic\t' + str(p_val) + '\t' + str(sampleID) + ' chr' + str(Chr) + ':' + str(start) \
-                + '\t' + str(Note) + '\t' + str(gDNA) + '\t' + str(tumor_type) + '\t' + str(source) \
-                + '\t' + str(sample_note) + ' ' + str(source) + ' ' + str(seq_center) + '\t' + str(tcov) \
-                + '\t' + str(ncov) + '\t' + str(sample_note) + '\t' + str(variant_key) + '\t' + str(COSMIC) \
-                + '\t' + str(date) + '\t' + RESECTION_DATE + '\t' + RUN_DATE + '\t' + SEQUENCER + '\t' + KIT + '\t' + NOTE + '\t' + INDEX + '\n'
+        to_write = str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str('\t'.join(columns[0:5])) \
+                   + '\t-\t-\t' + str(columns[20]) + '\t' + str(tumor_read1) + '\t' + str(tumor_read2) \
+                   + '\t' + str('\t'.join(columns[5:7])) + '\t' + str('\t'.join(columns[8:12])) \
+                   + '\t' + str('\t'.join(columns[13:17])) + '\t' + str('\t'.join(columns[18:20])) \
+                   + '\t' + str('\t'.join(columns[21:26])) + '\t' + str(normal_read1) + '\t' + str(normal_read2) \
+                   + '\t' + str(trfor) + '\t' + str(trrev) + '\t' + str(tvfor) + '\t' + str(tvrev) + '\t' + str(nrfor) \
+                   + '\t' + str(nrrev) + '\t' + str(nvfor) + '\t' + str(nfreq) + '\t' + str(nvrev) + '\t' + str(tfreq) \
+                   + '\tSomatic\t' + str(p_val) + '\t' + str(sampleID) + ' chr' + str(Chr) + ':' + str(start) \
+                   + '\t' + str(Note) + '\t' + str(gDNA) + '\t' + str(tumor_type) + '\t' + str(source) \
+                   + '\t' + str(sample_note) + ' ' + str(source) + ' ' + str(seq_center) + '\t' + str(tcov) \
+                   + '\t' + str(ncov) + '\t' + str(sample_note) + '\t' + str(variant_key) + '\t' + str(COSMIC) \
+                   + '\t' + str(date) + '\t' + RESECTION_DATE + '\t' + RUN_DATE + '\t' + SEQUENCER + '\t' + KIT + '\t' + NOTE + '\t' + INDEX + '\n'
         if (re.search(r'nonsynonymous', columns[8]) or re.search(r'frame', columns[8]) or re.search(r'stop', columns[8]) \
                 or re.search(r'nonsynonymous', columns[13]) or re.search(r'frame', columns[13]) or re.search(r'stop', columns[13]) \
                 or re.search(r'nonsynonymous', columns[18]) or re.search(r'frame', columns[18]) or re.search(r'stop', columns[18])):
-            nonsyn_file.write(str)
+            nonsyn_file.write(to_write)
         else:
-            all_file.write(str)
+            all_file.write(to_write)
     nonsyn_snv.close()
     nonsyn_file.close()
     all_file.close()
