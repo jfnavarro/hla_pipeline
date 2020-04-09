@@ -73,10 +73,10 @@ def Full_exome_pipeline(sample1,
     # GATK base re-calibration
     print('Starting re-calibration')
     cmd = '{} BaseRecalibratorSpark -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}'\
-          ' --known-sites {} -O sample1_recal_data.txt'.format(GATK, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+          ' --known-sites {} -O sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
     exec_command(cmd)
     cmd = '{} BaseRecalibratorSpark -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}'\
-          ' --known-sites {} -O sample2_recal_data.txt'.format(GATK, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+          ' --known-sites {} -O sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
     exec_command(cmd)
     cmd = '{} ApplyBQSR -R {} -I sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'.format(GATK, genome)
     exec_command(cmd)
