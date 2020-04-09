@@ -54,14 +54,12 @@ def Full_exome_pipeline(sample1,
 
     # Add headers
     print("Adding headers")
-    cmdT_RG = PICARD + ' AddOrReplaceReadGroups I=' + sample1 + ' O=sample1_header.bam RGID=' + sample1_ID\
-              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sample1_ID + ' RGSM=' + sample1_ID + ' RGCN=' + SEQ_CENTER\
-	          + ' RGDS=' + tumor_type
-    exec_command(cmdT_RG)
-    cmdN_RG = PICARD + ' AddOrReplaceReadGroups I=' + sample2 + ' O=sample2_header.bam RGID=' + sample2_ID\
-              + ' RGPL=Illumina RGLB=' + LIBRARY + ' RGPU=' + sample2_ID + ' RGSM=' + sample2_ID + ' RGCN=' + SEQ_CENTER\
-	          + ' RGDS=' + tumor_type
-    exec_command(cmdN_RG)
+    cmd = '{} AddOrReplaceReadGroups I={} O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
+          ' RGCN={} RGDS={}'.format(PICARD, sample1, sample1_ID, LIBRARY, sample1_ID, sample1_ID, SEQ_CENTER, tumor_type)
+    exec_command(cmd)
+    cmd = '{} AddOrReplaceReadGroups I={} O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
+          ' RGCN={} RGDS={}'.format(PICARD, sample2, sample1_ID, LIBRARY, sample2_ID, sample2_ID, SEQ_CENTER, tumor_type)
+    exec_command(cmd)
     print('Tumor and normal bam files had read group information added.')
 
     # Mark duplicates
@@ -74,16 +72,16 @@ def Full_exome_pipeline(sample1,
 
     # GATK base re-calibration
     print('Starting re-calibration')
-    cmd1 = GATK + ' BaseRecalibratorSpark -I sample1_dedup.bam' + ' -R ' + genome + ' --known-sites ' + SNPSITES + \
-           ' --known-sites ' + KNOWN_SITE1 + ' --known-sites ' + KNOWN_SITE2 + ' -O sample1_recal_data.txt'
-    cmd2 = GATK + ' BaseRecalibratorSpark -I sample2_dedup.bam' + ' -R ' + genome + ' --known-sites ' + SNPSITES + \
-           ' --known-sites ' + KNOWN_SITE1 + ' --known-sites ' + KNOWN_SITE2 + ' -O sample2_recal_data.txt'
-    exec_command(cmd1)
-    exec_command(cmd2)
-    cmd3 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample1_dedup.bam' + ' --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'
-    cmd4 = GATK + ' ApplyBQSR -R ' + genome + ' -I sample2_dedup.bam' + ' --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'
-    exec_command(cmd3)
-    exec_command(cmd4)
+    cmd = '{} BaseRecalibratorSpark -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}'\
+          ' --known-sites {} -O sample1_recal_data.txt'.format(GATK, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+    exec_command(cmd)
+    cmd = '{} BaseRecalibratorSpark -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}'\
+          ' --known-sites {} -O sample2_recal_data.txt'.format(GATK, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+    exec_command(cmd)
+    cmd = '{} ApplyBQSR -R {} -I sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'.format(GATK, genome)
+    exec_command(cmd)
+    cmd = '{} ApplyBQSR -R {} -I sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'.format(GATK, genome)
+    exec_command(cmd)
     print('Re-calibration was performed on the tumor and normal samples.')
 
     # HLA predictions
@@ -92,39 +90,37 @@ def Full_exome_pipeline(sample1,
     #HLA_PRG('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
     #print('HLA predictions completed for tumor and normal samples')
 
-    # Variant calling (SAMTOOLS PILEUP)
+    # Variant calling (Samtools pile-ups)
     print('Computing pile-ups')
-    PILEUP_DIR = os.path.join(WORKING_DIR, "pileups")
-    os.makedirs(PILEUP_DIR, exist_ok=True)
-    cmd1 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample1_final.bam' + ' > ' + os.path.join(PILEUP_DIR, 'sample1.pileup')
-    exec_command(cmd1)
-    cmd2 = SAMTOOLS + ' mpileup -C50 -B -q 1 -Q 15 -f ' + genome + ' sample2_final.bam' + ' > ' + os.path.join(PILEUP_DIR, 'sample2.pileup')
-    exec_command(cmd2)
+    cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample1_final.bam' + ' > sample1.pileup'.format(SAMTOOLS, genome)
+    exec_command(cmd)
+    cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample2_final.bam' + ' > sample2.pileup'.format(SAMTOOLS, genome)
+    exec_command(cmd)
     print('Pile-ups were computed for tumor and normal samples')
 
     print('Performing variant calling')
     # Variant calling Mutect2
-    cmd_mutect = GATK + ' Mutect2 -R ' + genome + ' -I sample1_final.bam -I sample2_final.bam -normal ' + sample2_ID\
-                 + ' -O Mutect_unfiltered.vcf --germline-resource ' + GERMLINE
-    exec_command(cmd_mutect)
-    cmd_mutect2 = GATK + ' FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf -R ' + genome
-    exec_command(cmd_mutect2)
+    cmd = GATK + '{} Mutect2 -R {} -I sample1_final.bam -I sample2_final.bam -normal {} -O Mutect_unfiltered.vcf'\
+                 ' --germline-resource {}'.format(GATK, genome, sample2_ID, GERMLINE)
+    exec_command(cmd)
+    cmd = '{} FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf -R {}'.format(GATK, genome)
+    exec_command(cmd)
 
     # Variant calling Strelka2
-    cmd_Strelka = STRELKA + ' --exome --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta ' + genome + ' --runDir Strelka_output'
-    exec_command(cmd_Strelka)
-    cmd_Strelka2 = 'Strelka_output/runWorkflow.py -m local -j {}'.format(THREADS)
-    exec_command(cmd_Strelka2)
+    cmd = '{} --exome --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta {}'\
+          ' --runDir Strelka_output'.format(STRELKA, genome)
+    exec_command(cmd)
+    cmd = 'Strelka_output/runWorkflow.py -m local -j {}'.format(THREADS)
+    exec_command(cmd)
 
     # Variant calling Somatic Sniper
-    cmd_SomaticSniper = SSNIPER + ' -L -G -F vcf -f ' + genome + ' sample1_final.bam sample2_final.bam SS.vcf'
-    exec_command(cmd_SomaticSniper)
+    cmd = '{} -L -G -F vcf -f {} sample1_final.bam sample2_final.bam SS.vcf'.format(SSNIPER, genome)
+    exec_command(cmd)
 
     # Variant calling VarScan
-    cmd_varscan = VARSCAN + ' somatic ' + os.path.join(PILEUP_DIR, 'sample2.pileup') + \
-                  ' ' + os.path.join(PILEUP_DIR, 'sample1.pileup') + ' varscan ' + \
-                  '--tumor-purity .5 --output-vcf 1 --min-coverage 4 --min-var-freq .05 --strand-filter 0'
-    exec_command(cmd_varscan)
+    cmd = VARSCAN + ' somatic sample2.pileup sample1.pileup varscan --tumor-purity .5 --output-vcf 1'\
+                    ' --min-coverage 4 --min-var-freq .05 --strand-filter 0'
+    exec_command(cmd)
     print('Done calling with Varscan, Mutect2, SomaticSniper & Strelka.')
 
     # Filtering Mutect snv calls
@@ -240,7 +236,7 @@ def Full_exome_pipeline(sample1,
                         elif x != ref and i == 2:
                             Tumor_GT = Tumor_GT + '/1'
                             i = i + 1
-                    filtered_vcf.write(str('\t'.join(columns[0:8])) + '\t' + Format + '\t' + Normal_GT + ':' + Normal + '\t' + Tumor_GT + ':' + Tumor + '\n')
+                    filtered_vcf.write('{}\t{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:8]), Format, Normal_GT, Normal, Tumor_GT, Tumor))
     vcf.close()
     filtered_vcf.close()
 
@@ -318,17 +314,20 @@ def Full_exome_pipeline(sample1,
     # Use GATK to combine all of the variants from various callers
     print('Combining variants')
     # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
-    cmd_GATK = GATK3 + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf ' \
-			   '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf -genotypeMergeOptions UNIQUIFY'
-    exec_command(cmd_GATK)
+    cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf '\
+          '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf '\
+          '-genotypeMergeOptions UNIQUIFY'.format(GATK3, genome)
+    exec_command(cmd)
 
     # Run annovar to annotate variants
     print('Running annovar')
     #TODO ensure GHRC37 works with annovar (hg19)
-    cmd1 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'
-    exec_command(cmd1)
-    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' snp.av ' + annovar_db + ' -thread ' + str(THREADS) + ' -out snp.sum -remove -protocol ' + annovar_anno
-    exec_command(cmd2)
+    cmd = '{} -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'.format(
+        os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
+    exec_command(cmd)
+    cmd = '{} snp.av {} -thread {} -out snp.sum -remove -protocol {}'.format(
+        os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovar_db, THREADS,  annovar_anno)
+    exec_command(cmd)
 
     # Extract coverage info from vcf file and add to annotation data
     print("Extracting coverage from combined VCF")
@@ -620,11 +619,17 @@ def Full_exome_pipeline(sample1,
                     FREQ = form.index('FREQ')
                     t_split = columns[varscanT].split(':')
                     n_split = columns[varscanN].split(':')
-                    vcf_final.write(
-                        str('\t'.join(columns[0:8])) + '\tGT:AD:DP:FREQ\t' + t_split[GT] + ':' + t_split[AD] + ':' + t_split[DP] \
-                        + ':' + t_split[FREQ] + '\t' + n_split[GT] + ':' + n_split[AD] + ':' + n_split[DP] + ':' + n_split[FREQ] + '\n')
+                    vcf_final.write('{}\tGT:AD:DP:FREQ\t{}:{}:{}:{}\t{}:{}:{}:{}\n'.format('\t'.join(columns[0:8]),
+                                                                                           t_split[GT],
+                                                                                           t_split[AD],
+                                                                                           t_split[DP],
+                                                                                           t_split[FREQ],
+                                                                                           n_split[GT],
+                                                                                           n_split[AD],
+                                                                                           n_split[DP],
+                                                                                           n_split[FREQ]))
                 else:
-                    vcf_final.write(str('\t'.join(columns[0:8])) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
+                    vcf_final.write('\t'.join(columns[0:8]) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
             elif re.search('somaticsniper', callers):
                 if not re.search(',', alt):
                     form = columns[8].split(':')
@@ -646,12 +651,17 @@ def Full_exome_pipeline(sample1,
                     ncov = nrfor + nrrev + nvfor + nvrev
                     tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
                     nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-                    vcf_final.write(
-                        str('\t'.join(columns[0:8])) + '\tGT:AD:DP:FREQ\t' + str(t_split[GT]) \
-                        + ':' + str(tumor_read2) + ':' + str(tcov) + ':' + str(tfreq) + '\t' + str(n_split[GT]) \
-                        + ':' + str(normal_read2) + ':' + str(ncov) + ':' + str(nfreq) + '\n')
+                    vcf_final.write('{}\tGT:AD:DP:FREQ\t{}:{}:{}:{}\t{}:{}:{}:{}\n'.format('\t'.join(columns[0:8]),
+                                                                                           t_split[GT],
+                                                                                           str(tumor_read2),
+                                                                                           str(tcov),
+                                                                                           str(tfreq),
+                                                                                           n_split[GT],
+                                                                                           str(normal_read2),
+                                                                                           str(ncov),
+                                                                                           str(nfreq)))
                 else:
-                    vcf_final.write(str('\t'.join(columns[0:8])) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
+                    vcf_final.write('\t'.join(columns[0:8]) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
             elif re.search('mutect', callers):
                 if not re.search(',', alt):
                     form = columns[8].split(':')
@@ -661,13 +671,17 @@ def Full_exome_pipeline(sample1,
                     FA = form.index('FA')
                     t_split = columns[mutectT].split(':')
                     n_split = columns[mutectN].split(':')
-                    vcf_final.write(str('\t'.join(columns[0:8])) + '\tGT:AD:DP:FREQ\t' + t_split[GT] \
-                                    + ':' + t_split[AD].split(',')[1] + ':' + t_split[DP] \
-                                    + ':' + str(float(t_split[FA]) * 100) + '%\t' + n_split[GT] \
-                                    + ':' + n_split[AD].split(',')[1] + ':' + n_split[DP] \
-                                    + ':' + str(float(n_split[FA]) * 100) + '%\n')
+                    vcf_final.write('{}\tGT:AD:DP:FREQ\t{}:{}:{}:{}%\t{}:{}:{}:{}%\n'.format('\t'.join(columns[0:8]),
+                                                                                             t_split[GT],
+                                                                                             t_split[AD].split(',')[1],
+                                                                                             t_split[DP],
+                                                                                             str(float(t_split[FA]) * 100),
+                                                                                             n_split[GT],
+                                                                                             n_split[AD].split(',')[1],
+                                                                                             n_split[DP],
+                                                                                             str(float(n_split[FA]) * 100)))
                 else:
-                    vcf_final.write(str('\t'.join(columns[0:8])) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
+                    vcf_final.write('\t'.join(columns[0:8]) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
             elif re.search('strelka', callers):
                 if not re.search(',', alt):
                     form = columns[8].split(':')
@@ -713,12 +727,17 @@ def Full_exome_pipeline(sample1,
                         ncov = normal_read1 + normal_read2
                         tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
                         nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-                    vcf_final.write(
-                        str('\t'.join(columns[0:8])) + '\tGT:AD:DP:FREQ\t' + str(t_split[GT]) \
-                        + ':' + str(tumor_read2) + ':' + str(tcov) + ':' + str(tfreq) + '\t' + str(n_split[GT]) \
-                        + ':' + str(normal_read2) + ':' + str(ncov) + ':' + str(nfreq) + '\n')
+                    vcf_final.write('{}\tGT:AD:DP:FREQ\t{}:{}:{}:{}\t{}:{}:{}:{}\n'.format('\t'.join(columns[0:8]),
+                                                                                           t_split[GT],
+                                                                                           str(tumor_read2),
+                                                                                           str(tcov),
+                                                                                           str(tfreq),
+                                                                                           n_split[GT],
+                                                                                           str(normal_read2),
+                                                                                           str(ncov),
+                                                                                           str(nfreq)))
                 else:
-                    vcf_final.write(str('\t'.join(columns[0:8])) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
+                    vcf_final.write('\t'.join(columns[0:8]) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
     vcf.close()
     vcf_final.close()
 
@@ -775,7 +794,8 @@ def Full_exome_pipeline(sample1,
                         Tumor_GT = '0/1'
                     else:
                         Tumor_GT = '1/1'
-                    filtered_vcf.write(str('\t'.join(columns[0:8])) + '\t' + Format + '\t' + Normal_GT + ':' + Normal + '\t' + Tumor_GT + ':' + Tumor + '\n')
+                    filtered_vcf.write('{}\t{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:8]), Format,
+                                                                         Normal_GT, Normal, Tumor_GT, Tumor))
     vcf.close()
     filtered_vcf.close()
 
@@ -820,18 +840,19 @@ def Full_exome_pipeline(sample1,
     # Combine with GATK
     print('Combining indels variants')
     # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
-    cmd_GATK = GATK + ' -T CombineVariants -R ' + genome + ' -V:varscan varscan_filtered_indel.vcf ' + \
-               '-V:strelka strelka_indel_filtered.vcf -o combined_indel_calls.vcf -genotypeMergeOptions UNIQUIFY'
-    exec_command(cmd_GATK)
+    cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered_indel.vcf '\
+          '-V:strelka strelka_indel_filtered.vcf -o combined_indel_calls.vcf -genotypeMergeOptions UNIQUIFY'.format(GATK, genome)
+    exec_command(cmd)
 
     # Annotate with Annovar
     print('Annotating combined indels with annovar')
     #TODO make sure that GRHC37 genomes work with annovar (hg19)
-    exec_command(cmd1)
-    cmd1 = os.path.join(ANNOVAR_PATH, 'convert2annovar.pl') + ' -format vcf4old combined_indel_calls.vcf --withzyg --comment --includeinfo -outfile indel.av'
-    exec_command(cmd1)
-    cmd2 = os.path.join(ANNOVAR_PATH, 'table_annovar.pl') + ' indel.av ' + annovar_db + ' -thread ' + str(THREADS) + ' -out indel.sum -remove -protocol ' + annovar_anno
-    exec_command(cmd2)
+    cmd = '{} -format vcf4old combined_indel_calls.vcf --withzyg --comment --includeinfo -outfile indel.av'.format(
+        os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
+    exec_command(cmd)
+    cmd = '{} indel.av {} -thread {} -out indel.sum -remove -protocol {}'.format(
+        os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovar_db, THREADS,  annovar_anno)
+    exec_command(cmd)
 
     # Extract coverage info from vcf file
     print("Extracting coverage info")
