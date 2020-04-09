@@ -190,7 +190,7 @@ def Full_exome_pipeline(sample1,
                 n_cov = int(n_split[0])
                 t_cov = int(t_split[0])
                 T_freq = float((tumor_variant_depth / t_cov) * 100)
-                # NOTE too strict filters
+                # NOTE too strict filters and maybe incorrect?
                 # Authors of Strelka recommend to compute allele frequency like this:
                 # refCounts = Value of FORMAT column $REF + “U” (e.g. if REF="A" then use the value in FOMRAT/AU)
                 # altCounts = Value of FORMAT column $ALT + “U” (e.g. if ALT="T" then use the value in FOMRAT/TU)
@@ -565,22 +565,22 @@ def Full_exome_pipeline(sample1,
         tfreq = vcf_cov_dict[ID]['tumor_freq']
         ncov = vcf_cov_dict[ID]['normal_coverage']
         nfreq = vcf_cov_dict[ID]['normal_freq']
-        to_write_str = str(mrn) + '\t' + str(seq_center) + '\t' + str(sampleID) + "\t" + str('\t'.join(columns[0:5])) + '\t-\t-\t' + str(columns[20]) \
-                              + '\t' + str(tumor_read1) + '\t' + str(tumor_read2) + '\t' + str('\t'.join(columns[5:7])) + '\t' + str('\t'.join(columns[8:12])) \
-                              + '\t' + str('\t'.join(columns[13:17])) + '\t' + str('\t'.join(columns[18:20])) + '\t' + str('\t'.join(columns[21:26])) \
-                              + '\t' + str(normal_read1) + '\t' + str(normal_read2) + '\t' + str(trfor) + '\t' + str(trrev) + '\t' + str(tvfor) \
-                              + '\t' + str(tvrev) + '\t' + str(nrfor) + '\t' + str(nrrev) + '\t' + str(nvfor) + '\t' + str(nfreq) + '\t' + str(nvrev) \
-                              + '\t' + str(tfreq) + '\tSomatic\t' + str(p_val) + '\t' + str(sampleID) + ' chr' + str(Chr) + ':' + str(start) + '\t' + str(Note) \
-                              + '\t' + str(gDNA) + '\t' + str(tumor_type) + '\t' + str(source) + '\t' + str(sample_note) + ' ' + str(source) \
-                              + ' ' + str(seq_center) + '\t' + str(tcov) + '\t' + str(ncov) + '\t' + str(sample_note) + '\t' + str(variant_key) \
-                              + '\t' + str(COSMIC) + '\t' + str(date) + '\t' + RESECTION_DATE + '\t' + RUN_DATE + '\t' + SEQUENCER + '\t' \
-                              + KIT + '\t' + NOTE + '\t' + INDEX + '\n'
+        to_write = str(mrn) + '\t' + str(seq_center) + '\t' + str(sampleID) + "\t" + str('\t'.join(columns[0:5])) + '\t-\t-\t' + str(columns[20]) \
+                   + '\t' + str(tumor_read1) + '\t' + str(tumor_read2) + '\t' + str('\t'.join(columns[5:7])) + '\t' + str('\t'.join(columns[8:12])) \
+                   + '\t' + str('\t'.join(columns[13:17])) + '\t' + str('\t'.join(columns[18:20])) + '\t' + str('\t'.join(columns[21:26])) \
+                   + '\t' + str(normal_read1) + '\t' + str(normal_read2) + '\t' + str(trfor) + '\t' + str(trrev) + '\t' + str(tvfor) \
+                   + '\t' + str(tvrev) + '\t' + str(nrfor) + '\t' + str(nrrev) + '\t' + str(nvfor) + '\t' + str(nfreq) + '\t' + str(nvrev) \
+                   + '\t' + str(tfreq) + '\tSomatic\t' + str(p_val) + '\t' + str(sampleID) + ' chr' + str(Chr) + ':' + str(start) + '\t' + str(Note) \
+                   + '\t' + str(gDNA) + '\t' + str(tumor_type) + '\t' + str(source) + '\t' + str(sample_note) + ' ' + str(source) \
+                   + ' ' + str(seq_center) + '\t' + str(tcov) + '\t' + str(ncov) + '\t' + str(sample_note) + '\t' + str(variant_key) \
+                   + '\t' + str(COSMIC) + '\t' + str(date) + '\t' + RESECTION_DATE + '\t' + RUN_DATE + '\t' + SEQUENCER + '\t' \
+                   + KIT + '\t' + NOTE + '\t' + INDEX + '\n'
         if (re.search(r'nonsynonymous', columns[8]) or re.search(r'frame', columns[8]) or re.search(r'stop', columns[8]) \
 				or re.search(r'nonsynonymous', columns[13]) or re.search(r'frame', columns[13]) or re.search(r'stop', columns[13]) \
                 or re.search(r'nonsynonymous', columns[18]) or re.search(r'frame', columns[18]) or re.search(r'stop', columns[18])):
-            nonsyn_file.write(to_write_str)
+            nonsyn_file.write(to_write)
         else:
-            all_file.write(to_write_str)
+            all_file.write(to_write)
     nonsyn_file.close()
     all_file.close()
 
@@ -841,7 +841,7 @@ def Full_exome_pipeline(sample1,
     print('Combining indels variants')
     # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
     cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered_indel.vcf '\
-          '-V:strelka strelka_indel_filtered.vcf -o combined_indel_calls.vcf -genotypeMergeOptions UNIQUIFY'.format(GATK, genome)
+          '-V:strelka strelka_indel_filtered.vcf -o combined_indel_calls.vcf -genotypeMergeOptions UNIQUIFY'.format(GATK3, genome)
     exec_command(cmd)
 
     # Annotate with Annovar
