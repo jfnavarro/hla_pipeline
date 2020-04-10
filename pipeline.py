@@ -3,17 +3,19 @@
 import argparse
 from common import *
 from Full_exome_pipeline import *
-from HLA_two_sample import *
+from RNA_seq_pipeline import *
 import multiprocessing
 import shutil
 
-parser=argparse.ArgumentParser(description='Jared pipeline (adjusted by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
-                               prog='pipeline.py',
-                               usage='pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer)')
+parser = argparse.ArgumentParser(description='Jared pipeline (adjusted by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
+                                 prog='pipeline.py',
+                                 usage='pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer)')
 parser.add_argument('R1_NORMAL', help='FASTQ file R1 (Normal)')
 parser.add_argument('R2_NORMAL', help='FASTQ file R2 (Normal)')
 parser.add_argument('R1_CANCER', help='FASTQ file R1 (Cancer)')
 parser.add_argument('R2_CANCER', help='FASTQ file R2 (Cancer)')
+parser.add_argument('R1_RNA', help='FASTQ file R1 (RNA)')
+parser.add_argument('R2_RNA', help='FASTQ file R2 (RNA)')
 parser.add_argument('--adapter',
                     help='Path to the Illumina adapters FASTA file.', required=True)
 parser.add_argument('--genome',
@@ -46,6 +48,8 @@ R1_NORMAL = os.path.abspath(args.R1_NORMAL)
 R2_NORMAL = os.path.abspath(args.R2_NORMAL)
 R1_CANCER = os.path.abspath(args.R1_CANCER)
 R2_CANCER = os.path.abspath(args.R2_CANCER)
+R1_RNA = os.path.abspath(args.R1_RNA)
+R2_RNA = os.path.abspath(args.R2_RNA)
 sampleID = args.sample
 tumor_type = args.tumor
 IILLUMINA_ADAPTERS = os.path.abspath(args.adapter)
@@ -177,7 +181,7 @@ exec_command(cmd)
 
 print('Merging of tumor and normal aligned samples completed.')
 
-# Final pìpeline
+# Exome pìpeline
 Full_exome_pipeline('aligned_cancer_merged.bam',
                     'aligned_normal_merged.bam',
                     tumor_type,
@@ -191,6 +195,20 @@ Full_exome_pipeline('aligned_cancer_merged.bam',
                     SNPSITES,
                     GERMLINE,
                     INTERVAL)
-#HLA_pipeline(loc, sample1, sample2, THREADS)
+# RNA pìpeline
+RNA_seq_pipeline(R1_RNA,
+                 R2_RNA,
+                 sampleID,
+                 genome,
+                 annotation,
+                 SNPSITES,
+                 KNOWN_SITE1,
+                 KNOWN_SITE2,
+                 THREADS)
+
+# HLA predictions
+#HLA_prediction(sample1, sample1, THREADS, 'cancer_exome')
+#HLA_prediction(sample2, sample2, THREADS, 'normal_exome')
+#HLA_prediction(R1_RNA, R2_RNA, THREADS, 'rna')
 
 

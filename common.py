@@ -1,6 +1,8 @@
 import subprocess
 import os
 import sys
+import re
+import datetime
 
 PICARD = 'picard'
 GATK = 'gatk'
@@ -11,6 +13,12 @@ SAMTOOLS = 'samtools'
 SSNIPER = 'bam-somaticsniper'
 HLA = "HLA-LA.pl"
 SAMTOOLS = 'samtools'
+CUFFLINKS = 'cufflinks'
+HLA = 'python PHLAT.py'
+HLA_INDEX = '~/shared/index4phlat'
+HLA_PATH = "~/phlat"
+BOWTIE2 = 'bowtie2'
+STAR = "star"
 
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
@@ -85,3 +93,39 @@ def exec_command(cmd):
         for line in error.decode("utf-8").split("\n") if error else "":
             print(line.rstrip())
         sys.exit(-1)
+
+# This function will predict HLAs using PHLAT one sample
+def HLA_prediction(sample1, sample2, threads, outfile):
+    cmd = "{} -1 {} -2 {} -index {} -b2url {} -tag normal -e {} -o . -p {}".format(HLA,
+                                                                                   sample1,
+                                                                                   sample2,
+                                                                                   BOWTIE2,
+                                                                                   HLA_PATH,
+                                                                                   threads)
+    exec_command(cmd)
+
+def HLA_PRG(bamfile, sampleID, outfile, threads):
+    OUT_DIR = "out_hla"
+    cmd = HLA + ' --BAM {} --workingDir {} --graph {} --sampleID {}'\
+          + ' --maxTHREADS {}'.format(bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
+    exec_command(cmd)
+
+    # create a dictionary to store the output for each allele
+    hla = pd.read_table(os.path.join(OUT_DIR, sampleID, 'hla', 'R1_bestguess_G.txt'), sep='\t')
+    allele_dict = {}
+    hla = hla.groupby('Locus')
+    for k, g in hla:
+        allele = [re.sub('G$', '', a).replace('N', '') for a in g['Allele'].tolist()]
+        allele_dict['HLA_' + k] = allele
+
+    # Create formatted output file
+    today = datetime.now().strftime('%B_%d_%Y')
+    a = open(outfile, 'w')
+    for x in sorted(allele_dict):
+        a.write('{}\t{}\tExome {}\t{}\t{}\t{}\tPRG-HLA-LA\t-\t-\n'.format(MRN,
+                                                                          sampleID,
+                                                                          today,
+                                                                          x,
+                                                                          allele_dict[x][0],
+                                                                          allele_dict[x][1]))
+    a.close()

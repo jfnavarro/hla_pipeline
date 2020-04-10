@@ -1,37 +1,9 @@
-import os
-import subprocess
 import pandas as pd
 import re
 import datetime
 import gzip
 from re import sub
 from common import *
-
-def HLA_PRG(bamfile, sampleID, outfile, threads):
-    OUT_DIR = "out_hla"
-    cmd = HLA + ' --BAM {} --workingDir {} --graph {} --sampleID {}'\
-          + ' --maxTHREADS {}'.format(bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
-    exec_command(cmd)
-
-    # create a dictionary to store the output for each allele
-    hla = pd.read_table(os.path.join(OUT_DIR, sampleID, 'hla', 'R1_bestguess_G.txt'), sep='\t')
-    allele_dict = {}
-    hla = hla.groupby('Locus')
-    for k, g in hla:
-        allele = [re.sub('G$', '', a).replace('N', '') for a in g['Allele'].tolist()]
-        allele_dict['HLA_' + k] = allele
-
-    # Create formatted output file
-    today = datetime.now().strftime('%B_%d_%Y')
-    a = open(outfile, 'w')
-    for x in sorted(allele_dict):
-        a.write('{}\t{}\tExome {}\t{}\t{}\t{}\tPRG-HLA-LA\t-\t-\n'.format(MRN,
-                                                                          sampleID,
-                                                                          today,
-                                                                          x,
-                                                                          allele_dict[x][0],
-                                                                          allele_dict[x][1]))
-    a.close()
 
 # Sample 1 cancer, sample 2 normal
 def Full_exome_pipeline(sample1,
@@ -47,7 +19,7 @@ def Full_exome_pipeline(sample1,
                         SNPSITES,
                         GERMLINE,
                         INTERVAL=None):
-    WORKING_DIR = os.path.abspath(os.getcwd())
+    print("Exome pipeline")
 
     sample1_ID = sampleID + "_Tumor"
     sample2_ID = sampleID + "_Normal"
@@ -62,12 +34,16 @@ def Full_exome_pipeline(sample1,
     exec_command(cmd)
     print('Tumor and normal bam files had read group information added.')
 
+    # Create sub-folder to store all results
+    os.makedirs('exome', exist_ok=True)
+    os.chdir('exome')
+
     # Mark duplicates
     print('Marking duplicates')
-    cmdT_mark = GATK + ' MarkDuplicatesSpark -I=sample1_header.bam -O=sample1_dedup.bam -M=dedup_sample1.txt'
-    exec_command(cmdT_mark)
-    cmdN_mark = GATK + ' MarkDuplicatesSpark -I=sample2_header.bam -O=sample2_dedup.bam -M=dedup_sample2.txt'
-    exec_command(cmdN_mark)
+    cmd = GATK + ' MarkDuplicatesSpark -I=sample1_header.bam -O=sample1_dedup.bam -M=dedup_sample1.txt'
+    exec_command(cmd)
+    cmd = GATK + ' MarkDuplicatesSpark -I=sample2_header.bam -O=sample2_dedup.bam -M=dedup_sample2.txt'
+    exec_command(cmd)
     print('Tumor and normal bam files had their optical and PCR duplicates marked.')
 
     # GATK base re-calibration
@@ -1083,18 +1059,19 @@ def Full_exome_pipeline(sample1,
 
     # Create list of AA and cDNA sequences
     print('Creating epitopes')
-    AA_seq = {}
-    dict1 = open(FASTA_AA_DICT)
-    for line in dict1:
-        entry = line.rstrip("\n").split(":")
-        key, values = entry[0], entry[1]
-        AA_seq[key] = values
-    cDNA_seq = {}
-    dict2 = open(FASTA_cDNA)
-    for line in dict2:
-        entry = line.rstrip("\n").split(":")
-        key, values = entry[0], entry[1]
-        cDNA_seq[key] = values
+    #NOTE temporary for testing till we get the files
+    AA_seq = FASTA_AA_DICT
+    #dict1 = open(FASTA_AA_DICT)
+    #for line in dict1:
+    #    entry = line.rstrip("\n").split(":")
+    #    key, values = entry[0], entry[1]
+    #    AA_seq[key] = values
+    cDNA_seq = FASTA_cDNA
+    #dict2 = open(FASTA_cDNA)
+    #for line in dict2:
+    #    entry = line.rstrip("\n").split(":")
+    #    key, values = entry[0], entry[1]
+    #    cDNA_seq[key] = values
 
     epitope_file = open('SQL_Epitopes.txt', 'w')
     input_file = open('Formatted_epitope_variant.txt')
