@@ -12,7 +12,7 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, annotation, SNPSITES, K
     print('Aligining with STAR')
     cmd = '{} --genomeDir {} --readFilesIn {} {} --outSAMmultNmax 1 --outSAMorder Paired --outSAMprimaryFlag OneBestScore'\
           ' --twopassMode Basic --outSAMunmapped Within --sjdbGTFfile {} --outFilterIntronMotifs RemoveNoncanonical --outFilterType Normal'\
-          ' --outSAMtype BAM SortedByCoordinate --runThreadN {}'.format(STAR, genome, sample1, sample2, THREADS, annotation)
+          ' --outSAMtype BAM SortedByCoordinate --runThreadN {}'.format(STAR, genome, sample1, sample2, annotation, THREADS)
     exec_command(cmd)
     print('Aligment completed.')
 
