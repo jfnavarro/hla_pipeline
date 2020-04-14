@@ -300,10 +300,7 @@ def Full_exome_pipeline(sample1,
 
     # Run annovar to annotate variants
     print('Running annovar')
-    # Ensure GHRC37 works with annovar (hg19)
-    if not UCSC:
-        cmd = 'awk \'{if($0 !~ /^#/) print "chr"$0; else print $0}\' combined_indel_calls.vcf > combined_calls.vcf'
-        exec_command(cmd)
+    #TODO Ensure GHRC37 works with annovar (hg19)
     cmd = '{} -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'.format(
         os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
     exec_command(cmd)
@@ -828,10 +825,7 @@ def Full_exome_pipeline(sample1,
 
     # Annotate with Annovar
     print('Annotating combined indels with annovar')
-    # Make sure that GRHC37 genomes work with annovar (hg19)
-    if not UCSC:
-        cmd = 'awk \'{if($0 !~ /^#/) print "chr"$0; else print $0}\' combined_indel_calls.vcf > combined_indel_calls.vcf'
-        exec_command(cmd)
+    #TODO Make sure that GRHC37 genomes work with annovar (hg19)
     cmd = '{} -format vcf4old combined_indel_calls.vcf --withzyg --comment --includeinfo -outfile indel.av'.format(
         os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
     exec_command(cmd)
