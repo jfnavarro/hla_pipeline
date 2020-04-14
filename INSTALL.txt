@@ -66,6 +66,7 @@ wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/Mutect2/af-only-gno
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.fasta.gz
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.dict.gz
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.fasta.fai.gz
+wget ftp://ftp.ensembl.org/pub/release-75/gtf/homo_sapiens/Homo_sapiens.GRCh37.75.gtf.gz
 bwa index human_g1k_v37_decoy.fasta.gz
 STAR --runMode genomeGenerate --runThreadN 40 --genomeDir STARIndex/ --genomeFastaFiles human_g1k_v37_decoy.fasta --sjdbGTFfile Homo_sapiens.GRCh37.75.gtf --sjdbOverhang 99
 

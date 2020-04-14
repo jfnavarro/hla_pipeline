@@ -18,24 +18,27 @@ def Full_exome_pipeline(sample1,
                         KNOWN_SITE2,
                         SNPSITES,
                         GERMLINE,
-                        INTERVAL=None):
+                        INTERVAL=None,
+                        UCSC=False):
     print("Exome pipeline")
 
     sample1_ID = sampleID + "_Tumor"
     sample2_ID = sampleID + "_Normal"
 
+    # Create sub-folder to store all results
+    os.makedirs('exome', exist_ok=True)
+
     # Add headers
     print("Adding headers")
-    cmd = '{} AddOrReplaceReadGroups I={} O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
+    cmd = '{} AddOrReplaceReadGroups I={} O=exome/sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
           ' RGCN={} RGDS={}'.format(PICARD, sample1, sample1_ID, LIBRARY, sample1_ID, sample1_ID, SEQ_CENTER, tumor_type)
     exec_command(cmd)
-    cmd = '{} AddOrReplaceReadGroups I={} O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
+    cmd = '{} AddOrReplaceReadGroups I={} O=exome/sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
           ' RGCN={} RGDS={}'.format(PICARD, sample2, sample1_ID, LIBRARY, sample2_ID, sample2_ID, SEQ_CENTER, tumor_type)
     exec_command(cmd)
     print('Tumor and normal bam files had read group information added.')
 
-    # Create sub-folder to store all results
-    os.makedirs('exome', exist_ok=True)
+    # Move here for convenience
     os.chdir('exome')
 
     # Mark duplicates
@@ -297,7 +300,10 @@ def Full_exome_pipeline(sample1,
 
     # Run annovar to annotate variants
     print('Running annovar')
-    #TODO ensure GHRC37 works with annovar (hg19)
+    # Ensure GHRC37 works with annovar (hg19)
+    if not UCSC:
+        cmd = 'awk \'{if($0 !~ /^#/) print "chr"$0; else print $0}\' combined_indel_calls.vcf > combined_calls.vcf'
+        exec_command(cmd)
     cmd = '{} -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'.format(
         os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
     exec_command(cmd)
@@ -822,7 +828,10 @@ def Full_exome_pipeline(sample1,
 
     # Annotate with Annovar
     print('Annotating combined indels with annovar')
-    #TODO make sure that GRHC37 genomes work with annovar (hg19)
+    # Make sure that GRHC37 genomes work with annovar (hg19)
+    if not UCSC:
+        cmd = 'awk \'{if($0 !~ /^#/) print "chr"$0; else print $0}\' combined_indel_calls.vcf > combined_indel_calls.vcf'
+        exec_command(cmd)
     cmd = '{} -format vcf4old combined_indel_calls.vcf --withzyg --comment --includeinfo -outfile indel.av'.format(
         os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
     exec_command(cmd)
@@ -1168,7 +1177,6 @@ def Full_exome_pipeline(sample1,
                 ref_cDNA_seq = cDNA_seq.get(transcriptID, 'cDNA not present for this transcript')
                 if ref_cDNA_seq == 'cDNA not present for this transcript':
                     errors += ' cDNA not present for this transcript'
-                len_ins = len(alt)
                 cDNA_strip = cDNA_raw.strip()
                 if re.search(r'dup', cDNA_strip):
                     cDNA_pos = cDNA_strip[int(cDNA_strip.find('.')) + 1:int(cDNA_strip.find('dup'))]
@@ -1181,7 +1189,7 @@ def Full_exome_pipeline(sample1,
                 mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
                 if protein_strip.startswith('p.') and re.search(r'fs', protein_strip) and not protein_strip.startswith('p.X'):
                     position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('f')])
-                elif protein_strip.startswith('p.') and re.search(r'delins', protein_strip) and not protein_strip.startswith('p.X'):  ##different versions of annovar annotated this differently this has corrected it thus far.
+                elif protein_strip.startswith('p.') and re.search(r'delins', protein_strip) and not protein_strip.startswith('p.X'):
                     position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('delins')])
                 elif protein_strip.startswith('p.X'):
                     position = 0
@@ -1239,7 +1247,6 @@ def Full_exome_pipeline(sample1,
                 mut_cDNA_seq = mut_cDNA_left + mut_cDNA_right
                 ref_FASTA = translate_dna(ref_cDNA_seq)
                 mut_FASTA = translate_dna(mut_cDNA_seq)
-                mut_stop = int(mut_FASTA.find('X'))
                 if position >= 13:
                     WT_25mer_temp = ref_FASTA[(position - 13):position + 12]
                     WT_25mer = WT_25mer_temp.replace('X', '')
@@ -1264,7 +1271,6 @@ def Full_exome_pipeline(sample1,
                 ref_cDNA_seq = cDNA_seq.get(transcriptID, 'cDNA not present for this transcript')
                 if ref_cDNA_seq == 'cDNA not present for this transcript':
                     errors += ' cDNA not present for this transcript'
-                len_ins = len(alt)
                 cDNA_strip = cDNA_raw.strip()
                 cDNA_pos = cDNA_strip[int(cDNA_strip.find('.')) + 1:int(cDNA_strip.find('_'))]
                 ins = cDNA_strip[int(cDNA_strip.find('ins')) + 3:]
@@ -1280,7 +1286,6 @@ def Full_exome_pipeline(sample1,
                     errors += ' deletion occurs in stop codon'
                 ref_FASTA = translate_dna(ref_cDNA_seq)
                 mut_FASTA = translate_dna(mut_cDNA_seq)
-                mut_stop = int(mut_FASTA.find('X'))
                 if position >= 13:
                     WT_25mer_temp = ref_FASTA[(position - 13):position + 12]
                     WT_25mer = WT_25mer_temp.replace('X', '')
