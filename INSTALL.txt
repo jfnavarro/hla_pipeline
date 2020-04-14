@@ -51,7 +51,9 @@ gsutil cp gs://gatk-best-practices/somatic-b37/af-only-gnomad.raw.sites.vcf.idx
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.fasta.gz
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.dict.gz
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.fasta.fai.gz
+wget https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/genes/hg19.refGene.gtf.gz
 bwa index ucsc.hg19.fasta.gz
+STAR --runMode genomeGenerate --runThreadN 40 --genomeDir STARIndex/ --genomeFastaFiles ucsc.hg19..fasta --sjdbGTFfile hg19.refGene.gtf --sjdbOverhang 99
 
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/1000G_phase1.indels.b37.vcf.gz
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/1000G_phase1.indels.b37.vcf.idx.gz
@@ -65,6 +67,7 @@ wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_d
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.dict.gz
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.fasta.fai.gz
 bwa index human_g1k_v37_decoy.fasta.gz
+STAR --runMode genomeGenerate --runThreadN 40 --genomeDir STARIndex/ --genomeFastaFiles human_g1k_v37_decoy.fasta --sjdbGTFfile Homo_sapiens.GRCh37.75.gtf --sjdbOverhang 99
 
 cd ~/Alena/
 git clone hla_pipeline

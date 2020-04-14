@@ -19,7 +19,9 @@ parser.add_argument('R2_RNA', help='FASTQ file R2 (RNA)')
 parser.add_argument('--adapter',
                     help='Path to the Illumina adapters FASTA file.', required=True)
 parser.add_argument('--genome',
-                    help='Path to the reference Genome FASTA file (must contain BWA index)', required=True)
+                    help='Path to the reference Genome FASTA file (must contain BWA and STAR index)', required=True)
+parser.add_argument('--genome-ref',
+                    help='Path to the reference Genome GTF file', required=True)
 parser.add_argument('--sample',
                     help='Name of the sample/experiment. Default is sample', default='sample')
 parser.add_argument('--tumor',
@@ -54,6 +56,7 @@ sampleID = args.sample
 tumor_type = args.tumor
 IILLUMINA_ADAPTERS = os.path.abspath(args.adapter)
 GENOME_REF = os.path.abspath(args.genome)
+GENOME_ANNOTATION = os.path.abspath(args.genome)
 THREADS = multiprocessing.cpu_count() - 1
 FASTA_AA_DICT = os.path.abspath(args.fastaAA)
 FASTA_cDNA = os.path.abspath(args.fastacDNA)
@@ -199,8 +202,8 @@ Full_exome_pipeline('aligned_cancer_merged.bam',
 RNA_seq_pipeline(R1_RNA,
                  R2_RNA,
                  sampleID,
-                 genome,
-                 annotation,
+                 GENOME_REF,
+                 GENOME_ANNOTATION,
                  SNPSITES,
                  KNOWN_SITE1,
                  KNOWN_SITE2,

@@ -1059,19 +1059,18 @@ def Full_exome_pipeline(sample1,
 
     # Create list of AA and cDNA sequences
     print('Creating epitopes')
-    #NOTE temporary for testing till we get the files
-    AA_seq = FASTA_AA_DICT
-    #dict1 = open(FASTA_AA_DICT)
-    #for line in dict1:
-    #    entry = line.rstrip("\n").split(":")
-    #    key, values = entry[0], entry[1]
-    #    AA_seq[key] = values
-    cDNA_seq = FASTA_cDNA
-    #dict2 = open(FASTA_cDNA)
-    #for line in dict2:
-    #    entry = line.rstrip("\n").split(":")
-    #    key, values = entry[0], entry[1]
-    #    cDNA_seq[key] = values
+    dict1 = open(FASTA_AA_DICT)
+    AA_seq = dict()
+    for line in dict1:
+        entry = line.rstrip("\n").split(":")
+        key, values = entry[0], entry[1]
+        AA_seq[key] = values
+    dict2 = open(FASTA_cDNA)
+    cDNA_seq = dict()
+    for line in dict2:
+        entry = line.rstrip("\n").split(":")
+        key, values = entry[0], entry[1]
+        cDNA_seq[key] = values
 
     epitope_file = open('SQL_Epitopes.txt', 'w')
     input_file = open('Formatted_epitope_variant.txt')

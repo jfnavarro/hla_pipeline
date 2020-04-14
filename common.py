@@ -37,7 +37,7 @@ KIT = "Na"
 NOTE = "Na"
 INDEX = "Na"
 
-FASTA_AA_DICT = {
+FASTA_AA = {
     'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',
     'ACA':'T', 'ACC':'T', 'ACG':'T', 'ACT':'T',
     'AAC':'N', 'AAT':'N', 'AAA':'K', 'AAG':'K',
@@ -55,8 +55,6 @@ FASTA_AA_DICT = {
     'TAC':'Y', 'TAT':'Y', 'TAA':'_', 'TAG':'_',
     'TGC':'C', 'TGT':'C', 'TGA':'_', 'TGG':'W',
 }
-
-FASTA_cDNA = {'A':'A', 'G':'G', 'C':'C', 'T':'U'}
 
 def index_column_substring(your_list, substring):
     for i, s in enumerate(your_list):
@@ -80,7 +78,7 @@ def translate_dna_to_protein(seq):
     if len(seq) % 3 == 0:
         for i in range(0, len(seq), 3):
             codon = seq[i:i + 3]
-            protein += FASTA_AA_DICT[codon]
+            protein += FASTA_AA[codon]
     return protein
 
 def exec_command(cmd):
