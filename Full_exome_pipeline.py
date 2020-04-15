@@ -16,7 +16,7 @@ def Full_exome_pipeline(R1_NORMAL,
                         sampleID,
                         THREADS,
                         FASTA_AA_DICT,
-                        FASTA_cDNA,
+                        FASTA_cDNA_DICT,
                         KNOWN_SITE1,
                         KNOWN_SITE2,
                         SNPSITES,
@@ -1174,15 +1174,14 @@ def Full_exome_pipeline(R1_NORMAL,
     AA_seq = dict()
     for line in dict1:
         entry = line.rstrip("\n").split(":")
-        key, values = entry[0], entry[1]
-        AA_seq[key] = values
-    dict2 = open(FASTA_cDNA)
+        AA_seq[entry[0]] = entry[1]
+    dict1.close()
+    dict2 = open(FASTA_cDNA_DICT)
     cDNA_seq = dict()
     for line in dict2:
         entry = line.rstrip("\n").split(":")
-        key, values = entry[0], entry[1]
-        cDNA_seq[key] = values
-
+        cDNA_seq[entry[0]] = entry[1]
+    dict2.close()
     epitope_file = open('SQL_Epitopes.txt', 'w')
     input_file = open('Formatted_epitope_variant.txt')
     for line in input_file:

@@ -5,7 +5,11 @@ conda activate jared
 
 cd ~/shared
 
-conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan cufflinks picard trim-galore star
+conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan cufflinks picard trim-galore star somatic-sniper bedtools pigz kallisto biopython scipy
+
+wget https://github.com/git-lfs/git-lfs/releases/download/v2.10.0/git-lfs-linux-386-v2.10.0.tar.gz
+tar -xvf git-lfs-linux-386-v2.10.0.tar.gz
+
 
 wget http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz
 mkdir -p HLA-PA/graphs

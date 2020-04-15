@@ -63,7 +63,7 @@ GENOME_REF_STAR = os.path.abspath(args.genome_star)
 GENOME_ANNOTATION = os.path.abspath(args.genome)
 THREADS = multiprocessing.cpu_count() - 1
 FASTA_AA_DICT = os.path.abspath(args.fastaAA)
-FASTA_cDNA = os.path.abspath(args.fastacDNA)
+FASTA_cDNA_DICT = os.path.abspath(args.fastacDNA)
 KNOWN_SITE1 = os.path.abspath(args.known1)
 KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
@@ -89,7 +89,7 @@ Full_exome_pipeline(R1_NORMAL,
                     sampleID,
                     THREADS,
                     FASTA_AA_DICT,
-                    FASTA_cDNA,
+                    FASTA_cDNA_DICT,
                     KNOWN_SITE1,
                     KNOWN_SITE2,
                     SNPSITES,
