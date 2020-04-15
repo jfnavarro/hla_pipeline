@@ -1173,13 +1173,13 @@ def Full_exome_pipeline(R1_NORMAL,
     dict1 = open(FASTA_AA_DICT)
     AA_seq = dict()
     for line in dict1:
-        entry = line.rstrip("\n").split(":")
+        entry = line.decode('utf-8').rstrip("\n").split(":")
         AA_seq[entry[0]] = entry[1]
     dict1.close()
     dict2 = open(FASTA_cDNA_DICT)
     cDNA_seq = dict()
     for line in dict2:
-        entry = line.rstrip("\n").split(":")
+        entry = line.decode('utf-8').rstrip("\n").split(":")
         cDNA_seq[entry[0]] = entry[1]
     dict2.close()
     epitope_file = open('SQL_Epitopes.txt', 'w')

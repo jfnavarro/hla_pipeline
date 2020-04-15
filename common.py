@@ -22,6 +22,7 @@ STAR = 'STAR'
 TRIMGALORE = 'trim_galore'
 TRIPTOMATIC = 'trimmomatic'
 BWA = 'bwa mem'
+ARCASHLA = os.path.join(os.environ('ARCASHLA_PATH'), 'arcasHLA')
 
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
@@ -95,14 +96,22 @@ def exec_command(cmd):
             print(line.rstrip())
         sys.exit(-1)
 
-# This function will predict HLAs using PHLAT one sample
-def HLA_prediction(sample1, sample2, threads, outfile):
-    cmd = "{} -1 {} -2 {} -index {} -b2url {} -tag normal -e {} -o . -p {}".format(HLA,
-                                                                                   sample1,
-                                                                                   sample2,
-                                                                                   BOWTIE2,
-                                                                                   HLA_PATH,
-                                                                                   threads)
+def HLA_predictionDNA(sample1, sample2, threads, outfile):
+    return
+
+def HLA_predictionRNA(sample, threads, outfile):
+    cmd = '{} extract --threads {} --paired {}'.format(ARCASHLA, threads, sample)
+    exec_command(cmd)
+
+    clean_name = os.path.splitext(sample)[0]
+
+    cmd = '{} genotype --threads {} {}.1.fq.gz {}.2.fq.gz'.format(ARCASHLA, threads, clean_name, clean_name)
+    exec_command(cmd)
+
+    cmd = '{} partial --threads {} -G {}.genotype.json {}.1.fq.gz {}.2.fq.gz'.format(ARCASHLA, threads, clean_name, clean_name, clean_name)
+    exec_command(cmd)
+
+    cmd = '{} merge --run {}'.format(ARCASHLA, outfile)
     exec_command(cmd)
 
 def HLA_PRG(bamfile, sampleID, outfile, threads):

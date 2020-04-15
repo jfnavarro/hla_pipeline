@@ -9,7 +9,15 @@ conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan cuffli
 
 wget https://github.com/git-lfs/git-lfs/releases/download/v2.10.0/git-lfs-linux-386-v2.10.0.tar.gz
 tar -xvf git-lfs-linux-386-v2.10.0.tar.gz
-
+export PATH="~/shared/gitlfs:$PATH
+git clone https://github.com/RabadanLab/arcasHLA.git
+cd arcasHLA/
+git-lfs install --local
+cd dat
+git clone https://github.com/ANHIG/IMGTHLA.git
+cd ..
+./arcasHLA reference --update
+export ARCASHLA_PATH="~/shared/arcasHLA"
 
 wget http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz
 mkdir -p HLA-PA/graphs
