@@ -130,9 +130,9 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
         sample_center = SEQ_CENTER
         variant_key = Chr + ':' + start + '-' + end + ' ' + ref + '>' + alt
         if ref_gene_detail != 'NA':
-           AA_change_refGene = ref_gene_detail
+            AA_change_refGene = ref_gene_detail
         if known_gene_detail != 'NA':
-           AA_change_knownGene = known_gene_detail
+            AA_change_knownGene = known_gene_detail
         if ens_gene_detail != 'NA':
             AA_change_ensGgene = ens_gene_detail
         insert_file.write(str(gDNA) + "\t" + str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str(Chr) + "\t" + str(start) + "\t"\
@@ -223,7 +223,6 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
     nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
     for line in joined_variants:
         columns = line.rstrip('\n').split('\t')
-        length = len(columns)
         mrn = columns[1]
         seq_center = columns[2]
         sampleID = columns[3]

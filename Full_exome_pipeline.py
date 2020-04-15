@@ -1170,13 +1170,13 @@ def Full_exome_pipeline(R1_NORMAL,
 
     # Create list of AA and cDNA sequences
     print('Creating epitopes')
-    dict1 = open(FASTA_AA_DICT)
+    dict1 = open(FASTA_AA_DICT, encoding="utf-8")
     AA_seq = dict()
     for line in dict1:
         entry = line.rstrip("\n").split(":")
         AA_seq[entry[0]] = entry[1]
     dict1.close()
-    dict2 = open(FASTA_cDNA_DICT)
+    dict2 = open(FASTA_cDNA_DICT, encoding="utf-8")
     cDNA_seq = dict()
     for line in dict2:
         entry = line.rstrip("\n").split(":")
@@ -1189,7 +1189,6 @@ def Full_exome_pipeline(R1_NORMAL,
         if len(columns) > 21:
             variant_key = columns[9].strip()
             ref = columns[13].strip()
-            alt = columns[14].strip()
             exonic_func = columns[16].strip()
             transcriptID = columns[18].strip()
             cDNA_raw = columns[20].strip()
@@ -1296,7 +1295,7 @@ def Full_exome_pipeline(R1_NORMAL,
                     position = 0
                     errors += ' frameshift insertion occurs in stop codon'
                 elif not protein_strip.startswith('p.'):
-                    postion = 0
+                    position = 0
                 ref_FASTA = translate_dna(ref_cDNA_seq)
                 mut_FASTA = translate_dna(mut_cDNA_seq)
                 mut_stop = int(mut_FASTA.find('X'))
