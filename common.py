@@ -11,18 +11,14 @@ VARSCAN = 'varscan'
 STRELKA = os.path.join(os.environ['STRELKA_PATH'], 'bin', 'configureStrelkaSomaticWorkflow.py')
 SAMTOOLS = 'samtools'
 SSNIPER = 'bam-somaticsniper'
-HLA = "HLA-LA.pl"
+HLALA = "HLA-LA.pl"
 SAMTOOLS = 'samtools'
 CUFFLINKS = 'cufflinks'
-HLA = 'python PHLAT.py'
-HLA_INDEX = '~/shared/index4phlat'
-HLA_PATH = "~/phlat"
-BOWTIE2 = 'bowtie2'
 STAR = 'STAR'
 TRIMGALORE = 'trim_galore'
 TRIPTOMATIC = 'trimmomatic'
 BWA = 'bwa mem'
-ARCASHLA = os.path.join(os.environ('ARCASHLA_PATH'), 'arcasHLA')
+ARCASHLA = os.path.join(os.environ['ARCASHLA_PATH'], 'arcasHLA')
 
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
@@ -116,8 +112,8 @@ def HLA_predictionRNA(sample, threads, outfile):
 
 def HLA_PRG(bamfile, sampleID, outfile, threads):
     OUT_DIR = "out_hla"
-    cmd = HLA + ' --BAM {} --workingDir {} --graph {} --sampleID {}'\
-          + ' --maxTHREADS {}'.format(bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
+    cmd = '{} --BAM {} --workingDir {} --graph {} --sampleID {}'\
+          + ' --maxTHREADS {}'.format(HLALA, bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
     exec_command(cmd)
 
     # create a dictionary to store the output for each allele
