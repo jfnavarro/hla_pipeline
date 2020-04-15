@@ -20,6 +20,8 @@ HLA_PATH = "~/phlat"
 BOWTIE2 = 'bowtie2'
 STAR = 'STAR'
 TRIMGALORE = 'trim_galore'
+TRIPTOMATIC = 'trimmomatic'
+BWA = 'bwa mem'
 
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']

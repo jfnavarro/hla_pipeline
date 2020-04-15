@@ -1,12 +1,12 @@
 mkdir -p ~/shared
 
-conda create alena
-source activate alena
+conda create -n jared python=3.6.1
+conda activate jared
 
-pip install pandas
-
-conda install hla-la
 cd ~/shared
+
+conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan cufflinks picard trim-galore star
+
 wget http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz
 mkdir -p HLA-PA/graphs
 tar -xvf PRG_MHC_GRCh38_withIMGT.tar.gz
@@ -14,15 +14,6 @@ mv PRG_MHC_GRCh38_withIMGT HLA-PA/graphs
 ~/anaconda3/envs/alena/opt/hla-la/bin/HLA-LA --action prepareGraph --PRG_graph_dir HLA-LA/graphs/PRG_MH
 mkdir ~/anaconda3/envs/alena/opt/hla-la/graphs
 mv ~/shared/HLA-LA/graphs/PRG_MHC_GRCh38_withIMGT ~/anaconda3/envs/alena/opt/hla-la/graphs/
-
-conda install gatk4
-conda install bwa
-conda install samtools
-conda install picard
-conda install trimmomatic
-conda install varscan
-conda install cufflinks
-conda install trim-galore
 
 wget https://github.com/Illumina/strelka/releases/download/v2.9.10/strelka-2.9.10.centos6_x86_64.tar.bz2
 tar -xjf strelka-2.9.10.centos6_x86_64.tar.bz2
@@ -43,6 +34,8 @@ gunzip humandb/hg19_kgXref.txt.gz
 export ANNOVAR_PATH=~/shared/annovar
 
 cd ~/shared/
+mkdir hg19
+cd hg19
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz.tbi
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/1000G_phase1.indels.hg19.sites.vcf.gz
@@ -57,6 +50,9 @@ wget https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/genes/hg19.refGene.
 bwa index ucsc.hg19.fasta.gz
 STAR --runMode genomeGenerate --runThreadN 40 --genomeDir STARIndex/ --genomeFastaFiles ucsc.hg19..fasta --sjdbGTFfile hg19.refGene.gtf --sjdbOverhang 99
 
+cd ~/shared/
+mkdir GRCh37
+cd GRCh37
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/1000G_phase1.indels.b37.vcf.gz
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/1000G_phase1.indels.b37.vcf.idx.gz
 wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/dbsnp_138.b37.vcf.gz

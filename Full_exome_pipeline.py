@@ -6,8 +6,11 @@ from re import sub
 from common import *
 
 # Sample 1 cancer, sample 2 normal
-def Full_exome_pipeline(sample1,
-                        sample2,
+def Full_exome_pipeline(R1_NORMAL,
+                        R2_NORMAL,
+                        R1_CANCER,
+                        R2_CANCER,
+                        IILLUMINA_ADAPTERS,
                         tumor_type,
                         genome,
                         sampleID,
@@ -27,19 +30,124 @@ def Full_exome_pipeline(sample1,
 
     # Create sub-folder to store all results
     os.makedirs('exome', exist_ok=True)
+    os.chdir('exome')
+
+    # TRIMMING
+    print('Starting trimming')
+
+    cmd = '{} PE -threads {} -phred33 {} {} R1_normal.fastq.gz R1_normal_unpaired.fastq.gz ' \
+          'R2_normal.fastq.gz R2_normal_unpaired.fastq.gz ' \
+          'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
+                                                                                           THREADS,
+                                                                                           R1_NORMAL,
+                                                                                           R2_NORMAL,
+                                                                                           IILLUMINA_ADAPTERS)
+    exec_command(cmd)
+
+    cmd = '{} PE -threads {} -phred33 {} {} R1_cancer.fastq.gz R1_cancer_unpaired.fastq.gz ' \
+          'R2_cancer.fastq.gz R2_cancer_unpaired.fastq.gz ' \
+          'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
+                                                                                           THREADS,
+                                                                                           R1_CANCER,
+                                                                                           R2_CANCER,
+                                                                                           IILLUMINA_ADAPTERS)
+    exec_command(cmd)
+
+    print('Trimming of tumor and normal samples completed.')
+
+    # ALIGNMENT
+    print('Starting alignment')
+
+    # Normal (paired)
+    cmd = '{} -t {} {} R1_normal.fastq.gz R2_normal.fastq.gz | {} view -bS > normal_paired_aligned.bam'.format(BWA,
+                                                                                                               THREADS,
+                                                                                                               genome,
+                                                                                                               SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} normal_paired_aligned.bam > normal_paired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                     THREADS)
+    exec_command(cmd)
+
+    # Cancer (paired)
+    cmd = '{} -t {} {} R1_cancer.fastq.gz R2_cancer.fastq.gz | {} view -bS > cancer_paired_aligned.bam'.format(BWA,
+                                                                                                               THREADS,
+                                                                                                               genome,
+                                                                                                               SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} cancer_paired_aligned.bam > cancer_paired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                     THREADS)
+    exec_command(cmd)
+
+    # Normal (unpaired R1)
+    cmd = '{} -t {} {} R1_normal_unpaired.fastq.gz | {} view -bS > R1_normal_unpaired_aligned.bam'.format(BWA,
+                                                                                                          THREADS,
+                                                                                                          genome,
+                                                                                                          SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} R1_normal_unpaired_aligned.bam > R1_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                               THREADS)
+    exec_command(cmd)
+
+    # Cancer (unpaired R1)
+    cmd = '{} -t {} {} R1_cancer_unpaired.fastq.gz | {} view -bS > R1_cancer_unpaired_aligned.bam'.format(BWA,
+                                                                                                          THREADS,
+                                                                                                          genome,
+                                                                                                          SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} R1_cancer_unpaired_aligned.bam > R1_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                               THREADS)
+    exec_command(cmd)
+
+    # Normal (unpaired R2)
+    cmd = '{} -t {} {} R2_normal_unpaired.fastq.gz | {} view -bS > R2_normal_unpaired_aligned.bam'.format(BWA,
+                                                                                                          THREADS,
+                                                                                                          genome,
+                                                                                                          SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} R2_normal_unpaired_aligned.bam > R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                               THREADS)
+    exec_command(cmd)
+
+    # Cancer (unpaired R2)
+    cmd = '{} -t {} {} R2_cancer_unpaired.fastq.gz | {} view -bS > R2_cancer_unpaired_aligned.bam'.format(BWA,
+                                                                                                          THREADS,
+                                                                                                          genome,
+                                                                                                          SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} R2_cancer_unpaired_aligned.bam > R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                               THREADS)
+    exec_command(cmd)
+
+    print('Aligment of tumor and normal samples completed.')
+
+    # Merge aligned files
+    print('Merging aligned files')
+
+    cmd = '{} merge -f aligned_normal_merged.bam normal_paired_aligned_sorted.bam ' \
+          'R1_normal_unpaired_aligned_sorted.bam R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} merge -f aligned_cancer_merged.bam cancer_paired_aligned_sorted.bam ' \
+          'R1_cancer_unpaired_aligned_sorted.bam R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
+    exec_command(cmd)
+
+    print('Merging of tumor and normal aligned samples completed.')
 
     # Add headers
     print("Adding headers")
-    cmd = '{} AddOrReplaceReadGroups I={} O=exome/sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
-          ' RGCN={} RGDS={}'.format(PICARD, sample1, sample1_ID, LIBRARY, sample1_ID, sample1_ID, SEQ_CENTER, tumor_type)
+    cmd = '{} AddOrReplaceReadGroups I=aligned_cancer_merged.bam O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
+          ' RGCN={} RGDS={}'.format(PICARD, sample1_ID, LIBRARY, sample1_ID, sample1_ID, SEQ_CENTER, tumor_type)
     exec_command(cmd)
-    cmd = '{} AddOrReplaceReadGroups I={} O=exome/sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
-          ' RGCN={} RGDS={}'.format(PICARD, sample2, sample1_ID, LIBRARY, sample2_ID, sample2_ID, SEQ_CENTER, tumor_type)
+    cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
+          ' RGCN={} RGDS={}'.format(PICARD, sample1_ID, LIBRARY, sample2_ID, sample2_ID, SEQ_CENTER, tumor_type)
     exec_command(cmd)
     print('Tumor and normal bam files had read group information added.')
-
-    # Move here for convenience
-    os.chdir('exome')
 
     # Mark duplicates
     print('Marking duplicates')

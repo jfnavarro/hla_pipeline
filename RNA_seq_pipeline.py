@@ -3,7 +3,7 @@ import re
 import datetime
 import os
 
-def RNA_seq_pipeline(sample1, sample2, sampleID, genome, annotation, SNPSITES, KNOWN_SITE1, KNOWN_SITE2, THREADS):
+def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation, SNPSITES, KNOWN_SITE1, KNOWN_SITE2, THREADS):
     print("RNA-seq pipeline")
 
     # Create sub-folder to store all results
@@ -18,8 +18,10 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, annotation, SNPSITES, K
     print('Aligining with STAR')
     cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired'\
           ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs'\
-          ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --runThreadN {}'.format(
-        STAR, os.path.join(genome, 'STARIndex'), annotation, THREADS)
+          ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --runThreadN {}'.format(STAR,
+                                                                                                                  genome_star,
+                                                                                                                  annotation,
+                                                                                                                  THREADS)
     exec_command(cmd)
     print('Aligment completed.')
 
