@@ -18,7 +18,8 @@ HLA = 'python PHLAT.py'
 HLA_INDEX = '~/shared/index4phlat'
 HLA_PATH = "~/phlat"
 BOWTIE2 = 'bowtie2'
-STAR = "STAR"
+STAR = 'STAR'
+TRIMGALORE = 'trim_galore'
 
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']

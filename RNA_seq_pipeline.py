@@ -1,6 +1,7 @@
 from common import *
 import re
 import datetime
+import os
 
 def RNA_seq_pipeline(sample1, sample2, sampleID, genome, annotation, SNPSITES, KNOWN_SITE1, KNOWN_SITE2, THREADS):
     print("RNA-seq pipeline")
@@ -9,10 +10,16 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, annotation, SNPSITES, K
     os.makedirs('rna', exist_ok=True)
     os.chdir('rna')
 
+    print('Trimmimg reads')
+    cmd = '{} --paired --basename sample {} {}'.format(TRIMGALORE, sample1, sample2)
+    exec_command(cmd)
+    print('Trimming completed.')
+
     print('Aligining with STAR')
-    cmd = '{} --genomeDir {} --readFilesIn {} {} --outSAMmultNmax 1 --outSAMorder Paired --outSAMprimaryFlag OneBestScore'\
-          ' --twopassMode Basic --outSAMunmapped Within --sjdbGTFfile {} --outFilterIntronMotifs RemoveNoncanonical --outFilterType Normal'\
-          ' --outSAMtype BAM SortedByCoordinate --runThreadN {}'.format(STAR, genome, sample1, sample2, annotation, THREADS)
+    cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired'\
+          ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs'\
+          ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --runThreadN {}'.format(
+        STAR, os.path.join(genome, 'STARIndex'), annotation, THREADS)
     exec_command(cmd)
     print('Aligment completed.')
 

@@ -21,6 +21,8 @@ conda install samtools
 conda install picard
 conda install trimmomatic
 conda install varscan
+conda install cufflinks
+conda install trim-galore
 
 wget https://github.com/Illumina/strelka/releases/download/v2.9.10/strelka-2.9.10.centos6_x86_64.tar.bz2
 tar -xjf strelka-2.9.10.centos6_x86_64.tar.bz2

@@ -19,7 +19,7 @@ parser.add_argument('R2_RNA', help='FASTQ file R2 (RNA)')
 parser.add_argument('--adapter',
                     help='Path to the Illumina adapters FASTA file.', required=True)
 parser.add_argument('--genome',
-                    help='Path to the reference Genome FASTA file (must contain BWA and STAR index)', required=True)
+                    help='Path to the reference Genome FASTA file (must contain BWA and STAR index in a folder called STARIndex)', required=True)
 parser.add_argument('--genome-ref',
                     help='Path to the reference Genome GTF file', required=True)
 parser.add_argument('--sample',
