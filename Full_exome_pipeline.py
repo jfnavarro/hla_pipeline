@@ -171,11 +171,11 @@ def Full_exome_pipeline(R1_NORMAL,
     exec_command(cmd)
     print('Re-calibration was performed on the tumor and normal samples.')
 
-    # HLA predictions
-    #print('Performing HLA predictions')
-    #HLA_PRG('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
-    #HLA_PRG('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
-    #print('HLA predictions completed for tumor and normal samples')
+    # HLA-LA predictions
+    #print('Performing HLA-LA predictions')
+    #HLA_LA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+    #HLA_LA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
+    #print('HLA-LA predictions completed for tumor and normal samples')
 
     # Variant calling (Samtools pile-ups)
     print('Computing pile-ups')
@@ -1173,13 +1173,13 @@ def Full_exome_pipeline(R1_NORMAL,
     dict1 = open(FASTA_AA_DICT)
     AA_seq = dict()
     for line in dict1:
-        entry = line.decode('utf-8').rstrip("\n").split(":")
+        entry = line.rstrip("\n").split(":")
         AA_seq[entry[0]] = entry[1]
     dict1.close()
     dict2 = open(FASTA_cDNA_DICT)
     cDNA_seq = dict()
     for line in dict2:
-        entry = line.decode('utf-8').rstrip("\n").split(":")
+        entry = line.rstrip("\n").split(":")
         cDNA_seq[entry[0]] = entry[1]
     dict2.close()
     epitope_file = open('SQL_Epitopes.txt', 'w')

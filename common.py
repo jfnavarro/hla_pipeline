@@ -110,7 +110,7 @@ def HLA_predictionRNA(sample, threads, outfile):
     cmd = '{} merge --run {}'.format(ARCASHLA, outfile)
     exec_command(cmd)
 
-def HLA_PRG(bamfile, sampleID, outfile, threads):
+def HLA_LA(bamfile, sampleID, outfile, threads):
     OUT_DIR = "out_hla"
     cmd = '{} --BAM {} --workingDir {} --graph {} --sampleID {}'\
           + ' --maxTHREADS {}'.format(HLALA, bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
