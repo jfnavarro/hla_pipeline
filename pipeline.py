@@ -79,24 +79,24 @@ os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
 
 # Exome pìpeline
-Full_exome_pipeline(R1_NORMAL,
-                    R2_NORMAL,
-                    R1_CANCER,
-                    R2_CANCER,
-                    IILLUMINA_ADAPTERS,
-                    tumor_type,
-                    GENOME_REF,
-                    sampleID,
-                    THREADS,
-                    FASTA_AA_DICT,
-                    FASTA_cDNA_DICT,
-                    KNOWN_SITE1,
-                    KNOWN_SITE2,
-                    SNPSITES,
-                    GERMLINE,
-                    INTERVAL,
-                    UCSC)
-os.chdir('..')
+#Full_exome_pipeline(R1_NORMAL,
+#                    R2_NORMAL,
+#                    R1_CANCER,
+#                    R2_CANCER,
+#                    IILLUMINA_ADAPTERS,
+#                    tumor_type,
+#                    GENOME_REF,
+#                    sampleID,
+#                    THREADS,
+#                    FASTA_AA_DICT,
+#                    FASTA_cDNA_DICT,
+#                    KNOWN_SITE1,
+#                    KNOWN_SITE2,
+#                    SNPSITES,
+#                    GERMLINE,
+#                    INTERVAL,
+#                    UCSC)
+#os.chdir('..')
 
 # RNA pìpeline
 RNA_seq_pipeline(R1_RNA,
