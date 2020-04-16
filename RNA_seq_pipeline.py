@@ -3,7 +3,7 @@ import re
 import datetime
 import os
 
-def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation, SNPSITES, KNOWN_SITE1, KNOWN_SITE2, THREADS):
+def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation, tumor_type, SNPSITES, KNOWN_SITE1, KNOWN_SITE2, THREADS):
     print("RNA-seq pipeline")
 
     # Create sub-folder to store all results
