@@ -19,7 +19,7 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
     cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired'\
           ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs'\
           ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c'\
-          ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, max(THREADS / 2, 1))
+          ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, max(int(THREADS / 2), 1))
     exec_command(cmd)
     print('Aligment completed.')
 
@@ -40,8 +40,7 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
     print('Duplicates marked')
 
     # Split N and cigars
-    cmd = '{} SplitNCigarReads -R {} -I sample_dedup.bam -o sample_split.bam -rf ReassignOneMappingQuality'\
-          ' -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS'.format(GATK, genome)
+    cmd = '{} SplitNCigarReads -R {} -I sample_dedup.bam -O sample_split.bam'.format(GATK, genome)
     exec_command(cmd)
 
     # GATK base re-calibration
