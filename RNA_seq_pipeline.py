@@ -60,9 +60,11 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
 
     # Variant calling VarScan
     print('Variant calling with varscan')
-    cmd = VARSCAN + ' mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 --min-var-freq .01 --p-value 0.99 > varscan.vcf'
+    cmd = VARSCAN + ' mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1'\
+                    + ' --min-var-freq .01 --p-value 0.99 > varscan.vcf'
     exec_command(cmd)
-    cmd = VARSCAN + ' mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 0 --min-var-freq .01 --p-value 0.99 > varscan.pileup'
+    cmd = VARSCAN + ' mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 0'\
+                    + ' --min-var-freq .01 --p-value 0.99 > varscan.pileup'
     exec_command(cmd)
     print('Variant calling completed.')
 
@@ -87,7 +89,7 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
     insert_file = open('SQL_variant_input.txt', 'w')
     date = datetime.datetime.now().replace(microsecond=0)
     for line in snv:
-        if line.snv('#') or line.startswith("Chr"):
+        if line.startswith('#') or line.startswith("Chr"):
             continue
         columns = line.rstrip('\n').split('\t')
         Chr = columns[0]
