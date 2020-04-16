@@ -63,9 +63,6 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
     cmd = VARSCAN + ' mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1'\
                     + ' --min-var-freq .01 --p-value 0.99 > varscan.vcf'
     exec_command(cmd)
-    cmd = VARSCAN + ' mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 0'\
-                    + ' --min-var-freq .01 --p-value 0.99 > varscan.pileup'
-    exec_command(cmd)
     print('Variant calling completed.')
 
     # Run annovar to annotate variants
@@ -87,6 +84,7 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
     print('Filtering Varscan')
     snv = open('snp.sum.hg19_multianno.txt')
     insert_file = open('SQL_variant_input.txt', 'w')
+    nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
     date = datetime.datetime.now().replace(microsecond=0)
     for line in snv:
         if line.startswith('#') or line.startswith("Chr"):
@@ -134,148 +132,21 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
             AA_change_knownGene = known_gene_detail
         if ens_gene_detail != 'NA':
             AA_change_ensGgene = ens_gene_detail
-        insert_file.write(str(gDNA) + "\t" + str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str(Chr) + "\t" + str(start) + "\t"\
+        txt = str(gDNA) + "\t" + str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str(Chr) + "\t" + str(start) + "\t"\
                           + str(end) + "\t" + str(ref) + "\t" + str(alt) + "\t" + str(snp138NonFlagged) + "\t" + str(func_ref_gene)\
                           + "\t" + str(gene_ref_gene) + "\t" + str(exonic_func_ref) + "\t" + str(AA_change_refGene) + "\t" + str(func_known_gene)\
                           + "\t" + str(gene_known_gene) + "\t" + str(exonic_known_ref) + "\t" + str(AA_change_knownGene) + "\t"\
                           + str(func_ens_gene) + "\t" + str(gene_ens_gene) + "\t" + str(exonic_ens_ref) + "\t" + str(AA_change_ensGene)\
                           + "\t" + str(apr_all) + "\t" + str(apr_eur) + "\t" + str(apr_amr) + "\t" + str(apr_asn) + "\t" + str(apr_afr)\
                           + "\t" + str(sample_gDNA) + "\t" + str(gDNA) + "\t" + str(sample_center) + "\t" + str(tumor_type)\
-                          + "\t" + str(sample_note) + '_' + str(date) + "\t" + str(source_of_DNA) + "\t" + str(variant_key) + "\n")
-    insert_file.close()
-    snv.close()
-
-    # This will format the  coverage information into a format that will be joined with the variant information
-    print('Filtering Pile-ups')
-    pileup = open('varscan.pileup')
-    insert_file = open('SQL_coverage_input.txt', 'w')
-    date = datetime.datetime.now().replace(microsecond=0)
-    first_line = True
-    for line in pileup:
-        if first_line:
-            first_line = False
-            continue
-        columns = line.rstrip('\n').split('\t')
-        Chr = columns[0]
-        start = columns[1]
-        ref = columns[2]
-        alt = columns[3]
-        columns2 = columns[4].rstrip('\n').split(':')
-        cons = columns2[0]
-        cov = columns2[1]
-        read1 = columns2[2]
-        read2 = columns2[3]
-        freq = columns2[4]
-        p_val = columns2[5]
-        columns3 = columns[5].rstrip('\n').split(':')
-        length = len(columns3)
-        if length == 6:
-            r1_plus = columns3[1]
-            r1_minus = columns3[2]
-            r2_plus = columns3[3]
-            r2_minus = columns3[4]
-            p_val2 = columns3[5]
-        elif length == 7:
-            r1_plus = columns3[2]
-            r1_minus = columns3[3]
-            r2_plus = columns3[4]
-            r2_minus = columns3[5]
-            p_val2 = columns3[6]
-        elif length != 6 or length !=7:
-            r1_plus = '-'
-            r1_minus = '-'
-            r2_plus = '-'
-            r2_minus = '-'
-            p_val2 = '-'
-        mrn = MRN
-        seq_center = SEQ_CENTER
-        sampleID = sampleID
-        sample_gDNA = sampleID + ' chr' + Chr + ':' + start
-        gDNA = 'chr' + Chr + ':' + start
-        join_key = gDNA
-        if re.search(r'-', alt):
-            join_key = 'chr' + Chr + ':'+  str(int(start) + 1)
-        tumor_type = tumor_type
-        source_of_DNA = SOURCE
-        sample_note = SAMPLE_NOTE
-        sample_center = SEQ_CENTER
-        insert_file.write(str(join_key) + "\t" + str(mrn) + "\t" + str(sampleID) + "\t" + str(seq_center) + "\t" + str(Chr)\
-                          + "\t" + str(start) + "\t" + str(ref) + "\t" + str(alt) + "\t" + str(cons) + "\t" + str(cov)\
-                          + "\t" + str(read1) + "\t" + str(read2) + "\t" + str(freq) + "\t" + str(p_val) + "\t" + str(r1_plus)\
-                          + "\t" + str(r1_minus) + "\t" + str(r2_plus) + "\t" + str(r2_minus) + "\t" + str(p_val2)\
-                          + "\t" + str(sample_center) + "\t" + str(sample_gDNA) + "\t" + str(gDNA) + "\t" + str(tumor_type)\
-                          + "\t" +str(sample_note) + '_' + str(date) + "\t" + str(source_of_DNA) + "\n")
-    pileup.close()
-    insert_file.close()
-
-    print('Sorting and joining files')
-    cmd = 'sort -k1b,1 SQL_coverage_input.txt > join_coverage_sort.txt'
-    exec_command(cmd)
-    cmd = 'sort -k1b,1 SQL_variant_input.txt > join_variants_sort.txt'
-    exec_command(cmd)
-    cmd = 'join -t$\'\\t\' -a1 -e"-" join_variants_sort.txt join_coverage_sort.txt > joined_coverage_variants.txt'
-    exec_command(cmd)
-
-    # This will extract just the nonsynonymous mutations:
-    print('Creating nonsynonymous file for insert into database')
-    joined_variants = open('joined_coverage_variants.txt')
-    nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
-    for line in joined_variants:
-        columns = line.rstrip('\n').split('\t')
-        mrn = columns[1]
-        seq_center = columns[2]
-        sampleID = columns[3]
-        Chr = columns[4]
-        Start = columns[5]
-        End = columns[6]
-        Ref = columns[7]
-        Alt = columns[8]
-        snp138JJG = columns[9]
-        Func_refGene = columns[10]
-        Gene_refGene = columns[11]
-        ExonicFunc_refGene = columns[12]
-        AAChange_refGene = columns[13]
-        Func_knownGene = columns[14]
-        Gene_knownGene = columns[15]
-        ExonicFunc_knownGene = columns[16]
-        AAChange_knownGene = columns[17]
-        Func_ensGene = columns[18]
-        Gene_ensGene = columns[19]
-        ExonicFunc_ensGene = columns[20]
-        AAChange_ensGene = columns[21]
-        apr_all = columns[22]
-        apr_eur = columns[23]
-        apr_amr = columns[24]
-        apr_asn = columns[25]
-        apr_afr = columns[26]
-        sample_gDNA = columns[27]
-        gDNA = columns[28]
-        sample_center = columns[29]
-        tumor_type = columns[30]
-        Note = columns[31]
-        source_of_RNA_used_for_sequencing = columns[32]
-        tumor_reads1 = columns[43]
-        tumor_reads2 = columns[44]
-        tumor_var_freq = columns[45].replace('%','')
-        read1_plus = columns[47]
-        read1_minus = columns[48]
-        read2_plus = columns[49]
-        read2_minus = columns[50]
-        variant_key = columns[33]
-        if (re.search(r'nonsynonymous', ExonicFunc_refGene)or re.search(r'frame', ExonicFunc_refGene)or re.search(r'stop', ExonicFunc_refGene)\
+                          + "\t" + str(sample_note) + '_' + str(date) + "\t" + str(source_of_DNA) + "\t" + str(variant_key) + "\n"
+        insert_file.write(txt)
+        if (re.search(r'nonsynonymous', ExonicFunc_refGene) or re.search(r'frame', ExonicFunc_refGene)or re.search(r'stop', ExonicFunc_refGene)\
                 or re.search(r'nonsynonymous', ExonicFunc_knownGene)or re.search(r'frame', ExonicFunc_knownGene) or re.search(r'stop', ExonicFunc_knownGene)\
                 or re.search(r'nonsynonymous', ExonicFunc_ensGene) or re.search(r'frame', ExonicFunc_ensGene)or re.search(r'stop', ExonicFunc_ensGene)):
-            nonsyn_file.write(str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str(Chr) + "\t" + str(Start) + "\t" + str(End)\
-                              + "\t" + str(Ref) + "\t" + str(Alt) + "\t" + "\t" + "\t" + str(snp138JJG) + "\t" + str(tumor_reads1)\
-                              + "\t" + str(tumor_reads2) + "\t" + str(tumor_var_freq) + "\t" + str(apr_all) + "\t" + str(Func_refGene)\
-                              + "\t" + str(Gene_refGene) + "\t" + str(ExonicFunc_refGene) + "\t" + str(AAChange_refGene) + "\t" + str(Func_knownGene)\
-                              + "\t" + str(Gene_knownGene) + "\t" + str(ExonicFunc_knownGene) + "\t" + str(AAChange_knownGene) + "\t" + str(Func_ensGene)\
-                              + "\t" + str(Gene_ensGene) + "\t" + str(ExonicFunc_ensGene) + "\t" + str(AAChange_ensGene) + "\t" + str(apr_eur)\
-                              + "\t" + str(apr_amr) + "\t" + str(apr_asn) + "\t" + str(apr_afr) + "\t" + "\t" + "\t" + "\t" + str(read1_plus)\
-                              + "\t" + str(read1_minus) + "\t" + str(read2_plus) + "\t" + str(read2_minus) + "\t" + "\t" + "\t" + str(sample_gDNA)\
-                              + "\t" +str(gDNA) + "\t" + str(sample_center) + "\t" + str(tumor_type) + "\t" + str(sample_note) + '_' + str(date)\
-                              + "\t" + str(source_of_RNA_used_for_sequencing) + "\t" + str(variant_key) + "\n")
-    joined_variants.close()
+            nonsyn_file.write(txt)
+    insert_file.close()
+    snv.close()
     nonsyn_file.close()
 
     # Reformat FPKM file
