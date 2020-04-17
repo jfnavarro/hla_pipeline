@@ -172,10 +172,10 @@ def Full_exome_pipeline(R1_NORMAL,
     print('Re-calibration was performed on the tumor and normal samples.')
 
     # HLA-LA predictions
-    #print('Performing HLA-LA predictions')
-    #HLA_LA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
-    #HLA_LA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
-    #print('HLA-LA predictions completed for tumor and normal samples')
+    print('Performing HLA-LA predictions')
+    HLA_LA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+    HLA_LA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
+    print('HLA-LA predictions completed for tumor and normal samples')
 
     # Variant calling (Samtools pile-ups)
     print('Computing pile-ups')
