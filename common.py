@@ -11,7 +11,7 @@ VARSCAN = 'varscan'
 STRELKA = os.path.join(os.environ['STRELKA_PATH'], 'bin', 'configureStrelkaSomaticWorkflow.py')
 SAMTOOLS = 'samtools'
 SSNIPER = 'bam-somaticsniper'
-HLALA = "HLA-LA.pl"
+HLALA = 'HLA-LA.pl'
 SAMTOOLS = 'samtools'
 CUFFLINKS = 'cufflinks'
 STAR = 'STAR'
@@ -115,7 +115,7 @@ def HLA_predictionRNA(sample, threads):
     exec_command(cmd)
 
 def HLA_LA(bamfile, sampleID, outfile, threads):
-    OUT_DIR = "out_hla"
+    OUT_DIR = 'out_hla'
     cmd = '{} --BAM {} --workingDir {} --graph {} --sampleID {}'\
           + ' --maxTHREADS {}'.format(HLALA, bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
     exec_command(cmd)

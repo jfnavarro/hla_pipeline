@@ -1,8 +1,7 @@
-mkdir -p ~/shared
-
 conda create -n jared python=3.6.1
 conda activate jared
 
+mkdir -p ~/shared
 cd ~/shared
 
 conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan cufflinks picard trim-galore star somatic-sniper bedtools
@@ -10,11 +9,12 @@ conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan cuffli
 wget https://github.com/git-lfs/git-lfs/releases/download/v2.10.0/git-lfs-linux-386-v2.10.0.tar.gz
 tar -xvf git-lfs-linux-386-v2.10.0.tar.gz
 export PATH="~/shared/gitlfs:$PATH"
-git-lfs install --local
+git-lfs install
 git clone https://github.com/RabadanLab/arcasHLA.git
 cd arcasHLA/
 ./arcasHLA reference --update
 export ARCASHLA_PATH="~/shared/arcasHLA"
+cd ..
 
 wget http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz
 mkdir -p HLA-PA/graphs
@@ -77,7 +77,8 @@ wget ftp://ftp.ensembl.org/pub/release-75/gtf/homo_sapiens/Homo_sapiens.GRCh37.7
 bwa index human_g1k_v37_decoy.fasta.gz
 STAR --runMode genomeGenerate --runThreadN 40 --genomeDir STARIndex/ --genomeFastaFiles human_g1k_v37_decoy.fasta --sjdbGTFfile Homo_sapiens.GRCh37.75.gtf --sjdbOverhang 99
 
-cd ~/Alena/
+mkdir -p ~/Analysis
+cd ~/Analysis
 git clone hla_pipeline
 cp hla_pipeline/shared/* ~/shared/
 # un-comment this to over-write Strelka´s settings with Jared´s ones

@@ -7,9 +7,9 @@ from RNA_seq_pipeline import *
 import multiprocessing
 import shutil
 
-parser = argparse.ArgumentParser(description='Jared pipeline (adjusted by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
+parser = argparse.ArgumentParser(description='Jareds pipeline (adjusted by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                  prog='pipeline.py',
-                                 usage='pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer)')
+                                 usage='pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer) R1(RNA) R2(RNA)')
 parser.add_argument('R1_NORMAL', help='FASTQ file R1 (Normal)')
 parser.add_argument('R2_NORMAL', help='FASTQ file R2 (Normal)')
 parser.add_argument('R1_CANCER', help='FASTQ file R1 (Cancer)')
@@ -27,7 +27,7 @@ parser.add_argument('--genome-ref',
 parser.add_argument('--sample',
                     help='Name of the sample/experiment. Default is sample', default='sample')
 parser.add_argument('--tumor',
-                    help='Tumor type. Default is NA', default='NA')
+                    help='Tumor type. Default is Tumor', default='Tumor')
 parser.add_argument('--dir',
                     help='Path to the output files', required=True)
 parser.add_argument('--known1',
