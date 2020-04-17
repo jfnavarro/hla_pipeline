@@ -33,6 +33,10 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
     exec_command(cmd)
     print('Headers added.')
 
+    print('Predicting HLA')
+    HLA_predictionRNA('sample_header.bam', THREADS)
+    print('HLA predicted')
+
     # Mark duplicates
     print('Marking duplicates')
     cmd = GATK + ' MarkDuplicatesSpark -I=sample_header.bam -O=sample_dedup.bam -M=dedup_sample.txt'
