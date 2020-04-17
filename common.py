@@ -132,7 +132,7 @@ def HLA_LA(bamfile, sampleID, outfile, threads):
         allele_dict['HLA_' + k] = allele
 
     # Create formatted output file
-    today = datetime.now().strftime('%B_%d_%Y')
+    today = datetime.datetime.now().strftime('%B_%d_%Y')
     a = open(outfile, 'w')
     for x in sorted(allele_dict):
         a.write('{}\t{}\tExome {}\t{}\t{}\t{}\tPRG-HLA-LA\t-\t-\n'.format(MRN,
