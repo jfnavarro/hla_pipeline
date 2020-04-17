@@ -3,6 +3,7 @@ import os
 import sys
 import re
 import datetime
+import pandas as pd
 
 PICARD = 'picard'
 GATK = 'gatk'
