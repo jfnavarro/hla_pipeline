@@ -117,7 +117,7 @@ def HLA_predictionRNA(sample, threads):
 def HLA_LA(bamfile, sampleID, outfile, threads):
     OUT_DIR = 'out_hla'
     cmd = '{} --BAM {} --workingDir {} --graph {} --sampleID {}'\
-          + ' --maxTHREADS {}'.format(HLALA, bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
+          ' --maxTHREADS {}'.format(HLALA, bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
     exec_command(cmd)
 
     # create a dictionary to store the output for each allele

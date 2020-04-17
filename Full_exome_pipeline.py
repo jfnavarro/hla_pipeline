@@ -5,7 +5,6 @@ import gzip
 from re import sub
 from common import *
 
-# Sample 1 cancer, sample 2 normal
 def Full_exome_pipeline(R1_NORMAL,
                         R2_NORMAL,
                         R1_CANCER,
@@ -25,6 +24,7 @@ def Full_exome_pipeline(R1_NORMAL,
                         UCSC=False):
     print("Exome pipeline")
 
+    # Sample 1 cancer, sample 2 normal
     sample1_ID = sampleID + "_Tumor"
     sample2_ID = sampleID + "_Normal"
 
