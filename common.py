@@ -28,14 +28,14 @@ annovar_anno = 'refGene,knownGene,ensGene,snp138NonFlagged,ALL.sites.2015_08,EUR
 MRN = "MRN"
 SEQ_CENTER = "VHIO"
 LIBRARY = "Library"
-SOURCE = "Source"
+SOURCE = "Human"
 SAMPLE_NOTE = "Sample"
-RESECTION_DATE = "Na"
-RUN_DATE = "Na"
-SEQUENCER = "Na"
-KIT = "Na"
-NOTE = "Na"
-INDEX = "Na"
+RESECTION_DATE = "Resection date"
+RUN_DATE = "Run date"
+SEQUENCER = "Sequencer"
+KIT = "Kit"
+NOTE = "Note"
+INDEX = "Index"
 
 FASTA_AA = {
     'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M',

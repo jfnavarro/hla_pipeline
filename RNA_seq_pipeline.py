@@ -50,7 +50,7 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
     exec_command(cmd)
     cmd = '{} ApplyBQSR -R {} -I sample_dedup.bam --bqsr-recal-file sample_recal_data.txt -O sample_final.bam'.format(GATK, genome)
     exec_command(cmd)
-    print('Re-calibration was performed on the tumor and normal samples.')
+    print('Re-calibration was performed.')
 
     # Variant calling (Samtools pile-ups)
     print('Computing pile-ups')
@@ -209,6 +209,8 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
     nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
     for line in joined_variants:
         columns = line.rstrip('\n').split('\t')
+        if (len(columns) < 51):
+            continue
         mrn = columns[1]
         seq_center = columns[2]
         sampleID = columns[3]
