@@ -115,7 +115,9 @@ def HLA_predictionRNA(sample, threads):
     exec_command(cmd)
 
 def HLA_LA(bamfile, sampleID, outfile, threads):
-    OUT_DIR = 'out_hla'
+    OUT_DIR = os.path.abspath('out_hla')
+    os.makedirs(OUT_DIR, exist_ok=True)
+    
     cmd = '{} --BAM {} --workingDir {} --graph {} --sampleID {}'\
           ' --maxTHREADS {}'.format(HLALA, bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
     exec_command(cmd)
