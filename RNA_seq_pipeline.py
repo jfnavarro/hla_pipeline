@@ -271,12 +271,13 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
     print('Creating FPKM insert file.')
     fpkm = open('genes.fpkm_tracking')
     FPKM_ins = open('FPKM_SQL_insert.txt', 'w')
+    date = datetime.datetime.now().replace(microsecond=0)
     first_line = True
     for line in fpkm:
         if first_line:
             first_line = False
             continue
         FPKM_ins.write(str(MRN) + '\t' + str(SEQ_CENTER) + '\t' + str(sampleID) + '\t' + str(SOURCE) + '\t' + str(tumor_type)\
-                       + '\t' + str(SAMPLE_NOTE) + '_' + date + '\t' + str(sampleID) + ' ' + str(SEQ_CENTER) + '\t' + line)
+                       + '\t' + str(SAMPLE_NOTE) + '_' + str(date) + '\t' + str(sampleID) + ' ' + str(SEQ_CENTER) + '\t' + line)
     FPKM_ins.close()
     fpkm.close()
