@@ -145,7 +145,7 @@ def Full_exome_pipeline(R1_NORMAL,
           ' RGCN={} RGDS={}'.format(PICARD, sample1_ID, LIBRARY, sample1_ID, sample1_ID, SEQ_CENTER, tumor_type)
     exec_command(cmd)
     cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
-          ' RGCN={} RGDS={}'.format(PICARD, sample1_ID, LIBRARY, sample2_ID, sample2_ID, SEQ_CENTER, tumor_type)
+          ' RGCN={} RGDS={}'.format(PICARD, sample2_ID, LIBRARY, sample2_ID, sample2_ID, SEQ_CENTER, tumor_type)
     exec_command(cmd)
     print('Tumor and normal bam files had read group information added.')
 
@@ -159,11 +159,11 @@ def Full_exome_pipeline(R1_NORMAL,
 
     # GATK base re-calibration
     print('Starting re-calibration')
-    #TODO BaseRecalibratorSpark is still BETA
-    cmd = '{} BaseRecalibrator -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}'\
+    #NOTE this needs the system to allow for many open files (ulimit -n)
+    cmd = '{} BaseRecalibratorSpark --num-reducers 20 -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}'\
           ' --known-sites {} -O sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
     exec_command(cmd)
-    cmd = '{} BaseRecalibrator -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}'\
+    cmd = '{} BaseRecalibratorSpark --num-reducers 20 -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}'\
           ' --known-sites {} -O sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
     exec_command(cmd)
     cmd = '{} ApplyBQSR -R {} -I sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'.format(GATK, genome)
