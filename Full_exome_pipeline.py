@@ -151,6 +151,7 @@ def Full_exome_pipeline(R1_NORMAL,
 
     # Mark duplicates
     print('Marking duplicates')
+    # NOTE setting reducers to it works in system that do not allow many files open
     cmd = GATK + ' MarkDuplicatesSpark -I=sample1_header.bam -O=sample1_dedup.bam -M=dedup_sample1.txt'
     exec_command(cmd)
     cmd = GATK + ' MarkDuplicatesSpark -I=sample2_header.bam -O=sample2_dedup.bam -M=dedup_sample2.txt'
@@ -159,11 +160,11 @@ def Full_exome_pipeline(R1_NORMAL,
 
     # GATK base re-calibration
     print('Starting re-calibration')
-    #NOTE this needs the system to allow for many open files (ulimit -n)
-    cmd = '{} BaseRecalibratorSpark --num-reducers 20 -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}'\
+    #NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
+    cmd = '{} BaseRecalibrator -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}'\
           ' --known-sites {} -O sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
     exec_command(cmd)
-    cmd = '{} BaseRecalibratorSpark --num-reducers 20 -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}'\
+    cmd = '{} BaseRecalibrator -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}'\
           ' --known-sites {} -O sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
     exec_command(cmd)
     cmd = '{} ApplyBQSR -R {} -I sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'.format(GATK, genome)
