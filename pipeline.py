@@ -77,7 +77,7 @@ UCSC = args.ucsc
 # Move to output dir
 if os.path.isdir(os.path.abspath(DIR)):
     print("Output dir already exists, removing it...")
-    shutil.rmtree(os.path.abspath(DIR), ignore_errors=True)
+    #shutil.rmtree(os.path.abspath(DIR), ignore_errors=True)
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
 
