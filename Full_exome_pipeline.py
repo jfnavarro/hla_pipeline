@@ -1205,6 +1205,7 @@ def Full_exome_pipeline(R1_NORMAL,
             Mut_25mer = ' '
             position = ' '
             protein_raw = columns[21].replace(' ', '')
+            print(protein_raw.strip())
             # Nonsynonymous point mutations to 25 mers
             if exonic_func == 'nonsynonymous SNV' and re.search(r'^p\.', protein_raw):
                 protein_strip = protein_raw.strip()
