@@ -38,6 +38,8 @@ parser.add_argument('--snpsites',
                     help='Path to the file with the SNPs (GATK buldle)', required=True)
 parser.add_argument('--germline',
                     help='Path to the file with the germline resources Nomad (GATK buldle)', required=True)
+parser.add_argument('--pon',
+                    help='Path to the file with the panel of normals (GATK buldle)', required=True)
 parser.add_argument('--fastaAA',
                     help='Path to the file with the dictionary of FASTA to AA', required=True)
 parser.add_argument('--fastacDNA',
@@ -68,6 +70,7 @@ KNOWN_SITE1 = os.path.abspath(args.known1)
 KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
 GERMLINE = os.path.abspath(args.germline)
+PON = os.path.abspath(args.pon)
 INTERVAL = os.path.abspath(args.exomes) if args.exomes else None
 UCSC = args.ucsc
 
@@ -94,6 +97,7 @@ Full_exome_pipeline(R1_NORMAL,
                     KNOWN_SITE2,
                     SNPSITES,
                     GERMLINE,
+                    PON,
                     INTERVAL,
                     UCSC)
 os.chdir('..')

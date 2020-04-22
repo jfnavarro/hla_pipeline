@@ -20,6 +20,7 @@ def Full_exome_pipeline(R1_NORMAL,
                         KNOWN_SITE2,
                         SNPSITES,
                         GERMLINE,
+                        PON,
                         INTERVAL=None,
                         UCSC=False):
     print("Exome pipeline")
@@ -190,7 +191,7 @@ def Full_exome_pipeline(R1_NORMAL,
     print('Performing variant calling')
     # Variant calling Mutect2
     cmd = '{} Mutect2 -R {} -I sample1_final.bam -I sample2_final.bam -normal {} -O Mutect_unfiltered.vcf'\
-          ' --germline-resource {}'.format(GATK, genome, sample2_ID, GERMLINE)
+          ' --germline-resource {} --panel-of-normals {}'.format(GATK, genome, sample2_ID, GERMLINE, PON)
     exec_command(cmd)
     cmd = '{} FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf -R {}'.format(GATK, genome)
     exec_command(cmd)
@@ -325,7 +326,7 @@ def Full_exome_pipeline(R1_NORMAL,
                         elif x != ref and i == 2:
                             Tumor_GT = Tumor_GT + '/1'
                             i = i + 1
-                    filtered_vcf.write('{}\t{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:8]), Format, Normal_GT, Normal, Tumor_GT, Tumor))
+                    filtered_vcf.write('{}\t{}\t{}:{}\t{}:{}\n'.format('\t'.join(columns[0:8]), Format, Normal_GT, Normal, Tumor_GT, Tumor))
     vcf.close()
     filtered_vcf.close()
 
@@ -847,8 +848,6 @@ def Full_exome_pipeline(R1_NORMAL,
             filtered_vcf.write(line)
         elif not line.startswith('#'):
             columns = line.strip().split('\t')
-            ref = columns[3]
-            alt = columns[4]
             Filter = columns[6]
             INFO = columns[7]
             Format = columns[8]
@@ -883,7 +882,7 @@ def Full_exome_pipeline(R1_NORMAL,
                         Tumor_GT = '0/1'
                     else:
                         Tumor_GT = '1/1'
-                    filtered_vcf.write('{}\t{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:8]), Format,
+                    filtered_vcf.write('{}\t{}\t{}:{}\t{}:{}\n'.format('\t'.join(columns[0:8]), Format,
                                                                          Normal_GT, Normal, Tumor_GT, Tumor))
     vcf.close()
     filtered_vcf.close()
