@@ -762,7 +762,7 @@ def Full_exome_pipeline(R1_NORMAL,
                     GT = form.index('GT')
                     AD = form.index('AD')
                     DP = form.index('DP')
-                    FA = form.index('FA')
+                    FA = form.index('AF')
                     t_split = columns[mutectT].split(':')
                     n_split = columns[mutectN].split(':')
                     vcf_final.write('{}\tGT:AD:DP:FREQ\t{}:{}:{}:{}%\t{}:{}:{}:{}%\n'.format('\t'.join(columns[0:8]),
