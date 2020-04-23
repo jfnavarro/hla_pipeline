@@ -1298,7 +1298,7 @@ def Full_exome_pipeline(R1_NORMAL,
                 mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
                 if protein_strip.startswith('p.') and re.search(r'fs', protein_strip) and not protein_strip.startswith('p.X'):
                     # Protein seq may contain the new AA before the 'fs'
-                    position = re.findall(r'\d+', protein_strip)
+                    position = int(re.findall(r'\d+', protein_strip)[0])
                     #position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('f')])
                 elif protein_strip.startswith('p.') and re.search(r'delins', protein_strip) and not protein_strip.startswith('p.X'):
                     position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('delins')])
