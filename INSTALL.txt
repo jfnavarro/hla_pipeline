@@ -4,7 +4,7 @@ conda activate jared
 mkdir -p ~/shared
 cd ~/shared
 
-conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan cufflinks picard trim-galore star somatic-sniper bedtools biopython
+conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan cufflinks picard trim-galore star somatic-sniper bedtools biopython nextflow mhcflurry
 
 wget https://github.com/git-lfs/git-lfs/releases/download/v2.10.0/git-lfs-linux-386-v2.10.0.tar.gz
 tar -xvf git-lfs-linux-386-v2.10.0.tar.gz

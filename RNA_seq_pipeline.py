@@ -49,7 +49,8 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
 
     # GATK base re-calibration
     print('Starting re-calibration')
-    cmd = '{} BaseRecalibratorSpark -I sample_dedup.bam -R {} --known-sites {} --known-sites {}'\
+    # NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
+    cmd = '{} BaseRecalibrator -I sample_dedup.bam -R {} --known-sites {} --known-sites {}'\
           ' --known-sites {} -O sample_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
     exec_command(cmd)
     cmd = '{} ApplyBQSR -R {} -I sample_dedup.bam --bqsr-recal-file sample_recal_data.txt -O sample_final.bam'.format(GATK, genome)
@@ -211,6 +212,7 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
     print('Creating nonsynonymous file for insert into database')
     joined_variants = open('joined_coverage_variants.txt')
     nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
+    all_file = open('all_other_mutations.txt', 'w')
     for line in joined_variants:
         columns = line.rstrip('\n').split('\t')
         if (len(columns) < 51):
@@ -255,21 +257,25 @@ def RNA_seq_pipeline(sample1, sample2, sampleID, genome, genome_star, annotation
         read2_plus = columns[49]
         read2_minus = columns[50]
         variant_key = columns[33]
+        to_write = str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str(Chr) + "\t" + str(Start) + "\t" + str(End)\
+                   + "\t" + str(Ref) + "\t" + str(Alt) + "\t" + "\t" + "\t" + str(snp138JJG) + "\t" + str(tumor_reads1)\
+                   + "\t" + str(tumor_reads2) + "\t" + str(tumor_var_freq) + "\t" + str(apr_all) + "\t" + str(Func_refGene)\
+                   + "\t" + str(Gene_refGene) + "\t" + str(ExonicFunc_refGene) + "\t" + str(AAChange_refGene) + "\t" + str(Func_knownGene)\
+                   + "\t" + str(Gene_knownGene) + "\t" + str(ExonicFunc_knownGene) + "\t" + str(AAChange_knownGene) + "\t" + str(Func_ensGene)\
+                   + "\t" + str(Gene_ensGene) + "\t" + str(ExonicFunc_ensGene) + "\t" + str(AAChange_ensGene) + "\t" + str(apr_eur)\
+                   + "\t" + str(apr_amr) + "\t" + str(apr_asn) + "\t" + str(apr_afr) + "\t" + "\t" + "\t" + "\t" + str(read1_plus)\
+                   + "\t" + str(read1_minus) + "\t" + str(read2_plus) + "\t" + str(read2_minus) + "\t" + "\t" + "\t" + str(sample_gDNA)\
+                   + "\t" +str(gDNA) + "\t" + str(sample_center) + "\t" + str(tumor_type) + "\t" + str(sample_note) + '_' + str(date)\
+                   + "\t" + str(source_of_RNA_used_for_sequencing) + "\t" + str(variant_key) + "\n"
         if (re.search(r'nonsynonymous', ExonicFunc_refGene)or re.search(r'frame', ExonicFunc_refGene)or re.search(r'stop', ExonicFunc_refGene)\
                 or re.search(r'nonsynonymous', ExonicFunc_knownGene)or re.search(r'frame', ExonicFunc_knownGene) or re.search(r'stop', ExonicFunc_knownGene)\
                 or re.search(r'nonsynonymous', ExonicFunc_ensGene) or re.search(r'frame', ExonicFunc_ensGene)or re.search(r'stop', ExonicFunc_ensGene)):
-            nonsyn_file.write(str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str(Chr) + "\t" + str(Start) + "\t" + str(End)\
-                              + "\t" + str(Ref) + "\t" + str(Alt) + "\t" + "\t" + "\t" + str(snp138JJG) + "\t" + str(tumor_reads1)\
-                              + "\t" + str(tumor_reads2) + "\t" + str(tumor_var_freq) + "\t" + str(apr_all) + "\t" + str(Func_refGene)\
-                              + "\t" + str(Gene_refGene) + "\t" + str(ExonicFunc_refGene) + "\t" + str(AAChange_refGene) + "\t" + str(Func_knownGene)\
-                              + "\t" + str(Gene_knownGene) + "\t" + str(ExonicFunc_knownGene) + "\t" + str(AAChange_knownGene) + "\t" + str(Func_ensGene)\
-                              + "\t" + str(Gene_ensGene) + "\t" + str(ExonicFunc_ensGene) + "\t" + str(AAChange_ensGene) + "\t" + str(apr_eur)\
-                              + "\t" + str(apr_amr) + "\t" + str(apr_asn) + "\t" + str(apr_afr) + "\t" + "\t" + "\t" + "\t" + str(read1_plus)\
-                              + "\t" + str(read1_minus) + "\t" + str(read2_plus) + "\t" + str(read2_minus) + "\t" + "\t" + "\t" + str(sample_gDNA)\
-                              + "\t" +str(gDNA) + "\t" + str(sample_center) + "\t" + str(tumor_type) + "\t" + str(sample_note) + '_' + str(date)\
-                              + "\t" + str(source_of_RNA_used_for_sequencing) + "\t" + str(variant_key) + "\n")
+            nonsyn_file.write(to_write)
+        else:
+            all_file.write(to_write)
     joined_variants.close()
     nonsyn_file.close()
+    all_file.close()
 
     # Reformat FPKM file
     print('Creating FPKM insert file.')

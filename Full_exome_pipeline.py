@@ -33,185 +33,185 @@ def Full_exome_pipeline(R1_NORMAL,
     os.makedirs('exome', exist_ok=True)
     os.chdir('exome')
 
-    # # TRIMMING
-    # print('Starting trimming')
-    #
-    # cmd = '{} PE -threads {} -phred33 {} {} R1_normal.fastq.gz R1_normal_unpaired.fastq.gz ' \
-    #       'R2_normal.fastq.gz R2_normal_unpaired.fastq.gz ' \
-    #       'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
-    #                                                                                        THREADS,
-    #                                                                                        R1_NORMAL,
-    #                                                                                        R2_NORMAL,
-    #                                                                                        IILLUMINA_ADAPTERS)
-    # exec_command(cmd)
-    #
-    # cmd = '{} PE -threads {} -phred33 {} {} R1_cancer.fastq.gz R1_cancer_unpaired.fastq.gz ' \
-    #       'R2_cancer.fastq.gz R2_cancer_unpaired.fastq.gz ' \
-    #       'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
-    #                                                                                        THREADS,
-    #                                                                                        R1_CANCER,
-    #                                                                                        R2_CANCER,
-    #                                                                                        IILLUMINA_ADAPTERS)
-    # exec_command(cmd)
-    #
-    # print('Trimming of tumor and normal samples completed.')
-    #
-    # # ALIGNMENT
-    # print('Starting alignment')
-    #
-    # # Normal (paired)
-    # cmd = '{} -t {} {} R1_normal.fastq.gz R2_normal.fastq.gz | {} view -bS > normal_paired_aligned.bam'.format(BWA,
-    #                                                                                                            THREADS,
-    #                                                                                                            genome,
-    #                                                                                                            SAMTOOLS)
-    # exec_command(cmd)
-    #
-    # cmd = '{} sort --threads {} normal_paired_aligned.bam > normal_paired_aligned_sorted.bam'.format(SAMTOOLS,
-    #                                                                                                  THREADS)
-    # exec_command(cmd)
-    #
-    # # Cancer (paired)
-    # cmd = '{} -t {} {} R1_cancer.fastq.gz R2_cancer.fastq.gz | {} view -bS > cancer_paired_aligned.bam'.format(BWA,
-    #                                                                                                            THREADS,
-    #                                                                                                            genome,
-    #                                                                                                            SAMTOOLS)
-    # exec_command(cmd)
-    #
-    # cmd = '{} sort --threads {} cancer_paired_aligned.bam > cancer_paired_aligned_sorted.bam'.format(SAMTOOLS,
-    #                                                                                                  THREADS)
-    # exec_command(cmd)
-    #
-    # # Normal (unpaired R1)
-    # cmd = '{} -t {} {} R1_normal_unpaired.fastq.gz | {} view -bS > R1_normal_unpaired_aligned.bam'.format(BWA,
-    #                                                                                                       THREADS,
-    #                                                                                                       genome,
-    #                                                                                                       SAMTOOLS)
-    # exec_command(cmd)
-    #
-    # cmd = '{} sort --threads {} R1_normal_unpaired_aligned.bam > R1_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-    #                                                                                                            THREADS)
-    # exec_command(cmd)
-    #
-    # # Cancer (unpaired R1)
-    # cmd = '{} -t {} {} R1_cancer_unpaired.fastq.gz | {} view -bS > R1_cancer_unpaired_aligned.bam'.format(BWA,
-    #                                                                                                       THREADS,
-    #                                                                                                       genome,
-    #                                                                                                       SAMTOOLS)
-    # exec_command(cmd)
-    #
-    # cmd = '{} sort --threads {} R1_cancer_unpaired_aligned.bam > R1_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-    #                                                                                                            THREADS)
-    # exec_command(cmd)
-    #
-    # # Normal (unpaired R2)
-    # cmd = '{} -t {} {} R2_normal_unpaired.fastq.gz | {} view -bS > R2_normal_unpaired_aligned.bam'.format(BWA,
-    #                                                                                                       THREADS,
-    #                                                                                                       genome,
-    #                                                                                                       SAMTOOLS)
-    # exec_command(cmd)
-    #
-    # cmd = '{} sort --threads {} R2_normal_unpaired_aligned.bam > R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-    #                                                                                                            THREADS)
-    # exec_command(cmd)
-    #
-    # # Cancer (unpaired R2)
-    # cmd = '{} -t {} {} R2_cancer_unpaired.fastq.gz | {} view -bS > R2_cancer_unpaired_aligned.bam'.format(BWA,
-    #                                                                                                       THREADS,
-    #                                                                                                       genome,
-    #                                                                                                       SAMTOOLS)
-    # exec_command(cmd)
-    #
-    # cmd = '{} sort --threads {} R2_cancer_unpaired_aligned.bam > R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-    #                                                                                                            THREADS)
-    # exec_command(cmd)
-    #
-    # print('Aligment of tumor and normal samples completed.')
-    #
-    # # Merge aligned files
-    # print('Merging aligned files')
-    #
-    # cmd = '{} merge -f aligned_normal_merged.bam normal_paired_aligned_sorted.bam ' \
-    #       'R1_normal_unpaired_aligned_sorted.bam R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
-    # exec_command(cmd)
-    #
-    # cmd = '{} merge -f aligned_cancer_merged.bam cancer_paired_aligned_sorted.bam ' \
-    #       'R1_cancer_unpaired_aligned_sorted.bam R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
-    # exec_command(cmd)
-    #
-    # print('Merging of tumor and normal aligned samples completed.')
-    #
-    # # Add headers
-    # print("Adding headers")
-    # cmd = '{} AddOrReplaceReadGroups I=aligned_cancer_merged.bam O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
-    #       ' RGCN={} RGDS={}'.format(PICARD, sample1_ID, LIBRARY, sample1_ID, sample1_ID, SEQ_CENTER, tumor_type)
-    # exec_command(cmd)
-    # cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
-    #       ' RGCN={} RGDS={}'.format(PICARD, sample2_ID, LIBRARY, sample2_ID, sample2_ID, SEQ_CENTER, tumor_type)
-    # exec_command(cmd)
-    # print('Tumor and normal bam files had read group information added.')
-    #
-    # # Mark duplicates
-    # print('Marking duplicates')
-    # # NOTE setting reducers to it works in system that do not allow many files open
-    # cmd = GATK + ' MarkDuplicatesSpark -I=sample1_header.bam -O=sample1_dedup.bam -M=dedup_sample1.txt'
-    # exec_command(cmd)
-    # cmd = GATK + ' MarkDuplicatesSpark -I=sample2_header.bam -O=sample2_dedup.bam -M=dedup_sample2.txt'
-    # exec_command(cmd)
-    # print('Tumor and normal bam files had their optical and PCR duplicates marked.')
-    #
-    # # GATK base re-calibration
-    # print('Starting re-calibration')
-    # #NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
-    # cmd = '{} BaseRecalibrator -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}'\
-    #       ' --known-sites {} -O sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
-    # exec_command(cmd)
-    # cmd = '{} BaseRecalibrator -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}'\
-    #       ' --known-sites {} -O sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
-    # exec_command(cmd)
-    # cmd = '{} ApplyBQSR -R {} -I sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'.format(GATK, genome)
-    # exec_command(cmd)
-    # cmd = '{} ApplyBQSR -R {} -I sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'.format(GATK, genome)
-    # exec_command(cmd)
-    # print('Re-calibration was performed on the tumor and normal samples.')
-    #
-    # # HLA-LA predictions
-    # print('Performing HLA-LA predictions')
-    # HLA_LA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
-    # HLA_LA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
-    # print('HLA-LA predictions completed for tumor and normal samples')
-    #
-    # # Variant calling (Samtools pile-ups)
-    # print('Computing pile-ups')
-    # cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample1_final.bam > sample1.pileup'.format(SAMTOOLS, genome)
-    # exec_command(cmd)
-    # cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample2_final.bam > sample2.pileup'.format(SAMTOOLS, genome)
-    # exec_command(cmd)
-    # print('Pile-ups were computed for tumor and normal samples')
-    #
-    # print('Performing variant calling')
-    # # Variant calling Mutect2
-    # cmd = '{} Mutect2 -R {} -I sample1_final.bam -I sample2_final.bam -normal {} -O Mutect_unfiltered.vcf'\
-    #       ' --germline-resource {} --panel-of-normals {}'.format(GATK, genome, sample2_ID, GERMLINE, PON)
-    # exec_command(cmd)
-    # cmd = '{} FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf -R {}'.format(GATK, genome)
-    # exec_command(cmd)
-    #
-    # # Variant calling Strelka2
-    # cmd = '{} --exome --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta {}'\
-    #       ' --runDir Strelka_output'.format(STRELKA, genome)
-    # exec_command(cmd)
-    # cmd = 'Strelka_output/runWorkflow.py -m local -j {}'.format(THREADS)
-    # exec_command(cmd)
-    #
-    # # Variant calling Somatic Sniper
-    # cmd = '{} -L -G -F vcf -f {} sample1_final.bam sample2_final.bam SS.vcf'.format(SSNIPER, genome)
-    # exec_command(cmd)
-    #
-    # # Variant calling VarScan
-    # cmd = VARSCAN + ' somatic sample2.pileup sample1.pileup varscan --tumor-purity .5 --output-vcf 1'\
-    #                 ' --min-coverage 4 --min-var-freq .05 --strand-filter 0'
-    # exec_command(cmd)
-    # print('Done calling with Varscan, Mutect2, SomaticSniper & Strelka.')
+    # TRIMMING
+    print('Starting trimming')
+
+    cmd = '{} PE -threads {} -phred33 {} {} R1_normal.fastq.gz R1_normal_unpaired.fastq.gz ' \
+          'R2_normal.fastq.gz R2_normal_unpaired.fastq.gz ' \
+          'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
+                                                                                           THREADS,
+                                                                                           R1_NORMAL,
+                                                                                           R2_NORMAL,
+                                                                                           IILLUMINA_ADAPTERS)
+    exec_command(cmd)
+
+    cmd = '{} PE -threads {} -phred33 {} {} R1_cancer.fastq.gz R1_cancer_unpaired.fastq.gz ' \
+          'R2_cancer.fastq.gz R2_cancer_unpaired.fastq.gz ' \
+          'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
+                                                                                           THREADS,
+                                                                                           R1_CANCER,
+                                                                                           R2_CANCER,
+                                                                                           IILLUMINA_ADAPTERS)
+    exec_command(cmd)
+
+    print('Trimming of tumor and normal samples completed.')
+
+    # ALIGNMENT
+    print('Starting alignment')
+
+    # Normal (paired)
+    cmd = '{} -t {} {} R1_normal.fastq.gz R2_normal.fastq.gz | {} view -bS > normal_paired_aligned.bam'.format(BWA,
+                                                                                                               THREADS,
+                                                                                                               genome,
+                                                                                                               SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} normal_paired_aligned.bam > normal_paired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                     THREADS)
+    exec_command(cmd)
+
+    # Cancer (paired)
+    cmd = '{} -t {} {} R1_cancer.fastq.gz R2_cancer.fastq.gz | {} view -bS > cancer_paired_aligned.bam'.format(BWA,
+                                                                                                               THREADS,
+                                                                                                               genome,
+                                                                                                               SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} cancer_paired_aligned.bam > cancer_paired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                     THREADS)
+    exec_command(cmd)
+
+    # Normal (unpaired R1)
+    cmd = '{} -t {} {} R1_normal_unpaired.fastq.gz | {} view -bS > R1_normal_unpaired_aligned.bam'.format(BWA,
+                                                                                                          THREADS,
+                                                                                                          genome,
+                                                                                                          SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} R1_normal_unpaired_aligned.bam > R1_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                               THREADS)
+    exec_command(cmd)
+
+    # Cancer (unpaired R1)
+    cmd = '{} -t {} {} R1_cancer_unpaired.fastq.gz | {} view -bS > R1_cancer_unpaired_aligned.bam'.format(BWA,
+                                                                                                          THREADS,
+                                                                                                          genome,
+                                                                                                          SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} R1_cancer_unpaired_aligned.bam > R1_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                               THREADS)
+    exec_command(cmd)
+
+    # Normal (unpaired R2)
+    cmd = '{} -t {} {} R2_normal_unpaired.fastq.gz | {} view -bS > R2_normal_unpaired_aligned.bam'.format(BWA,
+                                                                                                          THREADS,
+                                                                                                          genome,
+                                                                                                          SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} R2_normal_unpaired_aligned.bam > R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                               THREADS)
+    exec_command(cmd)
+
+    # Cancer (unpaired R2)
+    cmd = '{} -t {} {} R2_cancer_unpaired.fastq.gz | {} view -bS > R2_cancer_unpaired_aligned.bam'.format(BWA,
+                                                                                                          THREADS,
+                                                                                                          genome,
+                                                                                                          SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} sort --threads {} R2_cancer_unpaired_aligned.bam > R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
+                                                                                                               THREADS)
+    exec_command(cmd)
+
+    print('Aligment of tumor and normal samples completed.')
+
+    # Merge aligned files
+    print('Merging aligned files')
+
+    cmd = '{} merge -f aligned_normal_merged.bam normal_paired_aligned_sorted.bam ' \
+          'R1_normal_unpaired_aligned_sorted.bam R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
+    exec_command(cmd)
+
+    cmd = '{} merge -f aligned_cancer_merged.bam cancer_paired_aligned_sorted.bam ' \
+          'R1_cancer_unpaired_aligned_sorted.bam R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
+    exec_command(cmd)
+
+    print('Merging of tumor and normal aligned samples completed.')
+
+    # Add headers
+    print("Adding headers")
+    cmd = '{} AddOrReplaceReadGroups I=aligned_cancer_merged.bam O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
+          ' RGCN={} RGDS={}'.format(PICARD, sample1_ID, LIBRARY, sample1_ID, sample1_ID, SEQ_CENTER, tumor_type)
+    exec_command(cmd)
+    cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
+          ' RGCN={} RGDS={}'.format(PICARD, sample2_ID, LIBRARY, sample2_ID, sample2_ID, SEQ_CENTER, tumor_type)
+    exec_command(cmd)
+    print('Tumor and normal bam files had read group information added.')
+
+    # Mark duplicates
+    print('Marking duplicates')
+    # NOTE setting reducers to it works in system that do not allow many files open
+    cmd = GATK + ' MarkDuplicatesSpark -I=sample1_header.bam -O=sample1_dedup.bam -M=dedup_sample1.txt'
+    exec_command(cmd)
+    cmd = GATK + ' MarkDuplicatesSpark -I=sample2_header.bam -O=sample2_dedup.bam -M=dedup_sample2.txt'
+    exec_command(cmd)
+    print('Tumor and normal bam files had their optical and PCR duplicates marked.')
+
+    # GATK base re-calibration
+    print('Starting re-calibration')
+    #NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
+    cmd = '{} BaseRecalibrator -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}'\
+          ' --known-sites {} -O sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+    exec_command(cmd)
+    cmd = '{} BaseRecalibrator -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}'\
+          ' --known-sites {} -O sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+    exec_command(cmd)
+    cmd = '{} ApplyBQSR -R {} -I sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'.format(GATK, genome)
+    exec_command(cmd)
+    cmd = '{} ApplyBQSR -R {} -I sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'.format(GATK, genome)
+    exec_command(cmd)
+    print('Re-calibration was performed on the tumor and normal samples.')
+
+    # HLA-LA predictions
+    print('Performing HLA-LA predictions')
+    HLA_LA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+    HLA_LA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
+    print('HLA-LA predictions completed for tumor and normal samples')
+
+    # Variant calling (Samtools pile-ups)
+    print('Computing pile-ups')
+    cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample1_final.bam > sample1.pileup'.format(SAMTOOLS, genome)
+    exec_command(cmd)
+    cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample2_final.bam > sample2.pileup'.format(SAMTOOLS, genome)
+    exec_command(cmd)
+    print('Pile-ups were computed for tumor and normal samples')
+
+    print('Performing variant calling')
+    # Variant calling Mutect2
+    cmd = '{} Mutect2 -R {} -I sample1_final.bam -I sample2_final.bam -normal {} -O Mutect_unfiltered.vcf'\
+          ' --germline-resource {} --panel-of-normals {}'.format(GATK, genome, sample2_ID, GERMLINE, PON)
+    exec_command(cmd)
+    cmd = '{} FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf -R {}'.format(GATK, genome)
+    exec_command(cmd)
+
+    # Variant calling Strelka2
+    cmd = '{} --exome --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta {}'\
+          ' --runDir Strelka_output'.format(STRELKA, genome)
+    exec_command(cmd)
+    cmd = 'Strelka_output/runWorkflow.py -m local -j {}'.format(THREADS)
+    exec_command(cmd)
+
+    # Variant calling Somatic Sniper
+    cmd = '{} -L -G -F vcf -f {} sample1_final.bam sample2_final.bam SS.vcf'.format(SSNIPER, genome)
+    exec_command(cmd)
+
+    # Variant calling VarScan
+    cmd = VARSCAN + ' somatic sample2.pileup sample1.pileup varscan --tumor-purity .5 --output-vcf 1'\
+                    ' --min-coverage 4 --min-var-freq .05 --strand-filter 0'
+    exec_command(cmd)
+    print('Done calling with Varscan, Mutect2, SomaticSniper & Strelka.')
 
     # Filtering Mutect snv calls
     print("Filtering Mutect SNV")
@@ -455,6 +455,10 @@ def Full_exome_pipeline(R1_NORMAL,
             ncov = '.'
             tfreq = '.'
             nfreq = '.'
+            tumor_read1 = '.'
+            normal_read1 = '.'
+            tumor_read2 = '.'
+            normal_read2 = '.'
             callers = info.strip().split(';')[-1].replace('set=', '')
             if re.search('Intersection', callers) or re.search('varscan', callers):
                 if callers == 'Intersection':
@@ -467,8 +471,6 @@ def Full_exome_pipeline(R1_NORMAL,
                     for x in info_split:
                         if re.search('SPV=', x):
                             p_val = x.replace('SPV=', '')
-                else:
-                    p_val = '.'
                 form = columns[8].split(':')
                 DP4 = form.index('DP4')
                 Freq = form.index('FREQ')
@@ -533,9 +535,6 @@ def Full_exome_pipeline(R1_NORMAL,
                 elif ref == 'T':
                     tumor_read1 = int(t_split[TU].split(',')[0])
                     normal_read1 = int(n_split[TU].split(',')[0])
-                else:
-                    tumor_read1 = '.'
-                    normal_read1 = '.'
                 if alt == 'A':
                     tumor_read2 = int(t_split[AU].split(',')[0])
                     normal_read2 = int(n_split[AU].split(',')[0])
@@ -548,9 +547,6 @@ def Full_exome_pipeline(R1_NORMAL,
                 elif alt == 'T':
                     tumor_read2 = int(t_split[TU].split(',')[0])
                     normal_read2 = int(n_split[TU].split(',')[0])
-                else:
-                    tumor_read2 = '.'
-                    normal_read2 = '.'
                 if tumor_read2 != '.':
                     tcov = tumor_read1 + tumor_read2
                     ncov = normal_read1 + normal_read2
@@ -572,15 +568,6 @@ def Full_exome_pipeline(R1_NORMAL,
                     ncov = normal_read1 + normal_read2
                     tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
                     nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-                else:
-                    tumor_read1 = 0
-                    tumor_read2 = 0
-                    normal_read1 = 0
-                    normal_read2 = 0
-                    tcov = 0
-                    ncov = 0
-                    tfreq = str(0) + '%'
-                    nfreq = str(0) + '%'
             # populate
             vcf_cov_dict[DictID] = {}
             vcf_cov_dict[DictID]['pval'] = p_val
@@ -677,163 +664,6 @@ def Full_exome_pipeline(R1_NORMAL,
             print("Missing variant for {}".format(ID))
     nonsyn_file.close()
     all_file.close()
-
-    # Create a final vcf file to be stored
-    print("Formatting final VCF")
-    vcf = open('combined_calls.vcf')
-    vcf_final = open('final.vcf', 'w')
-    for line in vcf:
-        if line.startswith('##file') or line.startswith('##FILTER') or line.startswith('##FORMAT=<ID=GT') \
-                or line.startswith('##FORMAT=<ID=AD') or line.startswith('##FORMAT=<ID=BQ') or line.startswith('##FORMAT=<ID=DP,') \
-                or line.startswith('##FORMAT=<ID=DP') or line.startswith('##FORMAT=<ID=FA') or line.startswith('##INFO') or line.startswith('##contig'):
-            vcf_final.write(line)
-        if line.startswith('#CHROM'):
-            headers = line.strip().split('\t')
-            varscanT = headers.index('TUMOR.varscan')
-            varscanN = headers.index('NORMAL.varscan')
-            strelkaT = headers.index('TUMOR.strelka')
-            strelkaN = headers.index('NORMAL.strelka')
-            mutectT = headers.index(sample1_ID + '.mutect')
-            mutectN = headers.index(sample2_ID + '.mutect')
-            sniperT = headers.index('TUMOR.somaticsniper')
-            sniperN = headers.index('NORMAL.somaticsniper')
-            vcf_final.write(str('\t'.join(headers[0:9])) + '\tTUMOR\tNORMAL\n')
-        elif not line.startswith('#'):
-            columns = line.split('\t')
-            ref = columns[3]
-            alt = columns[4]
-            info = columns[7]
-            callers = info.strip().split(';')[-1].replace('set=', '')
-            if re.search('Intersection', callers) or re.search('varscan', callers):
-                if not re.search(',', alt):
-                    form = columns[8].split(':')
-                    GT = form.index('GT')
-                    AD = form.index('AD')
-                    DP = form.index('DP')
-                    FREQ = form.index('FREQ')
-                    t_split = columns[varscanT].split(':')
-                    n_split = columns[varscanN].split(':')
-                    vcf_final.write('{}\tGT:AD:DP:FREQ\t{}:{}:{}:{}\t{}:{}:{}:{}\n'.format('\t'.join(columns[0:8]),
-                                                                                           t_split[GT],
-                                                                                           t_split[AD],
-                                                                                           t_split[DP],
-                                                                                           t_split[FREQ],
-                                                                                           n_split[GT],
-                                                                                           n_split[AD],
-                                                                                           n_split[DP],
-                                                                                           n_split[FREQ]))
-                else:
-                    vcf_final.write('\t'.join(columns[0:8]) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
-            elif re.search('somaticsniper', callers):
-                if not re.search(',', alt):
-                    form = columns[8].split(':')
-                    DP4 = form.index('DP4')
-                    GT = form.index('GT')
-                    t_split = columns[sniperT].split(':')
-                    n_split = columns[sniperN].split(':')
-                    trfor = int(t_split[DP4].split(',')[0])
-                    trrev = int(t_split[DP4].split(',')[1])
-                    tvfor = int(t_split[DP4].split(',')[2])
-                    tvrev = int(t_split[DP4].split(',')[3])
-                    tumor_read2 = tvfor + tvrev
-                    tcov = trfor + trrev + tvfor + tvrev
-                    nrfor = int(n_split[DP4].split(',')[0])
-                    nrrev = int(n_split[DP4].split(',')[1])
-                    nvfor = int(n_split[DP4].split(',')[2])
-                    nvrev = int(n_split[DP4].split(',')[3])
-                    normal_read2 = nvfor + nvrev
-                    ncov = nrfor + nrrev + nvfor + nvrev
-                    tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
-                    nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-                    vcf_final.write('{}\tGT:AD:DP:FREQ\t{}:{}:{}:{}\t{}:{}:{}:{}\n'.format('\t'.join(columns[0:8]),
-                                                                                           t_split[GT],
-                                                                                           str(tumor_read2),
-                                                                                           str(tcov),
-                                                                                           str(tfreq),
-                                                                                           n_split[GT],
-                                                                                           str(normal_read2),
-                                                                                           str(ncov),
-                                                                                           str(nfreq)))
-                else:
-                    vcf_final.write('\t'.join(columns[0:8]) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
-            elif re.search('mutect', callers):
-                if not re.search(',', alt):
-                    form = columns[8].split(':')
-                    GT = form.index('GT')
-                    AD = form.index('AD')
-                    DP = form.index('DP')
-                    FA = form.index('AF')
-                    t_split = columns[mutectT].split(':')
-                    n_split = columns[mutectN].split(':')
-                    vcf_final.write('{}\tGT:AD:DP:FREQ\t{}:{}:{}:{}%\t{}:{}:{}:{}%\n'.format('\t'.join(columns[0:8]),
-                                                                                             t_split[GT],
-                                                                                             t_split[AD].split(',')[1],
-                                                                                             t_split[DP],
-                                                                                             str(float(t_split[FA]) * 100),
-                                                                                             n_split[GT],
-                                                                                             n_split[AD].split(',')[1],
-                                                                                             n_split[DP],
-                                                                                             str(float(n_split[FA]) * 100)))
-                else:
-                    vcf_final.write('\t'.join(columns[0:8]) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
-            elif re.search('strelka', callers):
-                if not re.search(',', alt):
-                    form = columns[8].split(':')
-                    GT = form.index('GT')
-                    AU = form.index('AU')
-                    CU = form.index('CU')
-                    GU = form.index('GU')
-                    TU = form.index('TU')
-                    t_split = columns[strelkaT].split(':')
-                    n_split = columns[strelkaN].split(':')
-                    if ref == 'A':
-                        tumor_read1 = int(t_split[AU].split(',')[0])
-                        normal_read1 = int(n_split[AU].split(',')[0])
-                    elif ref == 'C':
-                        tumor_read1 = int(t_split[CU].split(',')[0])
-                        normal_read1 = int(n_split[CU].split(',')[0])
-                    elif ref == 'G':
-                        tumor_read1 = int(t_split[GU].split(',')[0])
-                        normal_read1 = int(n_split[GU].split(',')[0])
-                    elif ref == 'T':
-                        tumor_read1 = int(t_split[TU].split(',')[0])
-                        normal_read1 = int(n_split[TU].split(',')[0])
-                    else:
-                        tumor_read1 = '.'
-                        normal_read1 = '.'
-                    if alt == 'A':
-                        tumor_read2 = int(t_split[AU].split(',')[0])
-                        normal_read2 = int(n_split[AU].split(',')[0])
-                    elif alt == 'C':
-                        tumor_read2 = int(t_split[CU].split(',')[0])
-                        normal_read2 = int(n_split[CU].split(',')[0])
-                    elif alt == 'G':
-                        tumor_read2 = int(t_split[GU].split(',')[0])
-                        normal_read2 = int(n_split[GU].split(',')[0])
-                    elif alt == 'T':
-                        tumor_read2 = int(t_split[TU].split(',')[0])
-                        normal_read2 = int(n_split[TU].split(',')[0])
-                    else:
-                        tumor_read2 = '.'
-                        normal_read2 = '.'
-                    if tumor_read2 != '.':
-                        tcov = tumor_read1 + tumor_read2
-                        ncov = normal_read1 + normal_read2
-                        tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
-                        nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-                    vcf_final.write('{}\tGT:AD:DP:FREQ\t{}:{}:{}:{}\t{}:{}:{}:{}\n'.format('\t'.join(columns[0:8]),
-                                                                                           t_split[GT],
-                                                                                           str(tumor_read2),
-                                                                                           str(tcov),
-                                                                                           str(tfreq),
-                                                                                           n_split[GT],
-                                                                                           str(normal_read2),
-                                                                                           str(ncov),
-                                                                                           str(nfreq)))
-                else:
-                    vcf_final.write('\t'.join(columns[0:8]) + '\tGT:AD:DP:FREQ\t.:.:.:.\t.:.:.:.\n')
-    vcf.close()
-    vcf_final.close()
 
     # Search for Indels now
     print("Filtering Strelka indels")
@@ -1171,7 +1001,6 @@ def Full_exome_pipeline(R1_NORMAL,
                     mrn + '\t' + seq_center + '\t' + sampleID + '\t' + source + '\t' + tumor_type + '\t' + sample_note + '\t' \
                     + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
                     + stop + '\t' + ref + '\t' + alt + '\t' + func_ens_gene + '\t' + exonic_func_ens + '\t' + str(sub(':', '\t', (entry))) + '\n')
-    epitope_file.write('\n')
     epitope_file.close()
     sample_sheet.close()
     print('Formatted file created')
@@ -1205,7 +1034,6 @@ def Full_exome_pipeline(R1_NORMAL,
             WT_25mer = ''
             Mut_25mer = ''
             position = 0
-            print(protein_strip + " " + cDNA_strip)
             # Nonsynonymous point mutations to 25 mers
             if exonic_func == 'nonsynonymous SNV' and re.search(r'^p\.', protein_strip):
                 # extract the AA change info
@@ -1384,7 +1212,7 @@ def Full_exome_pipeline(R1_NORMAL,
     print('Epitopes have been created...')
     input_file.close()
     epitope_file.close()
-    
+
     # Collect the hybridization stats using picards tool CollectHsMetrics
     if INTERVAL:
         print("Collecting HS metrics")
