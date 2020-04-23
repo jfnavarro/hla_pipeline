@@ -1210,7 +1210,7 @@ def Full_exome_pipeline(R1_NORMAL,
             if exonic_func == 'nonsynonymous SNV' and re.search(r'^p\.', protein_raw):
                 protein_strip = protein_raw.strip()
                 # extract the AA change info
-                position = int(protein_strip[(protein_strip.find('.') + 2):len(protein_strip) - 1])
+                position = int(re.findall(r'\d+', protein_strip)[0])
                 ref_AA = protein_strip[(protein_strip.find('.') + 1)]
                 var_AA = protein_strip[len(protein_strip) - 1]
                 # gather AA seq for transcript
@@ -1245,10 +1245,10 @@ def Full_exome_pipeline(R1_NORMAL,
                 cDNA_strip = cDNA_raw.strip()
                 if len_del > 1 and protein_strip.startswith('p.') and not protein_strip.startswith('p.X'):
                     cDNA_pos = cDNA_strip[(cDNA_strip.find('.') + 1):cDNA_strip.find('_')]
-                    position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('f')])
+                    position = int(re.findall(r'\d+', protein_strip)[0])
                 elif len_del == 1 and protein_strip.startswith('p.') and not protein_strip.startswith('p.X'):
                     cDNA_pos = cDNA_strip[(cDNA_strip.find('.') + 1):cDNA_strip.find('del')]
-                    position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('f')])
+                    position = int(re.findall(r'\d+', protein_strip)[0])
                 if not protein_strip.startswith('p.'):
                     position = 0
                 elif protein_strip.startswith('p.X'):
@@ -1297,11 +1297,9 @@ def Full_exome_pipeline(R1_NORMAL,
                 mut_cDNA_right = ref_cDNA_seq[int(cDNA_pos):]
                 mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
                 if protein_strip.startswith('p.') and re.search(r'fs', protein_strip) and not protein_strip.startswith('p.X'):
-                    # Protein seq may contain the new AA before the 'fs'
                     position = int(re.findall(r'\d+', protein_strip)[0])
-                    #position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('f')])
                 elif protein_strip.startswith('p.') and re.search(r'delins', protein_strip) and not protein_strip.startswith('p.X'):
-                    position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('delins')])
+                    position = int(re.findall(r'\d+', protein_strip)[0])
                 elif protein_strip.startswith('p.X'):
                     position = 0
                     errors += ' frameshift insertion occurs in stop codon'
@@ -1347,7 +1345,7 @@ def Full_exome_pipeline(R1_NORMAL,
                 else:
                     cDNA_pos = cDNA_strip[(cDNA_strip.find('.') + 1):cDNA_strip.find('del')]
                 if protein_strip.startswith('p.') and not protein_strip.startswith('p.X'):
-                    position = int(protein_strip[(protein_strip.find('.') + 1):protein_strip.find('_')])
+                    position = int(re.findall(r'\d+', protein_strip)[0])
                 elif not protein_strip.startswith('p.'):
                     position = 0
                 elif protein_strip.startswith('p.X'):
@@ -1389,7 +1387,7 @@ def Full_exome_pipeline(R1_NORMAL,
                 mut_cDNA_right = ref_cDNA_seq[int(cDNA_pos):]
                 mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
                 if protein_strip.startswith('p.') and not protein_strip.startswith('p.X'):
-                    position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('del')])
+                    position = int(re.findall(r'\d+', protein_strip)[0])
                 elif not protein_strip.startswith('p.'):
                     position = 0
                 elif protein_strip.startswith('p.X'):
