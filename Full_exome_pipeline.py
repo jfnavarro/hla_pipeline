@@ -1156,13 +1156,13 @@ def Full_exome_pipeline(R1_NORMAL,
         if re.search(r'nonsynonymous', exonic_func_ref) or re.search(r'frame', exonic_func_ref):
             for entry in AA_change_refGene:
                 epitope_file.write(
-                    mrn + '\t' + seq_center + '\t' + sampleID + '\t' + source + '\t' + tumor_type + '\t' + 'Sample' + '\t' \
+                    mrn + '\t' + seq_center + '\t' + sampleID + '\t' + source + '\t' + tumor_type + '\t' + sample_note + '\t' \
                     + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
                     + stop + '\t' + ref + '\t' + alt + '\t' + func_ref_gene + '\t' + exonic_func_ref + '\t' + str(sub(':', '\t', (entry))) + '\n')
         if re.search(r'nonsynonymous', exonic_func_UCSC) or re.search(r'frame', exonic_func_UCSC):
             for entry in AA_change_UCSCGene:
                 epitope_file.write(
-                    mrn + '\t' + seq_center + '\t' + sampleID + '\t' + source + '\t' + tumor_type + '\t' + 'Sample' + '\t' \
+                    mrn + '\t' + seq_center + '\t' + sampleID + '\t' + source + '\t' + tumor_type + '\t' + sample_note + '\t' \
                     + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
                     + stop + '\t' + ref + '\t' + alt + '\t' + func_UCSC_gene + '\t' + exonic_func_UCSC + '\t' + str(sub(':', '\t', (entry))) + '\n')
         if re.search(r'nonsynonymous', exonic_func_ens) or re.search(r'frame', exonic_func_ens):
@@ -1297,7 +1297,9 @@ def Full_exome_pipeline(R1_NORMAL,
                 mut_cDNA_right = ref_cDNA_seq[int(cDNA_pos):]
                 mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
                 if protein_strip.startswith('p.') and re.search(r'fs', protein_strip) and not protein_strip.startswith('p.X'):
-                    position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('f')])
+                    # Protein seq may contain the new AA before the 'fs'
+                    position = re.findall(r'\d+', protein_strip)
+                    #position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('f')])
                 elif protein_strip.startswith('p.') and re.search(r'delins', protein_strip) and not protein_strip.startswith('p.X'):
                     position = int(protein_strip[(protein_strip.find('.') + 2):protein_strip.find('delins')])
                 elif protein_strip.startswith('p.X'):
