@@ -20,9 +20,7 @@ def Full_exome_pipeline(R1_NORMAL,
                         KNOWN_SITE2,
                         SNPSITES,
                         GERMLINE,
-                        PON,
-                        INTERVAL=None,
-                        UCSC=False):
+                        PON):
     print("Exome pipeline")
 
     # Sample 1 cancer, sample 2 normal
@@ -1212,20 +1210,6 @@ def Full_exome_pipeline(R1_NORMAL,
     print('Epitopes have been created...')
     input_file.close()
     epitope_file.close()
-
-    # Collect the hybridization stats using picards tool CollectHsMetrics
-    if INTERVAL:
-        print("Collecting HS metrics")
-        cmd = '{} CollectHsMetrics I=sample1_final.bam TI={} BI={} R={} O=sample1_target_coverage.txt'.format(PICARD,
-                                                                                                              INTERVAL,
-                                                                                                              INTERVAL,
-                                                                                                              genome)
-        exec_command(cmd)
-        cmd = '{} CollectHsMetrics I=sample2_final.bam TI={} BI={} R={} O=sample2_target_coverage.txt'.format(PICARD,
-                                                                                                              INTERVAL,
-                                                                                                              INTERVAL,
-                                                                                                              genome)
-        exec_command(cmd)
 
     print("COMPLETED!")
 

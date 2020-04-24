@@ -44,9 +44,6 @@ parser.add_argument('--fastaAA',
                     help='Path to the file with the dictionary of FASTA to AA', required=True)
 parser.add_argument('--fastacDNA',
                     help='Path to the file with the dictionary of FASTA to cDNA', required=True)
-parser.add_argument('--exomes',
-                    help='Path to the BED files containing the target exomes from the library kit', default=None, required=False)
-parser.add_argument('--ucsc', dest='ucsc', action='store_true', default=False, help="Use this if the reference is from UCSC")
 
 # Parse arguments
 args = parser.parse_args()
@@ -71,8 +68,6 @@ KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
 GERMLINE = os.path.abspath(args.germline)
 PON = os.path.abspath(args.pon)
-INTERVAL = os.path.abspath(args.exomes) if args.exomes else None
-UCSC = args.ucsc
 
 # Move to output dir
 if os.path.isdir(os.path.abspath(DIR)):
@@ -97,9 +92,7 @@ Full_exome_pipeline(R1_NORMAL,
                     KNOWN_SITE2,
                     SNPSITES,
                     GERMLINE,
-                    PON,
-                    INTERVAL,
-                    UCSC)
+                    PON)
 os.chdir('..')
 
 # RNA pìpeline

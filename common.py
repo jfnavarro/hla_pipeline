@@ -59,9 +59,6 @@ def exec_command(cmd):
             print(line.rstrip())
         sys.exit(-1)
 
-def HLA_predictionDNA(sample1, sample2, threads, outfile):
-    return
-
 def HLA_predictionRNA(sample, threads):
     cmd = '{} extract --threads {} --paired {}'.format(ARCASHLA, threads, sample)
     exec_command(cmd)
