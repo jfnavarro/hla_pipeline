@@ -21,6 +21,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
                  '\tTCOV\tNCOV\tSAMPLE-NOTE\tVARIANT-KEY\tCOSMIC70\tDATE\tRESECTION-DATE\tRUN-DATE\tSEQUENCER\tKIT\tNOTE\tINDEX\n'
     nonsyn_file.write(header)
     all_file.write(header)
+    #TODO use header names instead
     for line in nonsyn_snv:
         if line.startswith('#'):
             continue
@@ -146,26 +147,22 @@ def Full_exome_pipeline(R1_NORMAL,
 
         # Normal (unpaired R1)
         cmd = '{} -t {} {} R1_normal_unpaired.fastq.gz | ' \
-              '{} sort --threads {} > R1_normal_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS,
-                                                                                    THREADS)
+              '{} sort --threads {} > R1_normal_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
         exec_command(cmd)
 
         # Cancer (unpaired R1)
         cmd = '{} -t {} {} R1_cancer_unpaired.fastq.gz | ' \
-              '{} sort --threads {} > R1_cancer_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS,
-                                                                                    THREADS)
+              '{} sort --threads {} > R1_cancer_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
         exec_command(cmd)
 
         # Normal (unpaired R2)
         cmd = '{} -t {} {} R2_normal_unpaired.fastq.gz | ' \
-              '{} sort --threads {} > R2_normal_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS,
-                                                                                    THREADS)
+              '{} sort --threads {} > R2_normal_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
         exec_command(cmd)
 
         # Cancer (unpaired R2)
         cmd = '{} -t {} {} R2_cancer_unpaired.fastq.gz | ' \
-              '{} sort --threads {} > R2_cancer_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS,
-                                                                                    THREADS)
+              '{} sort --threads {} > R2_cancer_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
         exec_command(cmd)
 
         # Merge aligned files
@@ -581,7 +578,7 @@ def Full_exome_pipeline(R1_NORMAL,
         # Extract peptides
         print("Extracting pepdides")
         snv = open('nonsyn_SQL_insert.txt').readlines()
-        header = snv.pop(0)
+        header = snv.pop(0).strip().split('\t')
         epitope_file = open('Formatted_epitope_variant.txt', 'w')
         for line in snv:
             columns = line.strip().split('\t')

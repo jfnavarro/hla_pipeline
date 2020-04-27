@@ -1,11 +1,9 @@
 #! /usr/bin/env python
 
 import argparse
-from common import *
 from Full_exome_pipeline import *
 from RNA_seq_pipeline import *
 import multiprocessing
-import shutil
 
 parser = argparse.ArgumentParser(description='Jareds pipeline (adjusted by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                  prog='pipeline.py',
@@ -44,10 +42,10 @@ parser.add_argument('--fastaAA',
                     help='Path to the file with the dictionary of FASTA to AA', required=True)
 parser.add_argument('--fastacDNA',
                     help='Path to the file with the dictionary of FASTA to cDNA', required=True)
-parser.add_argument('--dna-steps',  nargs='+',
-                    help='DNA steps to run', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
-parser.add_argument('--rna-steps',  nargs='+',
-                    help='DNA steps to run', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
+parser.add_argument('--dna-steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
+                    help='Steps to apply in the DNA pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
+parser.add_argument('--rna-steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
+                    help='Steps to apply in the RNA pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 
 # Parse arguments
 args = parser.parse_args()
