@@ -220,6 +220,9 @@ def RNA_seq_pipeline(sample1,
         # TODO remove unnecessary fields
         for line in joined_variants:
             columns = line.rstrip('\n').split('\t')
+            # Very ugly way to check that the variant was called by the two methods (TODO improve)
+            if len(columns) < 51:
+                continue
             mrn = columns[1]
             Chr = columns[4]
             Start = columns[5]
