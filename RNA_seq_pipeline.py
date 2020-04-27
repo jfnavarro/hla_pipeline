@@ -99,12 +99,13 @@ def RNA_seq_pipeline(sample1,
 
     if 'filter' in steps:
         print('Formatting Varscan variants')
-        snp = open('snp.sum.hg19_multianno.txt').readlines()
-        header = snp.pop(0).strip().split('\t')
+        snv = open('snp.sum.hg19_multianno.txt')
+        snv_lines = snv.readlines()
+        header = snv_lines.pop(0).strip().split('\t')
         insert_file = open('SQL_variant_input.txt', 'w')
         date = datetime.datetime.now().replace(microsecond=0)
         # TODO remove unnecessary fields
-        for line in snp:
+        for line in snv_lines:
             if line.startswith('#'):
                 continue
             columns = line.rstrip('\n').split('\t')
@@ -152,16 +153,17 @@ def RNA_seq_pipeline(sample1,
                               + "\t" + str(sample_gDNA) + "\t" + str(gDNA) + "\t" + str(SEQ_CENTER) + "\t" + str(tumor_type)\
                               + "\t" + str(SAMPLE_NOTE) + '_' + str(date) + "\t" + str(SOURCE) + "\t" + str(variant_key) + "\n")
         insert_file.close()
-        snp.close()
+        snv.close()
 
         # This will format the  coverage information into a format that will be joined with the variant information
         print('Formatting varscan pile-ups')
-        pileup = open('varscan.pileup').readlines()
-        header = pileup.pop(0).strip().split('\t')
+        pileup = open('varscan.pileup')
+        pileup_lines = pileup.readlines()
+        header = pileup_lines.pop(0).strip().split('\t')
         insert_file = open('SQL_coverage_input.txt', 'w')
         date = datetime.datetime.now().replace(microsecond=0)
         # TODO remove unnecessary fields
-        for line in pileup:
+        for line in pileup_lines:
             columns = line.rstrip('\n').split('\t')
             Chr = columns[header.index('Chrom')]
             start = columns[header.index('Position')]
@@ -276,14 +278,15 @@ def RNA_seq_pipeline(sample1,
 
         # Reformat FPKM file
         print('Creating FPKM info file')
-        fpkm = open('genes.fpkm_tracking').readlines()
+        fpkm = open('genes.fpkm_tracking')
+        fpkm_lines = fpkm.readlines()
         FPKM_ins = open('FPKM_SQL_insert.txt', 'w')
         firstline = fpkm.pop(0)
         date = datetime.datetime.now().replace(microsecond=0)
         header = 'NAME\tSEQ_CENTER\tSAMPLEID\tSOURCE\tTUMOUR\tSAMPLE_NOTE_DATE\tSAMPLEID\tSEQ_CENTER\t' + firstline
         FPKM_ins.write(header)
         # TODO remove unnecessary fields
-        for line in fpkm:
+        for line in fpkm_lines:
             FPKM_ins.write(str(MRN) + '\t' + str(SEQ_CENTER) + '\t' + str(sampleID) + '\t' + str(SOURCE) + '\t' + str(tumor_type)\
                            + '\t' + str(SAMPLE_NOTE) + '_' + str(date) + '\t' + str(sampleID) + ' ' + str(SEQ_CENTER) + '\t' + line)
         FPKM_ins.close()

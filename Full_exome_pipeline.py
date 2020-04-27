@@ -4,7 +4,8 @@ from filters import *
 import shutil
 
 def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_type, header=True):
-    nonsyn_snv = open(input).readlines()[1:]
+    nonsyn_snv = open(input)
+    nonsyn_snv_lines = nonsyn_snv.readlines()[1:]
     nonsyn_file = open(output, 'w' if header else 'a')
     all_file = open(output_other, 'w' if header else 'a')
     date = datetime.datetime.now().replace(microsecond=0)
@@ -20,7 +21,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
         all_file.write(header)
     #TODO use header names instead
     #TODO remove unnecessary fields
-    for line in nonsyn_snv:
+    for line in nonsyn_snv_lines:
         if line.startswith('#'):
             continue
         columns = line.strip().split('\t')
@@ -82,6 +83,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
             print("Missing variant for {}".format(ID))
     nonsyn_file.close()
     all_file.close()
+    nonsyn_snv.close()
 
 def Full_exome_pipeline(R1_NORMAL,
                         R2_NORMAL,
@@ -577,11 +579,12 @@ def Full_exome_pipeline(R1_NORMAL,
 
         # Extract peptides
         print("Extracting pepdides")
-        snv = open('nonsyn_SQL_insert.txt').readlines()
-        header = snv.pop(0).strip().split('\t')
+        snv = open('nonsyn_SQL_insert.txt')
+        snv_lines = snv.readlines()
+        header = snv_lines.pop(0).strip().split('\t')
         epitope_file = open('Formatted_epitope_variant.txt', 'w')
         # TODO remove unnecessary fields
-        for line in snv:
+        for line in snv_lines:
             columns = line.strip().split('\t')
             sample_gDNA = columns[header.index('SAMPLE_ID_CHR:START')]
             gDNA = columns[header.index('CHR:START')]
