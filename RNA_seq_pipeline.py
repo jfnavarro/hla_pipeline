@@ -53,7 +53,7 @@ def RNA_seq_pipeline(sample1,
         exec_command(cmd)
 
         # Split N and cigars
-        print('Splitting NCirgar Reads')
+        print('Splitting NCigar Reads')
         cmd = '{} SplitNCigarReads -R {} -I sample_dedup.bam -O sample_split.bam'.format(GATK, genome)
         exec_command(cmd)
 
@@ -75,10 +75,10 @@ def RNA_seq_pipeline(sample1,
         # Variant calling VarScan
         print('Variant calling with varscan')
         cmd = VARSCAN + ' mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1'\
-                        + ' --min-var-freq .01 --p-value 0.99 > varscan.vcf'
+              + ' --min-var-freq .01 --p-value 0.99 > varscan.vcf'
         exec_command(cmd)
         cmd = VARSCAN + ' mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1'\
-                        + ' --min-var-freq .01 --p-value 0.99 > varscan.pileup'
+              + ' --min-var-freq .01 --p-value 0.99 > varscan.pileup'
         exec_command(cmd)
 
         # TODO apply a filter to the variants
@@ -120,7 +120,7 @@ def RNA_seq_pipeline(sample1,
             exonic_func_ref = columns[header.index('ExonicFunc.refGene')]
             AA_change_refGene = columns[header.index('AAChange.refGene')]
             func_known_gene = columns[header.index('Func.knownGene')]
-            gene_known_gene = columns[header.index('Gene.known')]
+            gene_known_gene = columns[header.index('Gene.knownGene')]
             known_gene_detail = columns[header.index('GeneDetail.knownGene')]
             exonic_known_ref = columns[header.index('ExonicFunc.knownGene')]
             AA_change_knownGene = columns[header.index('AAChange.knownGene')]
