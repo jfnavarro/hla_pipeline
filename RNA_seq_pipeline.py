@@ -103,6 +103,7 @@ def RNA_seq_pipeline(sample1,
         header = snp.pop(0).strip().split('\t')
         insert_file = open('SQL_variant_input.txt', 'w')
         date = datetime.datetime.now().replace(microsecond=0)
+        # TODO remove unnecessary fields
         for line in snp:
             if line.startswith('#'):
                 continue
@@ -159,6 +160,7 @@ def RNA_seq_pipeline(sample1,
         header = pileup.pop(0).strip().split('\t')
         insert_file = open('SQL_coverage_input.txt', 'w')
         date = datetime.datetime.now().replace(microsecond=0)
+        # TODO remove unnecessary fields
         for line in pileup:
             columns = line.rstrip('\n').split('\t')
             Chr = columns[header.index('Chrom')]
@@ -213,6 +215,7 @@ def RNA_seq_pipeline(sample1,
                  '\tsource_of_RNA_used_for_sequencing\tVARIANT-KEY\n'
         nonsyn_file.write(header)
         all_file.write(header)
+        # TODO remove unnecessary fields
         for line in joined_variants:
             columns = line.rstrip('\n').split('\t')
             mrn = columns[1]
@@ -279,6 +282,7 @@ def RNA_seq_pipeline(sample1,
         date = datetime.datetime.now().replace(microsecond=0)
         header = 'NAME\tSEQ_CENTER\tSAMPLEID\tSOURCE\tTUMOUR\tSAMPLE_NOTE_DATE\tSAMPLEID\tSEQ_CENTER\t' + firstline
         FPKM_ins.write(header)
+        # TODO remove unnecessary fields
         for line in fpkm:
             FPKM_ins.write(str(MRN) + '\t' + str(SEQ_CENTER) + '\t' + str(sampleID) + '\t' + str(SOURCE) + '\t' + str(tumor_type)\
                            + '\t' + str(SAMPLE_NOTE) + '_' + str(date) + '\t' + str(sampleID) + ' ' + str(SEQ_CENTER) + '\t' + line)

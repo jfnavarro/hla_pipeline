@@ -1,10 +1,7 @@
-import pandas as pd
-import re
-import datetime
-import gzip
 from re import sub
 from common import *
 from filters import *
+import shutil
 
 def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_type, header=True):
     nonsyn_snv = open(input).readlines()[1:]
@@ -22,6 +19,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
         nonsyn_file.write(header)
         all_file.write(header)
     #TODO use header names instead
+    #TODO remove unnecessary fields
     for line in nonsyn_snv:
         if line.startswith('#'):
             continue
@@ -234,6 +232,8 @@ def Full_exome_pipeline(R1_NORMAL,
 
         # Variant calling Strelka2
         print('Performing variant calling with Strelka2')
+        if os.path.isdir('Strelka_output'):
+            shutil.rmtree(os.path.abspath('Strelka_output'))
         cmd = '{} --exome --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta {}' \
               ' --runDir Strelka_output'.format(STRELKA, genome)
         exec_command(cmd)
@@ -580,6 +580,7 @@ def Full_exome_pipeline(R1_NORMAL,
         snv = open('nonsyn_SQL_insert.txt').readlines()
         header = snv.pop(0).strip().split('\t')
         epitope_file = open('Formatted_epitope_variant.txt', 'w')
+        # TODO remove unnecessary fields
         for line in snv:
             columns = line.strip().split('\t')
             sample_gDNA = columns[header.index('SAMPLE_ID_CHR:START')]
@@ -638,10 +639,11 @@ def Full_exome_pipeline(R1_NORMAL,
         dict2.close()
         epitope_file = open('SQL_Epitopes.txt', 'w')
         input_file = open('Formatted_epitope_variant.txt')
-        header = 'NAME\tSEQ_CENTER\tSAMPLE_ID\tSOURCE\tTUMOUR\tSAMPLE_NOTE\tSAMPLE_ID_CHR:START\tCHR:START\tSAMPLE_CENTER\tVARIANT_KEY' \
+        header = 'NAME\tSEQ_CENTER\tSAMPLE_ID\tSOURCE\tTUMOUR\tSAMPLE_NOTE\tSAMPLE_ID_CHR:START\tCHR:START\tSAMPLE_CENTER\tVARIANT-KEY' \
                  '\tCHR\tSTART\tSTOP\tREF\tALT\tfunc_ref_gene\texonic_func_ref\tGene\tTranscript_ID\tExon_Numb\tNT_CHANGE\tAA_CHANGE' \
                  '\tPOSITION\tERRORS\tWT25MER\tMUT25MER\tVARIANT-KEY\tTRANSCRIPT\n'
         epitope_file.write(header)
+        # TODO remove unnecessary fields
         for line in input_file:
             columns = line.rstrip('\n').split('\t')
             variant_key = columns[9].strip()
