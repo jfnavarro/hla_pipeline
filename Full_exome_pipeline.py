@@ -4,598 +4,25 @@ import datetime
 import gzip
 from re import sub
 from common import *
+from filters import *
 
-def Full_exome_pipeline(R1_NORMAL,
-                        R2_NORMAL,
-                        R1_CANCER,
-                        R2_CANCER,
-                        IILLUMINA_ADAPTERS,
-                        tumor_type,
-                        genome,
-                        sampleID,
-                        THREADS,
-                        FASTA_AA_DICT,
-                        FASTA_cDNA_DICT,
-                        KNOWN_SITE1,
-                        KNOWN_SITE2,
-                        SNPSITES,
-                        GERMLINE,
-                        PON):
-    print("Exome pipeline")
-
-    # Sample 1 cancer, sample 2 normal
-    sample1_ID = sampleID + "_Tumor"
-    sample2_ID = sampleID + "_Normal"
-
-    # Create sub-folder to store all results
-    os.makedirs('exome', exist_ok=True)
-    os.chdir('exome')
-
-    # TRIMMING
-    print('Starting trimming')
-
-    cmd = '{} PE -threads {} -phred33 {} {} R1_normal.fastq.gz R1_normal_unpaired.fastq.gz ' \
-          'R2_normal.fastq.gz R2_normal_unpaired.fastq.gz ' \
-          'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
-                                                                                           THREADS,
-                                                                                           R1_NORMAL,
-                                                                                           R2_NORMAL,
-                                                                                           IILLUMINA_ADAPTERS)
-    exec_command(cmd)
-
-    cmd = '{} PE -threads {} -phred33 {} {} R1_cancer.fastq.gz R1_cancer_unpaired.fastq.gz ' \
-          'R2_cancer.fastq.gz R2_cancer_unpaired.fastq.gz ' \
-          'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
-                                                                                           THREADS,
-                                                                                           R1_CANCER,
-                                                                                           R2_CANCER,
-                                                                                           IILLUMINA_ADAPTERS)
-    exec_command(cmd)
-
-    print('Trimming of tumor and normal samples completed.')
-
-    # ALIGNMENT
-    print('Starting alignment')
-
-    # Normal (paired)
-    cmd = '{} -t {} {} R1_normal.fastq.gz R2_normal.fastq.gz | {} view -bS > normal_paired_aligned.bam'.format(BWA,
-                                                                                                               THREADS,
-                                                                                                               genome,
-                                                                                                               SAMTOOLS)
-    exec_command(cmd)
-
-    cmd = '{} sort --threads {} normal_paired_aligned.bam > normal_paired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                                     THREADS)
-    exec_command(cmd)
-
-    # Cancer (paired)
-    cmd = '{} -t {} {} R1_cancer.fastq.gz R2_cancer.fastq.gz | {} view -bS > cancer_paired_aligned.bam'.format(BWA,
-                                                                                                               THREADS,
-                                                                                                               genome,
-                                                                                                               SAMTOOLS)
-    exec_command(cmd)
-
-    cmd = '{} sort --threads {} cancer_paired_aligned.bam > cancer_paired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                                     THREADS)
-    exec_command(cmd)
-
-    # Normal (unpaired R1)
-    cmd = '{} -t {} {} R1_normal_unpaired.fastq.gz | {} view -bS > R1_normal_unpaired_aligned.bam'.format(BWA,
-                                                                                                          THREADS,
-                                                                                                          genome,
-                                                                                                          SAMTOOLS)
-    exec_command(cmd)
-
-    cmd = '{} sort --threads {} R1_normal_unpaired_aligned.bam > R1_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                                               THREADS)
-    exec_command(cmd)
-
-    # Cancer (unpaired R1)
-    cmd = '{} -t {} {} R1_cancer_unpaired.fastq.gz | {} view -bS > R1_cancer_unpaired_aligned.bam'.format(BWA,
-                                                                                                          THREADS,
-                                                                                                          genome,
-                                                                                                          SAMTOOLS)
-    exec_command(cmd)
-
-    cmd = '{} sort --threads {} R1_cancer_unpaired_aligned.bam > R1_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                                               THREADS)
-    exec_command(cmd)
-
-    # Normal (unpaired R2)
-    cmd = '{} -t {} {} R2_normal_unpaired.fastq.gz | {} view -bS > R2_normal_unpaired_aligned.bam'.format(BWA,
-                                                                                                          THREADS,
-                                                                                                          genome,
-                                                                                                          SAMTOOLS)
-    exec_command(cmd)
-
-    cmd = '{} sort --threads {} R2_normal_unpaired_aligned.bam > R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                                               THREADS)
-    exec_command(cmd)
-
-    # Cancer (unpaired R2)
-    cmd = '{} -t {} {} R2_cancer_unpaired.fastq.gz | {} view -bS > R2_cancer_unpaired_aligned.bam'.format(BWA,
-                                                                                                          THREADS,
-                                                                                                          genome,
-                                                                                                          SAMTOOLS)
-    exec_command(cmd)
-
-    cmd = '{} sort --threads {} R2_cancer_unpaired_aligned.bam > R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS,
-                                                                                                               THREADS)
-    exec_command(cmd)
-
-    print('Aligment of tumor and normal samples completed.')
-
-    # Merge aligned files
-    print('Merging aligned files')
-
-    cmd = '{} merge -f aligned_normal_merged.bam normal_paired_aligned_sorted.bam ' \
-          'R1_normal_unpaired_aligned_sorted.bam R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
-    exec_command(cmd)
-
-    cmd = '{} merge -f aligned_cancer_merged.bam cancer_paired_aligned_sorted.bam ' \
-          'R1_cancer_unpaired_aligned_sorted.bam R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
-    exec_command(cmd)
-
-    print('Merging of tumor and normal aligned samples completed.')
-
-    # Add headers
-    print("Adding headers")
-    cmd = '{} AddOrReplaceReadGroups I=aligned_cancer_merged.bam O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
-          ' RGCN={} RGDS={}'.format(PICARD, sample1_ID, LIBRARY, sample1_ID, sample1_ID, SEQ_CENTER, tumor_type)
-    exec_command(cmd)
-    cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}'\
-          ' RGCN={} RGDS={}'.format(PICARD, sample2_ID, LIBRARY, sample2_ID, sample2_ID, SEQ_CENTER, tumor_type)
-    exec_command(cmd)
-    print('Tumor and normal bam files had read group information added.')
-
-    # Mark duplicates
-    print('Marking duplicates')
-    # NOTE setting reducers to it works in system that do not allow many files open
-    cmd = GATK + ' MarkDuplicatesSpark -I=sample1_header.bam -O=sample1_dedup.bam -M=dedup_sample1.txt'
-    exec_command(cmd)
-    cmd = GATK + ' MarkDuplicatesSpark -I=sample2_header.bam -O=sample2_dedup.bam -M=dedup_sample2.txt'
-    exec_command(cmd)
-    print('Tumor and normal bam files had their optical and PCR duplicates marked.')
-
-    # GATK base re-calibration
-    print('Starting re-calibration')
-    #NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
-    cmd = '{} BaseRecalibrator -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}'\
-          ' --known-sites {} -O sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
-    exec_command(cmd)
-    cmd = '{} BaseRecalibrator -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}'\
-          ' --known-sites {} -O sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
-    exec_command(cmd)
-    cmd = '{} ApplyBQSR -R {} -I sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'.format(GATK, genome)
-    exec_command(cmd)
-    cmd = '{} ApplyBQSR -R {} -I sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'.format(GATK, genome)
-    exec_command(cmd)
-    print('Re-calibration was performed on the tumor and normal samples.')
-
-    # HLA-LA predictions
-    print('Performing HLA-LA predictions')
-    HLA_LA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
-    HLA_LA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
-    print('HLA-LA predictions completed for tumor and normal samples')
-
-    # Variant calling (Samtools pile-ups)
-    print('Computing pile-ups')
-    cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample1_final.bam > sample1.pileup'.format(SAMTOOLS, genome)
-    exec_command(cmd)
-    cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample2_final.bam > sample2.pileup'.format(SAMTOOLS, genome)
-    exec_command(cmd)
-    print('Pile-ups were computed for tumor and normal samples')
-
-    print('Performing variant calling')
-    # Variant calling Mutect2
-    cmd = '{} Mutect2 -R {} -I sample1_final.bam -I sample2_final.bam -normal {} -O Mutect_unfiltered.vcf'\
-          ' --germline-resource {} --panel-of-normals {}'.format(GATK, genome, sample2_ID, GERMLINE, PON)
-    exec_command(cmd)
-    cmd = '{} FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf -R {}'.format(GATK, genome)
-    exec_command(cmd)
-
-    # Variant calling Strelka2
-    cmd = '{} --exome --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta {}'\
-          ' --runDir Strelka_output'.format(STRELKA, genome)
-    exec_command(cmd)
-    cmd = 'Strelka_output/runWorkflow.py -m local -j {}'.format(THREADS)
-    exec_command(cmd)
-
-    # Variant calling Somatic Sniper
-    cmd = '{} -L -G -F vcf -f {} sample1_final.bam sample2_final.bam SS.vcf'.format(SSNIPER, genome)
-    exec_command(cmd)
-
-    # Variant calling VarScan
-    cmd = VARSCAN + ' somatic sample2.pileup sample1.pileup varscan --tumor-purity .5 --output-vcf 1'\
-                    ' --min-coverage 4 --min-var-freq .05 --strand-filter 0'
-    exec_command(cmd)
-    print('Done calling with Varscan, Mutect2, SomaticSniper & Strelka.')
-
-    # Filtering Mutect snv calls
-    print("Filtering Mutect SNV")
-    filtered_vcf = open('mutect_filtered.vcf', 'w')
-    vcf = open('Mutect.vcf')
-    for line in vcf:
-        if line.startswith('#') and not line.startswith('#CHROM'):
-            filtered_vcf.write(line)
-        elif line.startswith('#CHROM'):
-            headers = line.strip().split('\t')
-            Tmut = headers.index(sample1_ID)
-            Nmut = headers.index(sample2_ID)
-            filtered_vcf.write(line)
-        elif not line.startswith('#'):
-            columns = line.strip().split('\t')
-            Filter = columns[6]
-            if re.search('PASS', Filter):
-                # AD variable
-                n_split = columns[Nmut].split(':')[1].split(',')
-                t_split = columns[Tmut].split(':')[1].split(',')
-                normal_coverage = int(n_split[0]) + int(n_split[1])
-                tumor_coverage = int(t_split[0]) + int(t_split[1])
-                tumor_var_depth = int(t_split[1])
-                # AF variable
-                tumor_var_freq = float(float(columns[Tmut].split(':')[2]) * 100)
-                normal_var_freq = float(float(columns[Nmut].split(':')[2]) * 100)
-                if normal_var_freq != 0:
-                    t2n_ratio = float(tumor_var_freq) / float(normal_var_freq)
-                else:
-                    t2n_ratio = 5
-                # NOTE this filter seems to too strict with Mutect2 (where variants are already filtered)
-                if normal_coverage >= 10 and tumor_coverage >= 10 and tumor_var_freq >= 2.5 and tumor_var_depth >= 3 and t2n_ratio >= 5:
-                    filtered_vcf.write(line)
-    filtered_vcf.close()
-    vcf.close()
-
-    # Filtering Strelka snv calls and adding GT information
-    print("Filtering Strelka SNV")
-    alt_index = {'A': 4, 'C': 5, 'G': 6, 'T': 7}
-    filtered_vcf = open('strelka_filtered.vcf', 'w')
-    vcf = gzip.open('Strelka_output/results/variants/somatic.snvs.vcf.gz', 'rt')
-    for line in vcf:
-        if line.startswith('#') and not re.search('##FORMAT=<ID=DP,', line) and not line.startswith('#CHROM'):
-            filtered_vcf.write(line)
-        elif line.startswith('#') and re.search('##FORMAT=<ID=DP,', line):
-            filtered_vcf.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n' + line)
-        elif line.startswith('#CHROM'):
-            headers = line.strip().split('\t')
-            Tst = headers.index('TUMOR')
-            Nst = headers.index('NORMAL')
-            filtered_vcf.write(line)
-        elif not line.startswith('#'):
-            columns = line.strip().split('\t')
-            ref = columns[3]
-            alt = columns[4]
-            Filter = columns[6]
-            INFO = columns[7]
-            Format = columns[8]
-            Normal = columns[Nst]
-            Tumor = columns[Tst]
-            if re.search('PASS', Filter):
-                n_split = Normal.split(':')
-                t_split = Tumor.split(':')
-                normal_variant_depth = int(n_split[alt_index[alt]].split(',')[0])
-                tumor_variant_depth = int(t_split[alt_index[alt]].split(',')[0])
-                n_cov = int(n_split[0])
-                t_cov = int(t_split[0])
-                T_freq = float((tumor_variant_depth / t_cov) * 100)
-                # NOTE too strict filters and maybe incorrect?
-                # Authors of Strelka recommend to compute allele frequency like this:
-                # refCounts = Value of FORMAT column $REF + “U” (e.g. if REF="A" then use the value in FOMRAT/AU)
-                # altCounts = Value of FORMAT column $ALT + “U” (e.g. if ALT="T" then use the value in FOMRAT/TU)
-                # tier1RefCounts = First comma-delimited value from $refCounts
-                # tier1AltCounts = First comma-delimited value from $altCounts
-                # Somatic allele frequency is $tier1AltCounts / ($tier1AltCounts + $tier1RefCounts)
-                if normal_variant_depth != 0:
-                    N_freq = float(normal_variant_depth / n_cov)
-                    t2n_ratio = T_freq / N_freq
-                else:
-                    t2n_ratio = 5
-                if n_cov >= 10 and t_cov >= 10 and tumor_variant_depth >= 3 and T_freq >= 5 and t2n_ratio >= 5:
-                    Format = 'GT:' + Format
-                    INFO_split = INFO.split(';')
-                    SGT = INFO_split[6].replace('SGT=', '').split('->')
-                    Normal_GT = ''
-                    Tumor_GT = ''
-                    i = 1
-                    for x in SGT[0]:
-                        if x == ref and i == 1:
-                            Normal_GT = Normal_GT + '0'
-                            i = i + 1
-                        elif x == ref and i == 2:
-                            Normal_GT = Normal_GT + '/0'
-                            i = i + 1
-                        elif x != ref and i == 1:
-                            Normal_GT = Normal_GT + '1'
-                            i = i + 1
-                        elif x != ref and i == 2:
-                            Normal_GT = Normal_GT + '/1'
-                            i = i + 1
-                    i = 1
-                    for x in SGT[1]:
-                        if x == ref and i == 1:
-                            Tumor_GT = Tumor_GT + '0'
-                            i = i + 1
-                        elif x == ref and i == 2:
-                            Tumor_GT = Tumor_GT + '/0'
-                            i = i + 1
-                        elif x != ref and i == 1:
-                            Tumor_GT = Tumor_GT + '1'
-                            i = i + 1
-                        elif x != ref and i == 2:
-                            Tumor_GT = Tumor_GT + '/1'
-                            i = i + 1
-                    filtered_vcf.write('{}\t{}\t{}:{}\t{}:{}\n'.format('\t'.join(columns[0:8]), Format, Normal_GT, Normal, Tumor_GT, Tumor))
-    vcf.close()
-    filtered_vcf.close()
-
-    # Filter SomaticSniper SNV calls
-    print("Filtering SomaticSniper SNV")
-    filtered_vcf = open('somaticsniper_filtered.vcf', 'w')
-    vcf = open('SS.vcf')
-    for line in vcf:
-        if line.startswith('#') and not line.startswith('#CHROM'):
-            filtered_vcf.write(line)
-        elif line.startswith('#CHROM'):
-            headers = line.strip().split('\t')
-            Tss = headers.index('TUMOR')
-            Nss = headers.index('NORMAL')
-            filtered_vcf.write(line)
-        elif not line.startswith('#'):
-            columns = line.strip().split('\t')
-            n_split = columns[Nss].split(':')
-            t_split = columns[Tss].split(':')
-            normal_coverage = int(n_split[2])
-            tumor_coverage = int(t_split[2])
-            somatic_status = int(t_split[11])
-            variant_count = int(t_split[3].split(',')[2]) + int(t_split[3].split(',')[3])
-            normal_variant_count = int(n_split[3].split(',')[2]) + int(n_split[3].split(',')[3])
-            Tumor_variant_freq = float((variant_count / tumor_coverage) * 100)
-            if normal_variant_count != 0:
-                normal_freq = float((normal_variant_count / normal_coverage) * 100)
-                t2nratio = float(Tumor_variant_freq / normal_freq)
-            else:
-                t2nratio = 5
-            if normal_coverage >= 10 and tumor_coverage >= 10 and somatic_status == 2 and variant_count >= 3 and Tumor_variant_freq >= 5 and t2nratio >= 5:
-                filtered_vcf.write(line)
-    vcf.close()
-    filtered_vcf.close()
-
-    # Filter Varscan SNV calls
-    print("Filering Varscan SNV")
-    filtered_vcf = open('varscan_filtered.vcf', 'w')
-    vcf = open('varscan.snp.vcf')
-    for line in vcf:
-        if line.startswith('#') and re.search(r'DP4', line):
-            # Ugly hack so CombinaVariants works
-            new_DP4 = line.replace(
-                'ID=DP4,Number=1,Type=String,Description="Strand read counts: ref/fwd, ref/rev, var/fwd, var/rev"',
-                'ID=DP4,Number=4,Type=Integer,Description="# high-quality ref-forward bases, ref-reverse, alt-forward and alt-reverse bases"')
-            filtered_vcf.write(new_DP4)
-        elif line.startswith('#') and not line.startswith('#CHROM'):
-            filtered_vcf.write(line)
-        elif line.startswith('#CHROM'):
-            headers = line.strip().split('\t')
-            Tvs = headers.index('TUMOR')
-            Nvs = headers.index('NORMAL')
-            filtered_vcf.write(line)
-        elif not line.startswith('#'):
-            columns = line.strip().split('\t')
-            Filter = columns[6]
-            INFO = columns[7]
-            if re.search(r'SOMATIC', INFO) and re.search('PASS', Filter):
-                n_split = columns[Nvs].split(':')
-                t_split = columns[Tvs].split(':')
-                normal_coverage = int(n_split[2])
-                tumor_coverage = int(t_split[2])
-                tumor_var_depth = int(t_split[4])
-                tumor_var_freq = float(t_split[5].replace('%', ''))
-                normal_var_freq = float(n_split[5].replace('%', ''))
-                if normal_var_freq != 0:
-                    t2n_ratio = tumor_var_freq / normal_var_freq
-                else:
-                    t2n_ratio = 5
-                if normal_coverage >= 10 and tumor_coverage >= 10 and tumor_var_depth >= 3 and t2n_ratio >= 5 and tumor_var_freq >= 2.5:
-                    filtered_vcf.write(line)
-    vcf.close()
-    filtered_vcf.close()
-
-    # Use GATK to combine all of the variants from various callers
-    print('Combining variants')
-    # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
-    cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf '\
-          '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf '\
-          '-genotypeMergeOptions UNIQUIFY'.format(GATK3, genome)
-    exec_command(cmd)
-
-    # Run annovar to annotate variants
-    print('Running annovar')
-    #TODO Ensure GHRC37 works with annovar (hg19)
-    cmd = '{} -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'.format(
-        os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
-    exec_command(cmd)
-    cmd = '{} snp.av {} -thread {} -out snp.sum -remove -protocol {}'.format(
-        os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovar_db, THREADS,  annovar_anno)
-    exec_command(cmd)
-
-    # Extract coverage info from vcf file and add to annotation data
-    print("Extracting coverage from combined VCF")
-    vcf = open('combined_calls.vcf')
-    vcf_cov_dict = {}
-    for line in vcf:
-        if line.startswith('#CHROM'):
-            headers = line.strip().split('\t')
-            varscanT = headers.index('TUMOR.varscan')
-            varscanN = headers.index('NORMAL.varscan')
-            strelkaT = headers.index('TUMOR.strelka')
-            strelkaN = headers.index('NORMAL.strelka')
-            mutectT = headers.index(sample1_ID + '.mutect')
-            mutectN = headers.index(sample2_ID + '.mutect')
-            sniperT = headers.index('TUMOR.somaticsniper')
-            sniperN = headers.index('NORMAL.somaticsniper')
-        if not line.startswith('#'):
-            columns = line.split('\t')
-            chrm = columns[0]
-            pos = columns[1]
-            ref = columns[3]
-            alt = columns[4]
-            info = columns[7]
-            DictID = chrm + ':' + pos
-            trfor = '.'
-            trrev = '.'
-            tvfor = '.'
-            tvrev = '.'
-            nrfor = '.'
-            nrrev = '.'
-            nvfor = '.'
-            nvrev = '.'
-            p_val = '.'
-            tcov = '.'
-            ncov = '.'
-            tfreq = '.'
-            nfreq = '.'
-            tumor_read1 = '.'
-            normal_read1 = '.'
-            tumor_read2 = '.'
-            normal_read2 = '.'
-            callers = info.strip().split(';')[-1].replace('set=', '')
-            if re.search('Intersection', callers) or re.search('varscan', callers):
-                if callers == 'Intersection':
-                    caller_count = 4
-                    callers = 'varscan-strelka-mutect-somaticsniper'
-                else:
-                    caller_count = callers.count('-') + 1
-                if re.search('SPV=', info):
-                    info_split = info.split(';')
-                    for x in info_split:
-                        if re.search('SPV=', x):
-                            p_val = x.replace('SPV=', '')
-                form = columns[8].split(':')
-                DP4 = form.index('DP4')
-                Freq = form.index('FREQ')
-                t_split = columns[varscanT].split(':')
-                n_split = columns[varscanN].split(':')
-                trfor = int(t_split[DP4].split(',')[0])
-                trrev = int(t_split[DP4].split(',')[1])
-                tvfor = int(t_split[DP4].split(',')[2])
-                tvrev = int(t_split[DP4].split(',')[3])
-                tumor_read1 = trfor + trrev
-                tumor_read2 = tvfor + tvrev
-                tcov = trfor + trrev + tvfor + tvrev
-                tfreq = t_split[Freq]
-                nrfor = int(n_split[DP4].split(',')[0])
-                nrrev = int(n_split[DP4].split(',')[1])
-                nvfor = int(n_split[DP4].split(',')[2])
-                nvrev = int(n_split[DP4].split(',')[3])
-                normal_read1 = nrfor + nrrev
-                normal_read2 = nvfor + nvrev
-                ncov = nrfor + nrrev + nvfor + nvrev
-                nfreq = columns[varscanN].split(':')[Freq]
-            elif re.search('somaticsniper', callers):
-                caller_count = callers.count('-') + 1
-                form = columns[8].split(':')
-                DP4 = form.index('DP4')
-                t_split = columns[sniperT].split(':')
-                n_split = columns[sniperN].split(':')
-                trfor = int(t_split[DP4].split(',')[0])
-                trrev = int(t_split[DP4].split(',')[1])
-                tvfor = int(t_split[DP4].split(',')[2])
-                tvrev = int(t_split[DP4].split(',')[3])
-                tumor_read1 = trfor + trrev
-                tumor_read2 = tvfor + tvrev
-                tcov = trfor + trrev + tvfor + tvrev
-                nrfor = int(n_split[DP4].split(',')[0])
-                nrrev = int(n_split[DP4].split(',')[1])
-                nvfor = int(n_split[DP4].split(',')[2])
-                nvrev = int(n_split[DP4].split(',')[3])
-                normal_read1 = nrfor + nrrev
-                normal_read2 = nvfor + nvrev
-                ncov = nrfor + nrrev + nvfor + nvrev
-                tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
-                nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-            elif re.search('strelka', callers):
-                caller_count = callers.count('-') + 1
-                form = columns[8].split(':')
-                AU = form.index('AU')
-                CU = form.index('CU')
-                GU = form.index('GU')
-                TU = form.index('TU')
-                t_split = columns[strelkaT].split(':')
-                n_split = columns[strelkaN].split(':')
-                if ref == 'A':
-                    tumor_read1 = int(t_split[AU].split(',')[0])
-                    normal_read1 = int(n_split[AU].split(',')[0])
-                elif ref == 'C':
-                    tumor_read1 = int(t_split[CU].split(',')[0])
-                    normal_read1 = int(n_split[CU].split(',')[0])
-                elif ref == 'G':
-                    tumor_read1 = int(t_split[GU].split(',')[0])
-                    normal_read1 = int(n_split[GU].split(',')[0])
-                elif ref == 'T':
-                    tumor_read1 = int(t_split[TU].split(',')[0])
-                    normal_read1 = int(n_split[TU].split(',')[0])
-                if alt == 'A':
-                    tumor_read2 = int(t_split[AU].split(',')[0])
-                    normal_read2 = int(n_split[AU].split(',')[0])
-                elif alt == 'C':
-                    tumor_read2 = int(t_split[CU].split(',')[0])
-                    normal_read2 = int(n_split[CU].split(',')[0])
-                elif alt == 'G':
-                    tumor_read2 = int(t_split[GU].split(',')[0])
-                    normal_read2 = int(n_split[GU].split(',')[0])
-                elif alt == 'T':
-                    tumor_read2 = int(t_split[TU].split(',')[0])
-                    normal_read2 = int(n_split[TU].split(',')[0])
-                if tumor_read2 != '.':
-                    tcov = tumor_read1 + tumor_read2
-                    ncov = normal_read1 + normal_read2
-                    tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
-                    nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-            elif re.search('mutect', callers):
-                caller_count = callers.count('-') + 1
-                form = columns[8].split(':')
-                if not re.search(',', alt):
-                    AD = form.index('AD')
-                t_split = columns[mutectT].split(':')
-                n_split = columns[mutectN].split(':')
-                if not re.search(',', alt):
-                    tumor_read1 = int(t_split[AD].split(',')[0])
-                    tumor_read2 = int(t_split[AD].split(',')[1])
-                    normal_read1 = int(n_split[AD].split(',')[0])
-                    normal_read2 = int(n_split[AD].split(',')[1])
-                    tcov = tumor_read1 + tumor_read2
-                    ncov = normal_read1 + normal_read2
-                    tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
-                    nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-            # populate
-            vcf_cov_dict[DictID] = {}
-            vcf_cov_dict[DictID]['pval'] = p_val
-            vcf_cov_dict[DictID]['Note'] = str(caller_count) + ':' + callers
-            vcf_cov_dict[DictID]['trfor'] = trfor
-            vcf_cov_dict[DictID]['trrev'] = trrev
-            vcf_cov_dict[DictID]['tvfor'] = tvfor
-            vcf_cov_dict[DictID]['tvrev'] = tvrev
-            vcf_cov_dict[DictID]['nrfor'] = nrfor
-            vcf_cov_dict[DictID]['nrrev'] = nrrev
-            vcf_cov_dict[DictID]['nvfor'] = nvfor
-            vcf_cov_dict[DictID]['nvrev'] = nvrev
-            vcf_cov_dict[DictID]['tumor_read1'] = tumor_read1
-            vcf_cov_dict[DictID]['tumor_read2'] = tumor_read2
-            vcf_cov_dict[DictID]['normal_read1'] = normal_read1
-            vcf_cov_dict[DictID]['normal_read2'] = normal_read2
-            vcf_cov_dict[DictID]['tumor_coverage'] = tcov
-            vcf_cov_dict[DictID]['tumor_freq'] = tfreq
-            vcf_cov_dict[DictID]['normal_coverage'] = ncov
-            vcf_cov_dict[DictID]['normal_freq'] = nfreq
-    vcf.close()
-
-    # Generate final sheet with coverage
-    print("Formatting coverage and generating final sheet")
-    nonsyn_snv = open('snp.sum.hg19_multianno.txt')
-    nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
-    all_file = open('all_other_mutations.txt', 'w')
+def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_type, header=True):
+    nonsyn_snv = open(input).readlines()[1:]
+    nonsyn_file = open(output, 'w' if header else 'a')
+    all_file = open(output_other, 'w' if header else 'a')
     date = datetime.datetime.now().replace(microsecond=0)
+    if header:
+        header = 'NAME\tSEQ_CENTER\tSAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tColumna1\tColumna2\tsnp138NonFlagged\tTUMOR_READ1' \
+                 '\tTUMOR_READ2\tFunc.refGene\tGene.refGene\tExonicFunc.refGene\tAAChange.refGene\tFunc.knownGene\tGene.knownGene' \
+                 '\tExonicFunc.knownGene\tAAChange.knownGene\tFunc.ensGene\tGene.ensGene\tExonicFunc.ensGene\tAAChange.ensGene' \
+                 '\tALL.sites.2015_08\tEUR.sites.2015_08\tAMR.sites.2015_08\tEAS.sites.2015_08\tAFR.sites.2015_08\tNORMAL_READ1' \
+                 '\tNORMAL_READ2\tTRFOR-DP4\tTRREV-DP4\tTVFOR-DP4\tTVREV-DP4\tNRFOR-DP4\tNRREV-DP4\tNVFOR-DP4\tNVAF\tNVREV-DP4' \
+                 '\tTVAF\tSOMATIC\tPVAL\tSAMPLE_ID_CHR:START\tCALLERS\tCHR:START\tTUMOUR\tSOURCE\tSAMPLE-NOTE_SOURCE_SEQ-CENTER' \
+                 '\tTCOV\tNCOV\tSAMPLE-NOTE\tVARIANT-KEY\tCOSMIC70\tDATE\tRESECTION-DATE\tRUN-DATE\tSEQUENCER\tKIT\tNOTE\tINDEX\n'
+    nonsyn_file.write(header)
+    all_file.write(header)
     for line in nonsyn_snv:
-        if line.startswith('#') or line.startswith("Chr"):
+        if line.startswith('#'):
             continue
         columns = line.strip().split('\t')
         Chr = columns[0]
@@ -608,13 +35,7 @@ def Full_exome_pipeline(R1_NORMAL,
         known_gene_detail = columns[12]
         ens_gene_detail = columns[17]
         COSMIC = columns[26]
-        mrn = MRN
-        seq_center = SEQ_CENTER
-        sampleID = sampleID
         gDNA = 'chr' + Chr + ':' + start
-        tumor_type = tumor_type
-        source = SOURCE
-        sample_note = SAMPLE_NOTE
         variant_key = str(Chr) + ':' + str(start) + '-' + str(end) + ' ' + str(ref) + '>' + str(alt)
         if ref_gene_detail != 'NA':
             columns[9] = columns[7]
@@ -642,14 +63,14 @@ def Full_exome_pipeline(R1_NORMAL,
             tfreq = vcf_cov_dict[ID]['tumor_freq']
             ncov = vcf_cov_dict[ID]['normal_coverage']
             nfreq = vcf_cov_dict[ID]['normal_freq']
-            to_write = str(mrn) + '\t' + str(seq_center) + '\t' + str(sampleID) + "\t" + str('\t'.join(columns[0:5])) + '\t-\t-\t' + str(columns[20]) \
+            to_write = str(MRN) + '\t' + str(SEQ_CENTER) + '\t' + str(sampleID) + "\t" + str('\t'.join(columns[0:5])) + '\t-\t-\t' + str(columns[20]) \
                        + '\t' + str(tumor_read1) + '\t' + str(tumor_read2) + '\t' + str('\t'.join(columns[5:7])) + '\t' + str('\t'.join(columns[8:12])) \
                        + '\t' + str('\t'.join(columns[13:17])) + '\t' + str('\t'.join(columns[18:20])) + '\t' + str('\t'.join(columns[21:26])) \
                        + '\t' + str(normal_read1) + '\t' + str(normal_read2) + '\t' + str(trfor) + '\t' + str(trrev) + '\t' + str(tvfor) \
                        + '\t' + str(tvrev) + '\t' + str(nrfor) + '\t' + str(nrrev) + '\t' + str(nvfor) + '\t' + str(nfreq) + '\t' + str(nvrev) \
                        + '\t' + str(tfreq) + '\tSomatic\t' + str(p_val) + '\t' + str(sampleID) + ' chr' + str(Chr) + ':' + str(start) + '\t' + str(Note) \
-                       + '\t' + str(gDNA) + '\t' + str(tumor_type) + '\t' + str(source) + '\t' + str(sample_note) + ' ' + str(source) \
-                       + ' ' + str(seq_center) + '\t' + str(tcov) + '\t' + str(ncov) + '\t' + str(sample_note) + '\t' + str(variant_key) \
+                       + '\t' + str(gDNA) + '\t' + str(tumor_type) + '\t' + str(SOURCE) + '\t' + str(SAMPLE_NOTE) + ' ' + str(SOURCE) \
+                       + ' ' + str(SEQ_CENTER) + '\t' + str(tcov) + '\t' + str(ncov) + '\t' + str(SAMPLE_NOTE) + '\t' + str(variant_key) \
                        + '\t' + str(COSMIC) + '\t' + str(date) + '\t' + RESECTION_DATE + '\t' + RUN_DATE + '\t' + SEQUENCER + '\t' \
                        + KIT + '\t' + NOTE + '\t' + INDEX + '\n'
             if (re.search(r'nonsynonymous', columns[8]) or re.search(r'frame', columns[8]) or re.search(r'stop', columns[8]) \
@@ -663,374 +84,578 @@ def Full_exome_pipeline(R1_NORMAL,
     nonsyn_file.close()
     all_file.close()
 
-    # Search for Indels now
-    print("Filtering Strelka indels")
-    filtered_vcf = open('strelka_indel_filtered.vcf', 'w')
-    vcf = gzip.open('Strelka_output/results/variants/somatic.indels.vcf.gz', 'rt')
-    for line in vcf:
-        if line.startswith('#') and not re.search('##FORMAT=<ID=DP,', line) and not line.startswith('#CHROM'):
-            filtered_vcf.write(line)
-        elif line.startswith('#') and re.search('##FORMAT=<ID=DP,', line):
-            filtered_vcf.write(
-                '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n')
-        elif line.startswith('#CHROM'):
-            headers = line.strip().split('\t')
-            Tst = headers.index('TUMOR')
-            Nst = headers.index('NORMAL')
-            filtered_vcf.write(line)
-        elif not line.startswith('#'):
-            columns = line.strip().split('\t')
-            Filter = columns[6]
-            INFO = columns[7]
-            Format = columns[8]
-            Normal = columns[Nst]
-            Tumor = columns[Tst]
-            if re.search('PASS', Filter):
-                n_split = columns[Nst].split(':')
-                t_split = columns[Tst].split(':')
-                normal_variant_depth = int(n_split[3].split(',')[1])
-                tumor_variant_depth = int(t_split[3].split(',')[1])
-                n_cov = int(n_split[0])
-                t_cov = int(t_split[0])
-                T_freq = float((tumor_variant_depth / t_cov) * 100)
-                # Authors of Strelka recommend to compute allele frequency like this:
-                # refCounts = Value of FORMAT column $REF + “U” (e.g. if REF="A" then use the value in FOMRAT/AU)
-                # altCounts = Value of FORMAT column $ALT + “U” (e.g. if ALT="T" then use the value in FOMRAT/TU)
-                # tier1RefCounts = First comma-delimited value from $refCounts
-                # tier1AltCounts = First comma-delimited value from $altCounts
-                # Somatic allele frequency is $tier1AltCounts / ($tier1AltCounts + $tier1RefCounts)
-                if normal_variant_depth != 0:
-                    N_freq = float(normal_variant_depth / n_cov)
-                    t2n_ratio = T_freq / N_freq
-                else:
-                    t2n_ratio = 5
-                if n_cov >= 10 and t_cov >= 10 and tumor_variant_depth >= 3 and T_freq >= 5 and t2n_ratio >= 5:
-                    Format = 'GT:' + Format
-                    INFO_split = INFO.split(';')
-                    SGT_index = index_column_substring(INFO_split, 'SGT')
-                    SGT = INFO_split[SGT_index].replace('SGT=', '').split('->')
-                    Normal_GT = '0/0'
-                    if SGT[1] == 'het':
-                        Tumor_GT = '0/1'
+def Full_exome_pipeline(R1_NORMAL,
+                        R2_NORMAL,
+                        R1_CANCER,
+                        R2_CANCER,
+                        IILLUMINA_ADAPTERS,
+                        tumor_type,
+                        genome,
+                        sampleID,
+                        THREADS,
+                        FASTA_AA_DICT,
+                        FASTA_cDNA_DICT,
+                        KNOWN_SITE1,
+                        KNOWN_SITE2,
+                        SNPSITES,
+                        GERMLINE,
+                        PON,
+                        steps):
+    print("Exome pipeline")
+
+    # Sample 1 cancer, sample 2 normal
+    sample1_ID = sampleID + "_Tumor"
+    sample2_ID = sampleID + "_Normal"
+
+    # Create sub-folder to store all results
+    os.makedirs('exome', exist_ok=True)
+    os.chdir('exome')
+
+    if 'mapping' in steps:
+        # TRIMMING
+        print('Starting trimming')
+        cmd = '{} PE -threads {} -phred33 {} {} R1_normal.fastq.gz R1_normal_unpaired.fastq.gz ' \
+              'R2_normal.fastq.gz R2_normal_unpaired.fastq.gz ' \
+              'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
+                                                                                               THREADS,
+                                                                                               R1_NORMAL,
+                                                                                               R2_NORMAL,
+                                                                                               IILLUMINA_ADAPTERS)
+        exec_command(cmd)
+
+        cmd = '{} PE -threads {} -phred33 {} {} R1_cancer.fastq.gz R1_cancer_unpaired.fastq.gz ' \
+              'R2_cancer.fastq.gz R2_cancer_unpaired.fastq.gz ' \
+              'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
+                                                                                               THREADS,
+                                                                                               R1_CANCER,
+                                                                                               R2_CANCER,
+                                                                                               IILLUMINA_ADAPTERS)
+        exec_command(cmd)
+
+        # ALIGNMENT
+        print('Starting alignment')
+        # Normal (paired)
+        cmd = '{} -t {} {} R1_normal.fastq.gz R2_normal.fastq.gz | ' \
+              '{} sort --threads {} > normal_paired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
+        exec_command(cmd)
+
+        # Cancer (paired)
+        cmd = '{} -t {} {} R1_cancer.fastq.gz R2_cancer.fastq.gz | ' \
+              '{} sort --threads {} > cancer_paired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
+        exec_command(cmd)
+
+        # Normal (unpaired R1)
+        cmd = '{} -t {} {} R1_normal_unpaired.fastq.gz | ' \
+              '{} sort --threads {} > R1_normal_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS,
+                                                                                    THREADS)
+        exec_command(cmd)
+
+        # Cancer (unpaired R1)
+        cmd = '{} -t {} {} R1_cancer_unpaired.fastq.gz | ' \
+              '{} sort --threads {} > R1_cancer_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS,
+                                                                                    THREADS)
+        exec_command(cmd)
+
+        # Normal (unpaired R2)
+        cmd = '{} -t {} {} R2_normal_unpaired.fastq.gz | ' \
+              '{} sort --threads {} > R2_normal_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS,
+                                                                                    THREADS)
+        exec_command(cmd)
+
+        # Cancer (unpaired R2)
+        cmd = '{} -t {} {} R2_cancer_unpaired.fastq.gz | ' \
+              '{} sort --threads {} > R2_cancer_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS,
+                                                                                    THREADS)
+        exec_command(cmd)
+
+        # Merge aligned files
+        print('Merging aligned files')
+        cmd = '{} merge -f aligned_normal_merged.bam normal_paired_aligned_sorted.bam ' \
+              'R1_normal_unpaired_aligned_sorted.bam R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
+        exec_command(cmd)
+
+        cmd = '{} merge -f aligned_cancer_merged.bam cancer_paired_aligned_sorted.bam ' \
+              'R1_cancer_unpaired_aligned_sorted.bam R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
+        exec_command(cmd)
+
+    if 'gatk' in steps:
+        # Add headers
+        print("Adding headers")
+        cmd = '{} AddOrReplaceReadGroups I=aligned_cancer_merged.bam O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}' \
+              ' RGCN={} RGDS={}'.format(PICARD, sample1_ID, LIBRARY, sample1_ID, sample1_ID, SEQ_CENTER, tumor_type)
+        exec_command(cmd)
+        cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}' \
+              ' RGCN={} RGDS={}'.format(PICARD, sample2_ID, LIBRARY, sample2_ID, sample2_ID, SEQ_CENTER, tumor_type)
+        exec_command(cmd)
+
+        # Mark duplicates
+        print('Marking duplicates')
+        # NOTE setting reducers to it works in system that do not allow many files open
+        cmd = GATK + ' MarkDuplicatesSpark -I=sample1_header.bam -O=sample1_dedup.bam -M=dedup_sample1.txt'
+        exec_command(cmd)
+        cmd = GATK + ' MarkDuplicatesSpark -I=sample2_header.bam -O=sample2_dedup.bam -M=dedup_sample2.txt'
+        exec_command(cmd)
+
+        # GATK base re-calibration
+        print('Starting re-calibration')
+        # NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
+        cmd = '{} BaseRecalibrator -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}' \
+              ' --known-sites {} -O sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+        exec_command(cmd)
+        cmd = '{} BaseRecalibrator -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}' \
+              ' --known-sites {} -O sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+        exec_command(cmd)
+        cmd = '{} ApplyBQSR -R {} -I sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'.format(
+            GATK, genome)
+        exec_command(cmd)
+        cmd = '{} ApplyBQSR -R {} -I sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'.format(
+            GATK, genome)
+        exec_command(cmd)
+
+    if 'hla' in steps:
+        # HLA-LA predictions
+        print('Performing HLA-LA predictions')
+        HLA_LA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+        HLA_LA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
+
+    if 'variant' in steps:
+        # Variant calling (Samtools pile-ups)
+        print('Computing pile-ups')
+        cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample1_final.bam > sample1.pileup'.format(SAMTOOLS, genome)
+        exec_command(cmd)
+        cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample2_final.bam > sample2.pileup'.format(SAMTOOLS, genome)
+        exec_command(cmd)
+        print('Pile-ups were computed for tumor and normal samples')
+
+        print('Performing variant calling Mutect2')
+        # Variant calling Mutect2
+        cmd = '{} Mutect2 -R {} -I sample1_final.bam -I sample2_final.bam -normal {} -O Mutect_unfiltered.vcf' \
+              ' --germline-resource {} --panel-of-normals {}'.format(GATK, genome, sample2_ID, GERMLINE, PON)
+        exec_command(cmd)
+        cmd = '{} FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf -R {}'.format(GATK, genome)
+        exec_command(cmd)
+
+        # Variant calling Strelka2
+        print('Performing variant calling with Strelka2')
+        cmd = '{} --exome --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta {}' \
+              ' --runDir Strelka_output'.format(STRELKA, genome)
+        exec_command(cmd)
+        cmd = 'Strelka_output/runWorkflow.py -m local -j {}'.format(THREADS)
+        exec_command(cmd)
+
+        # Variant calling Somatic Sniper
+        print('Performing variant calling with Somatic Sniper')
+        cmd = '{} -L -G -F vcf -f {} sample1_final.bam sample2_final.bam SS.vcf'.format(SSNIPER, genome)
+        exec_command(cmd)
+
+        # Variant calling VarScan
+        print('Performing variant calling with Varscan')
+        cmd = VARSCAN + ' somatic sample2.pileup sample1.pileup varscan --tumor-purity .5 --output-vcf 1' \
+                        ' --min-coverage 4 --min-var-freq .05 --strand-filter 0'
+        exec_command(cmd)
+
+    if 'filter' in steps:
+        print('Filtering variants')
+
+        # TODO filters could be done with vcftools and improved
+        mutect2_filter('Mutect.vcf', 'mutect_filtered.vcf', sample1_ID, sample2_ID)
+        strelka2_filter('Strelka_output/results/variants/somatic.snvs.vcf.gz', 'strelka_filtered.vcf')
+        somaticSniper_filter('SS.vcf', 'somaticsniper_filtered.vcf')
+        varscan_filter('varscan.snp.vcf', 'varscan_filtered.vcf')
+        strelka2_filter_indels('Strelka_output/results/variants/somatic.indels.vcf.gz', 'strelka_indel_filtered.vcf')
+        varscan_filter('varscan.indel.vcf', 'varscan_filtered_indel.vcf')
+
+        # Combine with GATK
+        print('Combining SNV variants')
+        # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
+        cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf '\
+              '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf '\
+              '-genotypeMergeOptions UNIQUIFY'.format(GATK3, genome)
+        exec_command(cmd)
+
+        # Annotate with Annovar
+        print('Running annovar (SNV)')
+        cmd = '{} -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'.format(
+            os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
+        exec_command(cmd)
+        cmd = '{} snp.av {} -thread {} -out snp.sum -remove -protocol {}'.format(
+            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovar_db, THREADS,  annovar_anno)
+        exec_command(cmd)
+
+        # Combine with GATK
+        print('Combining indels variants')
+        # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
+        cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered_indel.vcf ' \
+              '-V:strelka strelka_indel_filtered.vcf -o combined_indel_calls.vcf -genotypeMergeOptions UNIQUIFY'.format(
+            GATK3, genome)
+        exec_command(cmd)
+
+        # Annotate with Annovar
+        print('Runnin annovar (indels)')
+        cmd = '{} -format vcf4old combined_indel_calls.vcf --withzyg --comment --includeinfo -outfile indel.av'.format(
+            os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
+        exec_command(cmd)
+        cmd = '{} indel.av {} -thread {} -out indel.sum -remove -protocol {}'.format(
+            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovar_db, THREADS, annovar_anno)
+        exec_command(cmd)
+
+        # Extract coverage info from vcf file and add to annotation data
+        print("Extracting coverage from combined variants (SNV)")
+        vcf = open('combined_calls.vcf')
+        vcf_cov_dict = {}
+        for line in vcf:
+            if line.startswith('#CHROM'):
+                headers = line.strip().split('\t')
+                varscanT = headers.index('TUMOR.varscan')
+                varscanN = headers.index('NORMAL.varscan')
+                strelkaT = headers.index('TUMOR.strelka')
+                strelkaN = headers.index('NORMAL.strelka')
+                mutectT = headers.index(sample1_ID + '.mutect')
+                mutectN = headers.index(sample2_ID + '.mutect')
+                sniperT = headers.index('TUMOR.somaticsniper')
+                sniperN = headers.index('NORMAL.somaticsniper')
+            if not line.startswith('#'):
+                columns = line.split('\t')
+                chrm = columns[0]
+                pos = columns[1]
+                ref = columns[3]
+                alt = columns[4]
+                info = columns[7]
+                DictID = chrm + ':' + pos
+                trfor = '.'
+                trrev = '.'
+                tvfor = '.'
+                tvrev = '.'
+                nrfor = '.'
+                nrrev = '.'
+                nvfor = '.'
+                nvrev = '.'
+                p_val = '.'
+                tcov = '.'
+                ncov = '.'
+                tfreq = '.'
+                nfreq = '.'
+                tumor_read1 = '.'
+                normal_read1 = '.'
+                tumor_read2 = '.'
+                normal_read2 = '.'
+                callers = info.strip().split(';')[-1].replace('set=', '')
+                if re.search('Intersection', callers) or re.search('varscan', callers):
+                    if callers == 'Intersection':
+                        caller_count = 4
+                        callers = 'varscan-strelka-mutect-somaticsniper'
                     else:
-                        Tumor_GT = '1/1'
-                    filtered_vcf.write('{}\t{}\t{}:{}\t{}:{}\n'.format('\t'.join(columns[0:8]), Format,
-                                                                         Normal_GT, Normal, Tumor_GT, Tumor))
-    vcf.close()
-    filtered_vcf.close()
-
-    # Filter Varscan for Indels
-    print("Filtering Varscan indels")
-    filtered_vcf = open('varscan_filtered_indel.vcf', 'w')
-    vcf = open('varscan.indel.vcf')
-    for line in vcf:
-        if line.startswith('#') and re.search(r'DP4', line):
-            new_DP4 = line.replace(
-                'ID=DP4,Number=1,Type=String,Description="Strand read counts: ref/fwd, ref/rev, var/fwd, var/rev"',
-                'ID=DP4,Number=4,Type=Integer,Description="# high-quality ref-forward bases, ref-reverse, alt-forward and alt-reverse bases"')
-            filtered_vcf.write(new_DP4)
-        elif line.startswith('#') and not re.search(r'DP4', line) and not line.startswith('#CHROM'):
-            filtered_vcf.write(line)
-        elif line.startswith('#CHROM'):
-            headers = line.strip().split('\t')
-            Tvs = headers.index('TUMOR')
-            Nvs = headers.index('NORMAL')
-            filtered_vcf.write(line)
-        elif not line.startswith('#'):
-            columns = line.strip().split('\t')
-            Filter = columns[6]
-            INFO = columns[7]
-            if re.search(r'SOMATIC', INFO) and re.search('PASS', Filter):
-                n_split = columns[Nvs].split(':')
-                t_split = columns[Tvs].split(':')
-                normal_coverage = int(n_split[2])
-                tumor_coverage = int(t_split[2])
-                tumor_var_depth = int(t_split[4])
-                tumor_var_freq = float(t_split[5].replace('%', ''))
-                normal_var_freq = float(n_split[5].replace('%', ''))
-                if normal_var_freq != 0:
-                    t2n_ratio = tumor_var_freq / normal_var_freq
-                else:
-                    t2n_ratio = 5
-                if normal_coverage >= 10 and tumor_coverage >= 10 and tumor_var_depth >= 3 and t2n_ratio >= 5 and tumor_var_freq >= 2.5:
-                    filtered_vcf.write(line)
-    vcf.close()
-    filtered_vcf.close()
-
-    # Combine with GATK
-    print('Combining indels variants')
-    # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
-    cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered_indel.vcf '\
-          '-V:strelka strelka_indel_filtered.vcf -o combined_indel_calls.vcf -genotypeMergeOptions UNIQUIFY'.format(GATK3, genome)
-    exec_command(cmd)
-
-    # Annotate with Annovar
-    print('Annotating combined indels with annovar')
-    #TODO Make sure that GRHC37 genomes work with annovar (hg19)
-    cmd = '{} -format vcf4old combined_indel_calls.vcf --withzyg --comment --includeinfo -outfile indel.av'.format(
-        os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
-    exec_command(cmd)
-    cmd = '{} indel.av {} -thread {} -out indel.sum -remove -protocol {}'.format(
-        os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovar_db, THREADS,  annovar_anno)
-    exec_command(cmd)
-
-    # Extract coverage info from vcf file
-    print("Extracting coverage info")
-    vcf = open('combined_indel_calls.vcf')
-    vcf_cov_dict = {}
-    for line in vcf:
-        if line.startswith('#CHROM'):
-            headers = line.strip().split('\t')
-            varscanT = headers.index('TUMOR.varscan')
-            varscanN = headers.index('NORMAL.varscan')
-            strelkaT = headers.index('TUMOR.strelka')
-            strelkaN = headers.index('NORMAL.strelka')
-        if not line.startswith('#'):
-            columns = line.split('\t')
-            chrm = columns[0]
-            pos = columns[1]
-            info = columns[7]
-            DictID = chrm + ':' + pos
-            trfor = '.'
-            trrev = '.'
-            tvfor = '.'
-            tvrev = '.'
-            nrfor = '.'
-            nrrev = '.'
-            nvfor = '.'
-            nvrev = '.'
-            p_val = '.'
-            callers = info.strip().split(';')[-1].replace('set=', '')
-            if re.search('Intersection', callers) or re.search('varscan', callers):
-                if callers == 'Intersection':
-                    caller_count = 2
-                    callers = 'varscan-strelka'
-                else:
+                        caller_count = callers.count('-') + 1
+                    if re.search('SPV=', info):
+                        info_split = info.split(';')
+                        for x in info_split:
+                            if re.search('SPV=', x):
+                                p_val = x.replace('SPV=', '')
+                    form = columns[8].split(':')
+                    DP4 = form.index('DP4')
+                    Freq = form.index('FREQ')
+                    t_split = columns[varscanT].split(':')
+                    n_split = columns[varscanN].split(':')
+                    trfor = int(t_split[DP4].split(',')[0])
+                    trrev = int(t_split[DP4].split(',')[1])
+                    tvfor = int(t_split[DP4].split(',')[2])
+                    tvrev = int(t_split[DP4].split(',')[3])
+                    tumor_read1 = trfor + trrev
+                    tumor_read2 = tvfor + tvrev
+                    tcov = trfor + trrev + tvfor + tvrev
+                    tfreq = t_split[Freq]
+                    nrfor = int(n_split[DP4].split(',')[0])
+                    nrrev = int(n_split[DP4].split(',')[1])
+                    nvfor = int(n_split[DP4].split(',')[2])
+                    nvrev = int(n_split[DP4].split(',')[3])
+                    normal_read1 = nrfor + nrrev
+                    normal_read2 = nvfor + nvrev
+                    ncov = nrfor + nrrev + nvfor + nvrev
+                    nfreq = columns[varscanN].split(':')[Freq]
+                elif re.search('somaticsniper', callers):
                     caller_count = callers.count('-') + 1
-                if re.search('SPV=', info):
-                    info_split = info.split(';')
-                    for x in info_split:
-                        if re.search('SPV=', x):
-                            p_val = x.replace('SPV=', '')
-                else:
-                    p_val = '.'
-                form = columns[8].split(':')
-                DP4 = form.index('DP4')
-                Freq = form.index('FREQ')
-                t_split = columns[varscanT].split(':')
-                n_split = columns[varscanN].split(':')
-                trfor = int(t_split[DP4].split(',')[0])
-                trrev = int(t_split[DP4].split(',')[1])
-                tvfor = int(t_split[DP4].split(',')[2])
-                tvrev = int(t_split[DP4].split(',')[3])
-                tumor_read1 = trfor + trrev
-                tumor_read2 = tvfor + tvrev
-                tcov = trfor + trrev + tvfor + tvrev
-                tfreq = t_split[Freq]
-                nrfor = int(n_split[DP4].split(',')[0])
-                nrrev = int(n_split[DP4].split(',')[1])
-                nvfor = int(n_split[DP4].split(',')[2])
-                nvrev = int(n_split[DP4].split(',')[3])
-                normal_read1 = nrfor + nrrev
-                normal_read2 = nvfor + nvrev
-                ncov = nrfor + nrrev + nvfor + nvrev
-                nfreq = n_split[Freq]
-            elif re.search('strelka', callers):
-                caller_count = callers.count('-') + 1
-                form = columns[8].split(':')
-                DP = form.index('DP')
-                TIR = form.index('TIR')
-                t_split = columns[strelkaT].split(':')
-                n_split = columns[strelkaN].split(':')
-                normal_read2 = int(n_split[TIR].split(',')[1])
-                tumor_read2 = int(t_split[TIR].split(',')[1])
-                n_cov = int(n_split[DP])
-                t_cov = int(t_split[DP])
-                tfreq = float((tumor_read2 / t_cov) * 100)
-                if normal_read2 != 0:
-                    nfreq = float(normal_read2 / n_cov)
-                else:
-                    nfreq = 0
-                tumor_read1 = t_cov - tumor_read2
-                normal_read1 = n_cov - normal_read2
-            vcf_cov_dict[DictID] = {}
-            vcf_cov_dict[DictID]['pval'] = p_val
-            vcf_cov_dict[DictID]['Note'] = str(caller_count) + ':' + callers
-            vcf_cov_dict[DictID]['trfor'] = trfor
-            vcf_cov_dict[DictID]['trrev'] = trrev
-            vcf_cov_dict[DictID]['tvfor'] = tvfor
-            vcf_cov_dict[DictID]['tvrev'] = tvrev
-            vcf_cov_dict[DictID]['nrfor'] = nrfor
-            vcf_cov_dict[DictID]['nrrev'] = nrrev
-            vcf_cov_dict[DictID]['nvfor'] = nvfor
-            vcf_cov_dict[DictID]['nvrev'] = nvrev
-            vcf_cov_dict[DictID]['tumor_read1'] = tumor_read1
-            vcf_cov_dict[DictID]['tumor_read2'] = tumor_read2
-            vcf_cov_dict[DictID]['normal_read1'] = normal_read1
-            vcf_cov_dict[DictID]['normal_read2'] = normal_read2
-            vcf_cov_dict[DictID]['tumor_coverage'] = tcov
-            vcf_cov_dict[DictID]['tumor_freq'] = tfreq
-            vcf_cov_dict[DictID]['normal_coverage'] = ncov
-            vcf_cov_dict[DictID]['normal_freq'] = nfreq
-    vcf.close()
+                    form = columns[8].split(':')
+                    DP4 = form.index('DP4')
+                    t_split = columns[sniperT].split(':')
+                    n_split = columns[sniperN].split(':')
+                    trfor = int(t_split[DP4].split(',')[0])
+                    trrev = int(t_split[DP4].split(',')[1])
+                    tvfor = int(t_split[DP4].split(',')[2])
+                    tvrev = int(t_split[DP4].split(',')[3])
+                    tumor_read1 = trfor + trrev
+                    tumor_read2 = tvfor + tvrev
+                    tcov = trfor + trrev + tvfor + tvrev
+                    nrfor = int(n_split[DP4].split(',')[0])
+                    nrrev = int(n_split[DP4].split(',')[1])
+                    nvfor = int(n_split[DP4].split(',')[2])
+                    nvrev = int(n_split[DP4].split(',')[3])
+                    normal_read1 = nrfor + nrrev
+                    normal_read2 = nvfor + nvrev
+                    ncov = nrfor + nrrev + nvfor + nvrev
+                    tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                    nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
+                elif re.search('strelka', callers):
+                    caller_count = callers.count('-') + 1
+                    form = columns[8].split(':')
+                    AU = form.index('AU')
+                    CU = form.index('CU')
+                    GU = form.index('GU')
+                    TU = form.index('TU')
+                    t_split = columns[strelkaT].split(':')
+                    n_split = columns[strelkaN].split(':')
+                    if ref == 'A':
+                        tumor_read1 = int(t_split[AU].split(',')[0])
+                        normal_read1 = int(n_split[AU].split(',')[0])
+                    elif ref == 'C':
+                        tumor_read1 = int(t_split[CU].split(',')[0])
+                        normal_read1 = int(n_split[CU].split(',')[0])
+                    elif ref == 'G':
+                        tumor_read1 = int(t_split[GU].split(',')[0])
+                        normal_read1 = int(n_split[GU].split(',')[0])
+                    elif ref == 'T':
+                        tumor_read1 = int(t_split[TU].split(',')[0])
+                        normal_read1 = int(n_split[TU].split(',')[0])
+                    if alt == 'A':
+                        tumor_read2 = int(t_split[AU].split(',')[0])
+                        normal_read2 = int(n_split[AU].split(',')[0])
+                    elif alt == 'C':
+                        tumor_read2 = int(t_split[CU].split(',')[0])
+                        normal_read2 = int(n_split[CU].split(',')[0])
+                    elif alt == 'G':
+                        tumor_read2 = int(t_split[GU].split(',')[0])
+                        normal_read2 = int(n_split[GU].split(',')[0])
+                    elif alt == 'T':
+                        tumor_read2 = int(t_split[TU].split(',')[0])
+                        normal_read2 = int(n_split[TU].split(',')[0])
+                    if tumor_read2 != '.':
+                        tcov = tumor_read1 + tumor_read2
+                        ncov = normal_read1 + normal_read2
+                        tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                        nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
+                elif re.search('mutect', callers):
+                    caller_count = callers.count('-') + 1
+                    form = columns[8].split(':')
+                    if not re.search(',', alt):
+                        AD = form.index('AD')
+                    t_split = columns[mutectT].split(':')
+                    n_split = columns[mutectN].split(':')
+                    if not re.search(',', alt):
+                        tumor_read1 = int(t_split[AD].split(',')[0])
+                        tumor_read2 = int(t_split[AD].split(',')[1])
+                        normal_read1 = int(n_split[AD].split(',')[0])
+                        normal_read2 = int(n_split[AD].split(',')[1])
+                        tcov = tumor_read1 + tumor_read2
+                        ncov = normal_read1 + normal_read2
+                        tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                        nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
+                # populate
+                vcf_cov_dict[DictID] = {}
+                vcf_cov_dict[DictID]['pval'] = p_val
+                vcf_cov_dict[DictID]['Note'] = str(caller_count) + ':' + callers
+                vcf_cov_dict[DictID]['trfor'] = trfor
+                vcf_cov_dict[DictID]['trrev'] = trrev
+                vcf_cov_dict[DictID]['tvfor'] = tvfor
+                vcf_cov_dict[DictID]['tvrev'] = tvrev
+                vcf_cov_dict[DictID]['nrfor'] = nrfor
+                vcf_cov_dict[DictID]['nrrev'] = nrrev
+                vcf_cov_dict[DictID]['nvfor'] = nvfor
+                vcf_cov_dict[DictID]['nvrev'] = nvrev
+                vcf_cov_dict[DictID]['tumor_read1'] = tumor_read1
+                vcf_cov_dict[DictID]['tumor_read2'] = tumor_read2
+                vcf_cov_dict[DictID]['normal_read1'] = normal_read1
+                vcf_cov_dict[DictID]['normal_read2'] = normal_read2
+                vcf_cov_dict[DictID]['tumor_coverage'] = tcov
+                vcf_cov_dict[DictID]['tumor_freq'] = tfreq
+                vcf_cov_dict[DictID]['normal_coverage'] = ncov
+                vcf_cov_dict[DictID]['normal_freq'] = nfreq
+        vcf.close()
 
-    # Generate final coverage sheet
-    nonsyn_snv = open('indel.sum.hg19_multianno.txt')
-    nonsyn_file = open('nonsyn_SQL_insert.txt', 'a')
-    all_file = open('all_other_mutations.txt', 'a')
-    for line in nonsyn_snv:
-        if line.startswith('#') or line.startswith("Chr"):
-            continue
-        columns = line.strip().split('\t')
-        Chr = columns[0]
-        start = columns[1]
-        end = columns[2]
-        ref = columns[3]
-        alt = columns[4]
-        if re.search('-', alt):
-            ID = Chr + ':' + str(int(start) - 1)
-        else:
-            ID = Chr + ':' + start
-        ref_gene_detail = columns[7]
-        known_gene_detail = columns[12]
-        ens_gene_detail = columns[17]
-        COSMIC = columns[26]
-        mrn = MRN
-        seq_center = SEQ_CENTER
-        gDNA = 'chr' + Chr + ':' + start
-        tumor_type = tumor_type
-        source = SOURCE
-        sample_note = SAMPLE_NOTE
-        variant_key = str(Chr) + ':' + str(start) + '-' + str(end) + ' ' + str(ref) + '>' + str(alt)
-        if ref_gene_detail != 'NA':
-            columns[9] = columns[7]
-        if known_gene_detail != 'NA':
-            columns[14] = columns[12]
-        if ens_gene_detail != 'NA':
-            columns[19] = columns[17]
-        try:
-            p_val = vcf_cov_dict[ID]['pval']
-            Note = vcf_cov_dict[ID]['Note']
-            trfor = vcf_cov_dict[ID]['trfor']
-            trrev = vcf_cov_dict[ID]['trrev']
-            tvfor = vcf_cov_dict[ID]['tvfor']
-            tvrev = vcf_cov_dict[ID]['tvrev']
-            nrfor = vcf_cov_dict[ID]['nrfor']
-            nrrev = vcf_cov_dict[ID]['nrrev']
-            nvfor = vcf_cov_dict[ID]['nvfor']
-            nvrev = vcf_cov_dict[ID]['nvrev']
-            tumor_read1 = vcf_cov_dict[ID]['tumor_read1']
-            tumor_read2 = vcf_cov_dict[ID]['tumor_read2']
-            normal_read1 = vcf_cov_dict[ID]['normal_read1']
-            normal_read2 = vcf_cov_dict[ID]['normal_read2']
-            tcov = vcf_cov_dict[ID]['tumor_coverage']
-            tfreq = vcf_cov_dict[ID]['tumor_freq']
-            ncov = vcf_cov_dict[ID]['normal_coverage']
-            nfreq = vcf_cov_dict[ID]['normal_freq']
-            to_write = str(mrn) + "\t" + str(seq_center) + "\t" + str(sampleID) + "\t" + str('\t'.join(columns[0:5])) \
-                       + '\t-\t-\t' + str(columns[20]) + '\t' + str(tumor_read1) + '\t' + str(tumor_read2) \
-                       + '\t' + str('\t'.join(columns[5:7])) + '\t' + str('\t'.join(columns[8:12])) \
-                       + '\t' + str('\t'.join(columns[13:17])) + '\t' + str('\t'.join(columns[18:20])) \
-                       + '\t' + str('\t'.join(columns[21:26])) + '\t' + str(normal_read1) + '\t' + str(normal_read2) \
-                       + '\t' + str(trfor) + '\t' + str(trrev) + '\t' + str(tvfor) + '\t' + str(tvrev) + '\t' + str(nrfor) \
-                       + '\t' + str(nrrev) + '\t' + str(nvfor) + '\t' + str(nfreq) + '\t' + str(nvrev) + '\t' + str(tfreq) \
-                       + '\tSomatic\t' + str(p_val) + '\t' + str(sampleID) + ' chr' + str(Chr) + ':' + str(start) \
-                       + '\t' + str(Note) + '\t' + str(gDNA) + '\t' + str(tumor_type) + '\t' + str(source) \
-                       + '\t' + str(sample_note) + ' ' + str(source) + ' ' + str(seq_center) + '\t' + str(tcov) \
-                       + '\t' + str(ncov) + '\t' + str(sample_note) + '\t' + str(variant_key) + '\t' + str(COSMIC) \
-                       + '\t' + str(date) + '\t' + RESECTION_DATE + '\t' + RUN_DATE + '\t' + SEQUENCER + '\t' + KIT + '\t' + NOTE + '\t' + INDEX + '\n'
-            if (re.search(r'nonsynonymous', columns[8]) or re.search(r'frame', columns[8]) or re.search(r'stop', columns[8]) \
-                    or re.search(r'nonsynonymous', columns[13]) or re.search(r'frame', columns[13]) or re.search(r'stop', columns[13]) \
-                    or re.search(r'nonsynonymous', columns[18]) or re.search(r'frame', columns[18]) or re.search(r'stop', columns[18])):
-                nonsyn_file.write(to_write)
-            else:
-                all_file.write(to_write)
-        except KeyError:
-            print("Missing variant for {}".format(ID))
-    nonsyn_snv.close()
-    nonsyn_file.close()
-    all_file.close()
+        print('Adding annotated SNVs to final report')
+        final_variants('snp.sum.hg19_multianno.txt', 'nonsyn_SQL_insert.txt', 'all_other_mutations.txt',
+                       sampleID, tumor_type, vcf_cov_dict, header=True)
 
-    # Extract peptides
-    print("Extracting pepdides")
-    sample_sheet = open('nonsyn_SQL_insert.txt')
-    epitope_file = open('Formatted_epitope_variant.txt', 'w')
-    for line in sample_sheet:
-        columns = line.strip().split('\t')
-        mrn = columns[0]
-        seq_center = columns[1]
-        sampleID = columns[2]
-        source = columns[48]
-        tumor_type = columns[47]
-        sample_note = columns[52]
-        sample_gDNA = columns[44]
-        gDNA = columns[46]
-        sample_center = columns[49]
-        variant_key = columns[53]
-        chrom = columns[3]
-        start = columns[4]
-        stop = columns[5]
-        ref = columns[6]
-        alt = columns[7]
-        func_ref_gene = columns[13]
-        exonic_func_ref = columns[15]
-        AA_change_refGene = columns[16].split(',')
-        func_UCSC_gene = columns[17]
-        exonic_func_UCSC = columns[19]
-        AA_change_UCSCGene = columns[20].split(',')
-        func_ens_gene = columns[21]
-        exonic_func_ens = columns[23]
-        AA_change_ensGene = columns[24].split(',')
-        if re.search(r'nonsynonymous', exonic_func_ref) or re.search(r'frame', exonic_func_ref):
-            for entry in AA_change_refGene:
-                epitope_file.write(
-                    mrn + '\t' + seq_center + '\t' + sampleID + '\t' + source + '\t' + tumor_type + '\t' + sample_note + '\t' \
-                    + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
-                    + stop + '\t' + ref + '\t' + alt + '\t' + func_ref_gene + '\t' + exonic_func_ref + '\t' + str(sub(':', '\t', (entry))) + '\n')
-        if re.search(r'nonsynonymous', exonic_func_UCSC) or re.search(r'frame', exonic_func_UCSC):
-            for entry in AA_change_UCSCGene:
-                epitope_file.write(
-                    mrn + '\t' + seq_center + '\t' + sampleID + '\t' + source + '\t' + tumor_type + '\t' + sample_note + '\t' \
-                    + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
-                    + stop + '\t' + ref + '\t' + alt + '\t' + func_UCSC_gene + '\t' + exonic_func_UCSC + '\t' + str(sub(':', '\t', (entry))) + '\n')
-        if re.search(r'nonsynonymous', exonic_func_ens) or re.search(r'frame', exonic_func_ens):
-            for entry in AA_change_ensGene:
-                epitope_file.write(
-                    mrn + '\t' + seq_center + '\t' + sampleID + '\t' + source + '\t' + tumor_type + '\t' + sample_note + '\t' \
-                    + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
-                    + stop + '\t' + ref + '\t' + alt + '\t' + func_ens_gene + '\t' + exonic_func_ens + '\t' + str(sub(':', '\t', (entry))) + '\n')
-    epitope_file.close()
-    sample_sheet.close()
-    print('Formatted file created')
+        # Extract coverage info from vcf file
+        print("Extracting coverage from combined variants (indels)")
+        vcf = open('combined_indel_calls.vcf')
+        vcf_cov_dict = {}
+        for line in vcf:
+            if line.startswith('#CHROM'):
+                headers = line.strip().split('\t')
+                varscanT = headers.index('TUMOR.varscan')
+                varscanN = headers.index('NORMAL.varscan')
+                strelkaT = headers.index('TUMOR.strelka')
+                strelkaN = headers.index('NORMAL.strelka')
+            if not line.startswith('#'):
+                columns = line.split('\t')
+                chrm = columns[0]
+                pos = columns[1]
+                info = columns[7]
+                DictID = chrm + ':' + pos
+                trfor = '.'
+                trrev = '.'
+                tvfor = '.'
+                tvrev = '.'
+                nrfor = '.'
+                nrrev = '.'
+                nvfor = '.'
+                nvrev = '.'
+                p_val = '.'
+                callers = info.strip().split(';')[-1].replace('set=', '')
+                if re.search('Intersection', callers) or re.search('varscan', callers):
+                    if callers == 'Intersection':
+                        caller_count = 2
+                        callers = 'varscan-strelka'
+                    else:
+                        caller_count = callers.count('-') + 1
+                    if re.search('SPV=', info):
+                        info_split = info.split(';')
+                        for x in info_split:
+                            if re.search('SPV=', x):
+                                p_val = x.replace('SPV=', '')
+                    else:
+                        p_val = '.'
+                    form = columns[8].split(':')
+                    DP4 = form.index('DP4')
+                    Freq = form.index('FREQ')
+                    t_split = columns[varscanT].split(':')
+                    n_split = columns[varscanN].split(':')
+                    trfor = int(t_split[DP4].split(',')[0])
+                    trrev = int(t_split[DP4].split(',')[1])
+                    tvfor = int(t_split[DP4].split(',')[2])
+                    tvrev = int(t_split[DP4].split(',')[3])
+                    tumor_read1 = trfor + trrev
+                    tumor_read2 = tvfor + tvrev
+                    tcov = trfor + trrev + tvfor + tvrev
+                    tfreq = t_split[Freq]
+                    nrfor = int(n_split[DP4].split(',')[0])
+                    nrrev = int(n_split[DP4].split(',')[1])
+                    nvfor = int(n_split[DP4].split(',')[2])
+                    nvrev = int(n_split[DP4].split(',')[3])
+                    normal_read1 = nrfor + nrrev
+                    normal_read2 = nvfor + nvrev
+                    ncov = nrfor + nrrev + nvfor + nvrev
+                    nfreq = n_split[Freq]
+                elif re.search('strelka', callers):
+                    caller_count = callers.count('-') + 1
+                    form = columns[8].split(':')
+                    DP = form.index('DP')
+                    TIR = form.index('TIR')
+                    t_split = columns[strelkaT].split(':')
+                    n_split = columns[strelkaN].split(':')
+                    normal_read2 = int(n_split[TIR].split(',')[1])
+                    tumor_read2 = int(t_split[TIR].split(',')[1])
+                    n_cov = int(n_split[DP])
+                    t_cov = int(t_split[DP])
+                    tfreq = float((tumor_read2 / t_cov) * 100)
+                    if normal_read2 != 0:
+                        nfreq = float(normal_read2 / n_cov)
+                    else:
+                        nfreq = 0
+                    tumor_read1 = t_cov - tumor_read2
+                    normal_read1 = n_cov - normal_read2
+                vcf_cov_dict[DictID] = {}
+                vcf_cov_dict[DictID]['pval'] = p_val
+                vcf_cov_dict[DictID]['Note'] = str(caller_count) + ':' + callers
+                vcf_cov_dict[DictID]['trfor'] = trfor
+                vcf_cov_dict[DictID]['trrev'] = trrev
+                vcf_cov_dict[DictID]['tvfor'] = tvfor
+                vcf_cov_dict[DictID]['tvrev'] = tvrev
+                vcf_cov_dict[DictID]['nrfor'] = nrfor
+                vcf_cov_dict[DictID]['nrrev'] = nrrev
+                vcf_cov_dict[DictID]['nvfor'] = nvfor
+                vcf_cov_dict[DictID]['nvrev'] = nvrev
+                vcf_cov_dict[DictID]['tumor_read1'] = tumor_read1
+                vcf_cov_dict[DictID]['tumor_read2'] = tumor_read2
+                vcf_cov_dict[DictID]['normal_read1'] = normal_read1
+                vcf_cov_dict[DictID]['normal_read2'] = normal_read2
+                vcf_cov_dict[DictID]['tumor_coverage'] = tcov
+                vcf_cov_dict[DictID]['tumor_freq'] = tfreq
+                vcf_cov_dict[DictID]['normal_coverage'] = ncov
+                vcf_cov_dict[DictID]['normal_freq'] = nfreq
+        vcf.close()
 
-    # Create list of AA and cDNA sequences
-    print('Creating epitopes')
-    dict1 = open(FASTA_AA_DICT, encoding="utf-8")
-    AA_seq = dict()
-    for line in dict1:
-        entry = line.rstrip("\n").split(":")
-        AA_seq[entry[0]] = entry[1]
-    dict1.close()
-    dict2 = open(FASTA_cDNA_DICT, encoding="utf-8")
-    cDNA_seq = dict()
-    for line in dict2:
-        entry = line.rstrip("\n").split(":")
-        cDNA_seq[entry[0]] = entry[1]
-    dict2.close()
-    epitope_file = open('SQL_Epitopes.txt', 'w')
-    input_file = open('Formatted_epitope_variant.txt')
-    for line in input_file:
-        columns = line.rstrip('\n').split('\t')
-        if len(columns) > 21:
+        print('Adding annotated indels to final report')
+        final_variants('indel.sum.hg19_multianno.txt', 'nonsyn_SQL_insert.txt', 'all_other_mutations.txt',
+                       sampleID, tumor_type, vcf_cov_dict, header=False)
+
+        # Extract peptides
+        print("Extracting pepdides")
+        snv = open('nonsyn_SQL_insert.txt').readlines()
+        header = snv.pop(0)
+        epitope_file = open('Formatted_epitope_variant.txt', 'w')
+        for line in snv:
+            columns = line.strip().split('\t')
+            sample_gDNA = columns[header.index('SAMPLE_ID_CHR:START')]
+            gDNA = columns[header.inded('CHR:START')]
+            sample_center = columns[header.index('SAMPLE-NOTE_SOURCE_SEQ-CENTER')]
+            variant_key = columns[header.index('VARIANT-KEY')]
+            chrom = columns[header.index('CHR')]
+            start = columns[header.index('START')]
+            stop = columns[header.index('END')]
+            ref = columns[header.index('REF')]
+            alt = columns[header.index('ALT')]
+            func_ref_gene = columns[header.index('Func.refGene')]
+            exonic_func_ref = columns[header.index('ExonicFunc.refGene')]
+            AA_change_refGene = columns[header.index('AAChange.refGene')].split(',')
+            func_UCSC_gene = columns[header.index('Func.knownGene')]
+            exonic_func_UCSC = columns[header.index('ExonicFunc.knownGene')]
+            AA_change_UCSCGene = columns[header.index('AAChange.knownGene')].split(',')
+            func_ens_gene = columns[header.index('Func.ensGene')]
+            exonic_func_ens = columns[header.index('ExonicFunc.ensGene')]
+            AA_change_ensGene = columns[header.index('AAChange.ensGene')].split(',')
+            if re.search(r'nonsynonymous', exonic_func_ref) or re.search(r'frame', exonic_func_ref):
+                for entry in AA_change_refGene:
+                    epitope_file.write(
+                        MRN + '\t' + SEQ_CENTER + '\t' + sampleID + '\t' + SOURCE + '\t' + tumor_type + '\t' + SAMPLE_NOTE + '\t' \
+                        + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
+                        + stop + '\t' + ref + '\t' + alt + '\t' + func_ref_gene + '\t' + exonic_func_ref + '\t' + str(sub(':', '\t', (entry))) + '\n')
+            if re.search(r'nonsynonymous', exonic_func_UCSC) or re.search(r'frame', exonic_func_UCSC):
+                for entry in AA_change_UCSCGene:
+                    epitope_file.write(
+                        MRN + '\t' + SEQ_CENTER + '\t' + sampleID + '\t' + SOURCE + '\t' + tumor_type + '\t' + SAMPLE_NOTE + '\t' \
+                        + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
+                        + stop + '\t' + ref + '\t' + alt + '\t' + func_UCSC_gene + '\t' + exonic_func_UCSC + '\t' + str(sub(':', '\t', (entry))) + '\n')
+            if re.search(r'nonsynonymous', exonic_func_ens) or re.search(r'frame', exonic_func_ens):
+                for entry in AA_change_ensGene:
+                    epitope_file.write(
+                        MRN + '\t' + SEQ_CENTER + '\t' + sampleID + '\t' + SOURCE + '\t' + tumor_type + '\t' + SAMPLE_NOTE + '\t' \
+                        + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
+                        + stop + '\t' + ref + '\t' + alt + '\t' + func_ens_gene + '\t' + exonic_func_ens + '\t' + str(sub(':', '\t', (entry))) + '\n')
+        epitope_file.close()
+        snv.close()
+        print('Formatted file created')
+
+        # Create list of AA and cDNA sequences
+        print('Creating epitopes')
+        dict1 = open(FASTA_AA_DICT, encoding="utf-8")
+        AA_seq = dict()
+        for line in dict1:
+            entry = line.rstrip("\n").split(":")
+            AA_seq[entry[0]] = entry[1]
+        dict1.close()
+        dict2 = open(FASTA_cDNA_DICT, encoding="utf-8")
+        cDNA_seq = dict()
+        for line in dict2:
+            entry = line.rstrip("\n").split(":")
+            cDNA_seq[entry[0]] = entry[1]
+        dict2.close()
+        epitope_file = open('SQL_Epitopes.txt', 'w')
+        input_file = open('Formatted_epitope_variant.txt')
+        header = 'NAME\tSEQ_CENTER\tSAMPLE_ID\tSOURCE\tTUMOUR\tSAMPLE_NOTE\tSAMPLE_ID_CHR:START\tCHR:START\tSAMPLE_CENTER\tVARIANT_KEY' \
+                 '\tCHR\tSTART\tSTOP\tREF\tALT\tfunc_ref_gene\texonic_func_ref\tGene\tTranscript_ID\tExon_Numb\tNT_CHANGE\tAA_CHANGE' \
+                 '\tPOSITION\tERRORS\tWT25MER\tMUT25MER\tVARIANT-KEY\tTRANSCRIPT\n'
+        epitope_file.write(header)
+        for line in input_file:
+            columns = line.rstrip('\n').split('\t')
             variant_key = columns[9].strip()
             ref = columns[13].strip()
             exonic_func = columns[16].strip()
             transcriptID = columns[18].strip()
             cDNA_strip = columns[20].strip()
             protein_strip = columns[21].strip()
-            errors = ''
-            WT_25mer = ''
-            Mut_25mer = ''
+            errors = ' '
+            WT_25mer = ' '
+            Mut_25mer = ' '
             position = 0
             # Nonsynonymous point mutations to 25 mers
             if exonic_func == 'nonsynonymous SNV' and re.search(r'^p\.', protein_strip):
@@ -1200,16 +825,19 @@ def Full_exome_pipeline(R1_NORMAL,
                         errors += ' No ATG start codon for this transcript cDNA'
                     if position == 1:
                         errors += 'mutation occurs in start codon'
-            epitope_file.write('{}\t{}\t{}\t{}\t{}\t{}\{}\n'.format('\t'.join(columns[0:]),
-                                                                    str(position),
+            elif re.search(r'^stop', exonic_func ):
+                position = ''.join([s for s in protein_strip if s.isdigit()])
+                errors = 'Stop mutation'
+            epitope_file.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:]),
+                                                                    position,
                                                                     errors,
                                                                     WT_25mer,
                                                                     Mut_25mer,
-                                                                    str(variant_key),
+                                                                    variant_key,
                                                                     transcriptID))
-    print('Epitopes have been created...')
-    input_file.close()
-    epitope_file.close()
+        print('Epitopes have been created...')
+        input_file.close()
+        epitope_file.close()
 
     print("COMPLETED!")
 

@@ -44,6 +44,10 @@ parser.add_argument('--fastaAA',
                     help='Path to the file with the dictionary of FASTA to AA', required=True)
 parser.add_argument('--fastacDNA',
                     help='Path to the file with the dictionary of FASTA to cDNA', required=True)
+parser.add_argument('--dna-steps',  nargs='+',
+                    help='DNA steps to run', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
+parser.add_argument('--rna-steps',  nargs='+',
+                    help='DNA steps to run', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 
 # Parse arguments
 args = parser.parse_args()
@@ -68,11 +72,10 @@ KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
 GERMLINE = os.path.abspath(args.germline)
 PON = os.path.abspath(args.pon)
+DNA_STEPS = args.dna_steps
+RNA_STEPS = args.rna_steps
 
 # Move to output dir
-if os.path.isdir(os.path.abspath(DIR)):
-    print("Output dir already exists, removing it...")
-    #shutil.rmtree(os.path.abspath(DIR), ignore_errors=True)
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
 
@@ -92,7 +95,8 @@ Full_exome_pipeline(R1_NORMAL,
                     KNOWN_SITE2,
                     SNPSITES,
                     GERMLINE,
-                    PON)
+                    PON,
+                    DNA_STEPS)
 os.chdir('..')
 
 # RNA pìpeline
@@ -106,7 +110,8 @@ RNA_seq_pipeline(R1_RNA,
                  SNPSITES,
                  KNOWN_SITE1,
                  KNOWN_SITE2,
-                 THREADS)
+                 THREADS,
+                 RNA_STEPS)
 os.chdir('..')
 
 
