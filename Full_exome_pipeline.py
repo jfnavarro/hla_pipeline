@@ -584,7 +584,7 @@ def Full_exome_pipeline(R1_NORMAL,
         for line in snv:
             columns = line.strip().split('\t')
             sample_gDNA = columns[header.index('SAMPLE_ID_CHR:START')]
-            gDNA = columns[header.inded('CHR:START')]
+            gDNA = columns[header.index('CHR:START')]
             sample_center = columns[header.index('SAMPLE-NOTE_SOURCE_SEQ-CENTER')]
             variant_key = columns[header.index('VARIANT-KEY')]
             chrom = columns[header.index('CHR')]

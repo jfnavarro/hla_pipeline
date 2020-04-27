@@ -30,7 +30,7 @@ def RNA_seq_pipeline(sample1,
         cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired'\
               ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs'\
               ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c'\
-              ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, max(int(THREADS / 2), 1))
+              ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, THREADS)
         exec_command(cmd)
 
         # Add headers
