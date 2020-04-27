@@ -283,8 +283,8 @@ def RNA_seq_pipeline(sample1,
         print('Creating FPKM info file')
         fpkm = open('genes.fpkm_tracking')
         fpkm_lines = fpkm.readlines()
+        firstline = fpkm_lines.pop(0)
         FPKM_ins = open('FPKM_SQL_insert.txt', 'w')
-        firstline = fpkm.pop(0)
         date = datetime.datetime.now().replace(microsecond=0)
         header = 'NAME\tSEQ_CENTER\tSAMPLEID\tSOURCE\tTUMOUR\tSAMPLE_NOTE_DATE\tSAMPLEID\tSEQ_CENTER\t' + firstline
         FPKM_ins.write(header)
