@@ -284,3 +284,5 @@ def RNA_seq_pipeline(sample1,
                            + '\t' + str(SAMPLE_NOTE) + '_' + str(date) + '\t' + str(sampleID) + ' ' + str(SEQ_CENTER) + '\t' + line)
         FPKM_ins.close()
         fpkm.close()
+
+    print("COMPLETED!")
