@@ -19,8 +19,8 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
                  '\tNORMAL_READ2\tTRFOR-DP4\tTRREV-DP4\tTVFOR-DP4\tTVREV-DP4\tNRFOR-DP4\tNRREV-DP4\tNVFOR-DP4\tNVAF\tNVREV-DP4' \
                  '\tTVAF\tSOMATIC\tPVAL\tSAMPLE_ID_CHR:START\tCALLERS\tCHR:START\tTUMOUR\tSOURCE\tSAMPLE-NOTE_SOURCE_SEQ-CENTER' \
                  '\tTCOV\tNCOV\tSAMPLE-NOTE\tVARIANT-KEY\tCOSMIC70\tDATE\tRESECTION-DATE\tRUN-DATE\tSEQUENCER\tKIT\tNOTE\tINDEX\n'
-    nonsyn_file.write(header)
-    all_file.write(header)
+        nonsyn_file.write(header)
+        all_file.write(header)
     #TODO use header names instead
     for line in nonsyn_snv:
         if line.startswith('#'):
