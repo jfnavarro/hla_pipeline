@@ -57,7 +57,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
         header_fpkm = FPKM_file_lines.pop(0).strip().split('\t')
         for line in FPKM_file_lines:
             columns = line.strip().split('\t')
-            gene_id = columns[header_fpkm.index('tracking_id')]
+            gene_id = columns[header_fpkm.index('gene_id')]
             locus = columns[header_fpkm.index('locus')]
             fpkm_value = columns[header_fpkm.index('FPKM')]
             sample = columns[header_fpkm.index('SAMPLE_ID')]

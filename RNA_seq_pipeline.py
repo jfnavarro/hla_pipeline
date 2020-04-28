@@ -203,7 +203,7 @@ def RNA_seq_pipeline(sample1,
         header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tsnp138JJG\tTUMOR_READ1\tTUMOR_READ2' \
                  '\tTUMOR_VAR_FREQ\tAPR_ALL\tFunc_refGene\tGene_refGene\tExonicFunc_refGene\tAAChange_refGene\tFunc_knownGene' \
                  '\tGene_knownGene\tExonicFunc_knownGene\tAAChange_knownGene\tFunc_ensGene\tGene\texonic_func\tNT-AA_CHANGE' \
-                 '\tAPR_AMR2\tAPR_ASN3\tAPR_AFR4\tREAD1_PLUS\tREAD1_MINUS\tREAD2_PLUS\tREAD2_MINUS' \
+                 '\tAPR_EUR\tAPR_AMR2\tAPR_ASN3\tAPR_AFR4\tREAD1_PLUS\tREAD1_MINUS\tREAD2_PLUS\tREAD2_MINUS' \
                  '\ttumour_type\tsource_of_RNA_used_for_sequencing\tVARIANT-KEY\n'
         nonsyn_file.write(header)
         all_file.write(header)
@@ -238,13 +238,13 @@ def RNA_seq_pipeline(sample1,
             apr_afr = columns[24]
             variant_key = columns[25]
             source_of_RNA_used_for_sequencing = columns[33]
-            tumor_reads1 = columns[35]
-            tumor_reads2 = columns[36]
-            tumor_var_freq = columns[37].replace('%','')
-            read1_plus = columns[39]
-            read1_minus = columns[40]
-            read2_plus = columns[41]
-            read2_minus = columns[42]
+            tumor_reads1 = columns[34]
+            tumor_reads2 = columns[35]
+            tumor_var_freq = columns[36].replace('%','')
+            read1_plus = columns[38]
+            read1_minus = columns[39]
+            read2_plus = columns[40]
+            read2_minus = columns[41]
             to_write = '\t'.join([str(x) for x in [sampleID, Chr, Start, End, Ref, Alt, snp138JJG, tumor_reads1,
                                                    tumor_reads2, tumor_var_freq, apr_all, Func_refGene, Gene_refGene,
                                                    ExonicFunc_refGene, AAChange_refGene, Func_knownGene, Gene_knownGene,
