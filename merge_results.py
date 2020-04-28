@@ -202,7 +202,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                     dbSNP_ID = exome[header_exome.index('snp138NonFlagged')]
                     cosmic = exome[header_exome.index('COSMIC70')]
                     gene_name = transcript[header_epitopes.index('Gene')]
-                    transcript_name = transcript[header_epitopes.index('TRANSCRIPT')]
+                    transcript_name = transcript[header_epitopes.index('Transcript_ID')]
                     mutation_type = transcript[header_epitopes.index('exonic_func_ref')]
                     exon = transcript[header_epitopes.index('Exon_Numb')]
                     cdna_change = transcript[header_epitopes.index('NT_CHANGE')]
