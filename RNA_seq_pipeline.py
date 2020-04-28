@@ -285,13 +285,12 @@ def RNA_seq_pipeline(sample1,
         fpkm_lines = fpkm.readlines()
         firstline = fpkm_lines.pop(0)
         FPKM_ins = open('FPKM_SQL_insert.txt', 'w')
-        date = datetime.datetime.now().replace(microsecond=0)
-        header = 'NAME\tSEQ_CENTER\tSAMPLEID\tSOURCE\tTUMOUR\tSAMPLE_NOTE_DATE\tSAMPLEID\tSEQ_CENTER\t' + firstline
+        header = 'NAME\tSEQ_CENTER\tSAMPLE_ID\tSOURCE\tTUMOUR\tSAMPLE_NOTE\tSAMPLE_ID\tSEQ_CENTER\t' + firstline
         FPKM_ins.write(header)
         # TODO remove unnecessary fields
         for line in fpkm_lines:
             FPKM_ins.write(str(MRN) + '\t' + str(SEQ_CENTER) + '\t' + str(sampleID) + '\t' + str(SOURCE) + '\t' + str(tumor_type)\
-                           + '\t' + str(SAMPLE_NOTE) + '_' + str(date) + '\t' + str(sampleID) + ' ' + str(SEQ_CENTER) + '\t' + line)
+                           + '\t' + str(SAMPLE_NOTE) + '\t' + str(sampleID) + ' ' + str(SEQ_CENTER) + '\t' + line)
         FPKM_ins.close()
         fpkm.close()
 
