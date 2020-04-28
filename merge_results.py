@@ -223,7 +223,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                     to_write = '\t'.join(str(x) for x in [key, len(exome_pass), num_rna_samples, len(exome_pass) + len(exome_fail),
                                                           ','.join(exome_pass), ','.join(rna_samples), ','.join(exome_fail),
                                                           ref_gene_name, ref_gene_mut, ref_gene_change,
-                                                          ref_gene_mut, UCSC_gene_name, UCSC_gene_mut, UCSC_gene_change,
+                                                          UCSC_gene_name, UCSC_gene_mut, UCSC_gene_change,
                                                           ENS_gene_name, ENS_gene_mut, ENS_gene_change, genome_all,
                                                           dbSNP_ID, cosmic, gene_name, transcript_name, mutation_type,
                                                           exon, cdna_change, aa_change, aa_position, flags, wt_mer,
