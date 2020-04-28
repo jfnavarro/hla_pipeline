@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-import numpy as np
+import statistics
 from re import sub
 import argparse
 import re
@@ -164,6 +164,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                     exome_fail.append(sampleID)
         else:
             print("Variant {} is not present in the exome data".format(key))
+            sample_cov = ['-;-,-,-,-']
 
         # RNA
         sample_covR = []
@@ -181,7 +182,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
             print("Variant {} is not present in the RNA data".format(key))
             sample_covR = ['-;-,-,-,-']
 
-        if len(sample_cov) >= 1:
+        if len(sample_cov) >= 1 and 'Epitopes' in value and 'Exome' in value:
             # Loop through epitopes for this position and write a line for each individual mut25mer
             for mer in sorted(value['Epitopes'].values()):
                 # NOTE this assumes that epitoes on the same position in different samples are the same
@@ -217,7 +218,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                     if ENS_gene_name in FPKM_dict:
                         fpkm_info = '|'.join(
                             ['{},{},{}'.format(s, x['locus'], x['expression']) for s,x in FPKM_dict[ENS_gene_name].items()])
-                        fpkm_mean = np.mean(float(x['expression']) for x in FPKM_dict[ENS_gene_name].values())
+                        fpkm_mean = statistics.mean([float(x['expression']) for x in FPKM_dict[ENS_gene_name].values()])
                     else:
                         fpkm_info = 'NA'
                         fpkm_mean = 'NA'
@@ -233,7 +234,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                         final_file.write(to_write + '\n')
                     else:
                         final_file_discarded.write(to_write + '\n')
-        elif len(sample_covR) >= 1:
+        elif len(sample_covR) >= 1 and 'RNA' in value:
             print('Variant {} was only detected in RNA'.format(key))
             # NOTE assuming same gene for the variant in all samples
             ENS_gene_name = list(value['RNA'].values())[0][header_rna.index('Gene')]
@@ -242,7 +243,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
             if ENS_gene_name in FPKM_dict:
                 fpkm_info = '|'.join(
                     ['{},{},{}'.format(s, x['locus'], x['expression']) for s, x in FPKM_dict[ENS_gene_name].items()])
-                fpkm_mean = np.mean(float(x['expression']) for x in FPKM_dict[ENS_gene_name].values())
+                fpkm_mean = statistics.mean([float(x['expression']) for x in FPKM_dict[ENS_gene_name].values()])
             else:
                 fpkm_info = 'NA'
                 fpkm_mean = 'NA'
