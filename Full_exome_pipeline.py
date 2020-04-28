@@ -656,9 +656,9 @@ def Full_exome_pipeline(R1_NORMAL,
             transcriptID = columns[10].strip()
             cDNA_strip = columns[12].strip()
             protein_strip = columns[13].strip()
-            errors = ' '
-            WT_25mer = ' '
-            Mut_25mer = ' '
+            errors = '-'
+            WT_25mer = '-'
+            Mut_25mer = '-'
             position = 0
             # Nonsynonymous point mutations to 25 mers
             if exonic_func == 'nonsynonymous SNV' and re.search(r'^p\.', protein_strip):

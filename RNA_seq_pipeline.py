@@ -211,7 +211,7 @@ def RNA_seq_pipeline(sample1,
         for line in joined_variants:
             columns = line.rstrip('\n').split('\t')
             # Very ugly way to check that the variant was called by the two methods (TODO improve)
-            if len(columns) < 45:
+            if len(columns) < 44:
                 continue
             Chr = columns[2]
             Start = columns[3]
