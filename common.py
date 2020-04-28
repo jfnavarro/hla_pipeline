@@ -27,18 +27,6 @@ ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
 annovar_db = os.path.join(ANNOVAR_PATH, 'humandb') + ' -buildver hg19'
 annovar_anno = 'refGene,knownGene,ensGene,snp138NonFlagged,ALL.sites.2015_08,EUR.sites.2015_08,AMR.sites.2015_08,EAS.sites.2015_08,AFR.sites.2015_08,cosmic70 -operation g,g,g,f,f,f,f,f,f,f -nastring NA'
 
-MRN = "MRN"
-SEQ_CENTER = "VHIO"
-LIBRARY = "Library"
-SOURCE = "Human"
-SAMPLE_NOTE = "Sample"
-RESECTION_DATE = "Resection date"
-RUN_DATE = "Run date"
-SEQUENCER = "Sequencer"
-KIT = "Kit"
-NOTE = "Note"
-INDEX = "Index"
-
 def index_column_substring(your_list, substring):
     for i, s in enumerate(your_list):
         if substring in s:

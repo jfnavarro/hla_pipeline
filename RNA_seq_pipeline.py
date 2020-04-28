@@ -37,8 +37,8 @@ def RNA_seq_pipeline(sample1,
         print("Adding headers")
         cmd = '{} AddOrReplaceReadGroups I=Aligned.sortedByCoord.out.bam O=sample_header.bam SO=coordinate RGID=SB_RNA-seq RGLB={}'\
               ' RGPL=Illumina RGPU=PU{} RGSM=rna-seq_{} Create_Index=true Validation_Stringency=SILENT'.format(PICARD,
-                                                                                                               SEQ_CENTER,
-                                                                                                               SEQ_CENTER,
+                                                                                                               'VHIO',
+                                                                                                               'VHIO',
                                                                                                                sampleID)
         exec_command(cmd)
 
@@ -103,8 +103,6 @@ def RNA_seq_pipeline(sample1,
         snv_lines = snv.readlines()
         header = snv_lines.pop(0).strip().split('\t')
         insert_file = open('SQL_variant_input.txt', 'w')
-        date = datetime.datetime.now().replace(microsecond=0)
-        # TODO remove unnecessary fields
         for line in snv_lines:
             if line.startswith('#'):
                 continue
@@ -135,7 +133,6 @@ def RNA_seq_pipeline(sample1,
             apr_amr = columns[header.index('AMR.sites.2015_08')]
             apr_asn = columns[header.index('EAS.sites.2015_08')]
             apr_afr = columns[header.index('AFR.sites.2015_08')]
-            sample_gDNA = sampleID + ' chr' + Chr + ':' + start
             gDNA = 'chr' + Chr + ':' + start
             variant_key = Chr + ':' + start + '-' + end + ' ' + ref + '>' + alt
             if ref_gene_detail != 'NA':
@@ -144,14 +141,12 @@ def RNA_seq_pipeline(sample1,
                 AA_change_knownGene = known_gene_detail
             if ens_gene_detail != 'NA':
                 AA_change_ensGgene = ens_gene_detail
-            insert_file.write(str(gDNA) + "\t" + str(MRN) + "\t" + str(SEQ_CENTER) + "\t" + str(sampleID) + "\t" + str(Chr) + "\t" + str(start)\
-                              + "\t" + str(end) + "\t" + str(ref) + "\t" + str(alt) + "\t" + str(snp138NonFlagged) + "\t" + str(func_ref_gene)\
-                              + "\t" + str(gene_ref_gene) + "\t" + str(exonic_func_ref) + "\t" + str(AA_change_refGene) + "\t" + str(func_known_gene)\
-                              + "\t" + str(gene_known_gene) + "\t" + str(exonic_known_ref) + "\t" + str(AA_change_knownGene)\
-                              + "\t" + str(func_ens_gene) + "\t" + str(gene_ens_gene) + "\t" + str(exonic_ens_ref) + "\t" + str(AA_change_ensGene)\
-                              + "\t" + str(apr_all) + "\t" + str(apr_eur) + "\t" + str(apr_amr) + "\t" + str(apr_asn) + "\t" + str(apr_afr)\
-                              + "\t" + str(sample_gDNA) + "\t" + str(gDNA) + "\t" + str(SEQ_CENTER) + "\t" + str(tumor_type)\
-                              + "\t" + str(SAMPLE_NOTE) + '_' + str(date) + "\t" + str(SOURCE) + "\t" + str(variant_key) + "\n")
+            to_write = '\t'.join([str(x) for x in [gDNA, sampleID, Chr, start, end, ref, alt, snp138NonFlagged,
+                                                   func_ref_gene, gene_ref_gene, exonic_func_ref, AA_change_refGene,
+                                                   func_known_gene, gene_known_gene, exonic_known_ref, AA_change_knownGene,
+                                                   func_ens_gene, gene_ens_gene, exonic_ens_ref, AA_change_ensGene,
+                                                   apr_all, apr_eur, apr_amr, apr_asn, apr_afr, variant_key]])
+            insert_file.write(to_write + "\n")
         insert_file.close()
         snv.close()
 
@@ -161,8 +156,6 @@ def RNA_seq_pipeline(sample1,
         pileup_lines = pileup.readlines()
         header = pileup_lines.pop(0).strip().split('\t')
         insert_file = open('SQL_coverage_input.txt', 'w')
-        date = datetime.datetime.now().replace(microsecond=0)
-        # TODO remove unnecessary fields
         for line in pileup_lines:
             columns = line.rstrip('\n').split('\t')
             Chr = columns[header.index('Chrom')]
@@ -182,17 +175,15 @@ def RNA_seq_pipeline(sample1,
             r2_plus = columns3[3]
             r2_minus = columns3[4]
             p_val2 = columns3[5]
-            sample_gDNA = sampleID + ' chr' + Chr + ':' + start
+            variant_key = Chr + ':' + start + '-' + end + ' ' + ref + '>' + alt
             gDNA = 'chr' + Chr + ':' + start
             join_key = gDNA
             if re.search(r'-', alt):
-                join_key = 'chr' + Chr + ':'+  str(int(start) + 1)
-            insert_file.write(str(join_key) + "\t" + str(MRN) + "\t" + str(sampleID) + "\t" + str(SEQ_CENTER) + "\t" + str(Chr)\
-                              + "\t" + str(start) + "\t" + str(ref) + "\t" + str(alt) + "\t" + str(cons) + "\t" + str(cov)\
-                              + "\t" + str(read1) + "\t" + str(read2) + "\t" + str(freq) + "\t" + str(p_val) + "\t" + str(r1_plus)\
-                              + "\t" + str(r1_minus) + "\t" + str(r2_plus) + "\t" + str(r2_minus) + "\t" + str(p_val2)\
-                              + "\t" + str(SEQ_CENTER) + "\t" + str(sample_gDNA) + "\t" + str(gDNA) + "\t" + str(tumor_type)\
-                              + "\t" + str(SAMPLE_NOTE) + '_' + str(date) + "\t" + str(SOURCE) + "\n")
+                join_key = 'chr' + Chr + ':' + str(int(start) + 1)
+            to_write = '\t'.join([str(x) for x in [join_key, sampleID, Chr, start, end, ref, alt, cons,
+                                                   cov, read1, read2, freq, p_val, r1_plus, r1_minus, r2_plus,
+                                                   r2_minus, p_val2, variant_key]])
+            insert_file.write(to_write + "\n")
         pileup.close()
         insert_file.close()
 
@@ -209,11 +200,10 @@ def RNA_seq_pipeline(sample1,
         joined_variants = open('joined_coverage_variants.txt')
         nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
         all_file = open('all_other_mutations.txt', 'w')
-        header = 'NAME\tSEQ_CENTER\tSAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tColumna1\tColumna2\tsnp138JJG\tTUMOR_READ1\tTUMOR_READ2' \
+        header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tsnp138JJG\tTUMOR_READ1\tTUMOR_READ2' \
                  '\tTUMOR_VAR_FREQ\tAPR_ALL\tFunc_refGene\tGene_refGene\tExonicFunc_refGene\tAAChange_refGene\tFunc_knownGene' \
                  '\tGene_knownGene\tExonicFunc_knownGene\tAAChange_knownGene\tFunc_ensGene\tGene\texonic_func\tNT-AA_CHANGE' \
-                 '\tAPR_AMR2\tAPR_ASN3\tAPR_AFR4\tColumna3\tColumna4\tColumna5\tREAD1_PLUS\tREAD1_MINUS\tREAD2_PLUS\tREAD2_MINUS' \
-                 '\tColumna6\tColumna7\tSAMPLE_ID_CHR:START\tCHR:START\tSAMPLE_CENTER\tTUMOR\tSAMPLE_NOTE_DATE' \
+                 '\tAPR_AMR2\tAPR_ASN3\tAPR_AFR4\tREAD1_PLUS\tREAD1_MINUS\tREAD2_PLUS\tREAD2_MINUS' \
                  '\tsource_of_RNA_used_for_sequencing\tVARIANT-KEY\n'
         nonsyn_file.write(header)
         all_file.write(header)
@@ -221,60 +211,53 @@ def RNA_seq_pipeline(sample1,
         for line in joined_variants:
             columns = line.rstrip('\n').split('\t')
             # Very ugly way to check that the variant was called by the two methods (TODO improve)
-            if len(columns) < 51:
+            if len(columns) < 45:
                 continue
-            mrn = columns[1]
-            Chr = columns[4]
-            Start = columns[5]
-            End = columns[6]
-            Ref = columns[7]
-            Alt = columns[8]
-            snp138JJG = columns[9]
-            Func_refGene = columns[10]
-            Gene_refGene = columns[11]
-            ExonicFunc_refGene = columns[12]
-            AAChange_refGene = columns[13]
-            Func_knownGene = columns[14]
-            Gene_knownGene = columns[15]
-            ExonicFunc_knownGene = columns[16]
-            AAChange_knownGene = columns[17]
-            Func_ensGene = columns[18]
-            Gene_ensGene = columns[19]
-            ExonicFunc_ensGene = columns[20]
-            AAChange_ensGene = columns[21]
-            apr_all = columns[22]
-            apr_eur = columns[23]
-            apr_amr = columns[24]
-            apr_asn = columns[25]
-            apr_afr = columns[26]
-            sample_gDNA = columns[27]
-            gDNA = columns[28]
-            Note = columns[31]
-            source_of_RNA_used_for_sequencing = columns[32]
-            tumor_reads1 = columns[43]
-            tumor_reads2 = columns[44]
-            tumor_var_freq = columns[45].replace('%','')
-            read1_plus = columns[47]
-            read1_minus = columns[48]
-            read2_plus = columns[49]
-            read2_minus = columns[50]
-            variant_key = columns[33]
-            to_write = str(mrn) + "\t" + str(SEQ_CENTER) + "\t" + str(sampleID) + "\t" + str(Chr) + "\t" + str(Start) + "\t" + str(End)\
-                       + "\t" + str(Ref) + "\t" + str(Alt) + "\t" + "\t" + "\t" + str(snp138JJG) + "\t" + str(tumor_reads1)\
-                       + "\t" + str(tumor_reads2) + "\t" + str(tumor_var_freq) + "\t" + str(apr_all) + "\t" + str(Func_refGene)\
-                       + "\t" + str(Gene_refGene) + "\t" + str(ExonicFunc_refGene) + "\t" + str(AAChange_refGene) + "\t" + str(Func_knownGene)\
-                       + "\t" + str(Gene_knownGene) + "\t" + str(ExonicFunc_knownGene) + "\t" + str(AAChange_knownGene) + "\t" + str(Func_ensGene)\
-                       + "\t" + str(Gene_ensGene) + "\t" + str(ExonicFunc_ensGene) + "\t" + str(AAChange_ensGene) + "\t" + str(apr_eur)\
-                       + "\t" + str(apr_amr) + "\t" + str(apr_asn) + "\t" + str(apr_afr) + "\t" + "\t" + "\t" + "\t" + str(read1_plus)\
-                       + "\t" + str(read1_minus) + "\t" + str(read2_plus) + "\t" + str(read2_minus) + "\t" + "\t" + "\t" + str(sample_gDNA)\
-                       + "\t" +str(gDNA) + "\t" + str(SEQ_CENTER) + "\t" + str(tumor_type) + "\t" + str(SAMPLE_NOTE) + '_' + str(date)\
-                       + "\t" + str(source_of_RNA_used_for_sequencing) + "\t" + str(variant_key) + "\n"
-            if (re.search(r'nonsynonymous', ExonicFunc_refGene)or re.search(r'frame', ExonicFunc_refGene)or re.search(r'stop', ExonicFunc_refGene)\
-                    or re.search(r'nonsynonymous', ExonicFunc_knownGene)or re.search(r'frame', ExonicFunc_knownGene) or re.search(r'stop', ExonicFunc_knownGene)\
-                    or re.search(r'nonsynonymous', ExonicFunc_ensGene) or re.search(r'frame', ExonicFunc_ensGene)or re.search(r'stop', ExonicFunc_ensGene)):
-                nonsyn_file.write(to_write)
+            Chr = columns[2]
+            Start = columns[3]
+            End = columns[4]
+            Ref = columns[5]
+            Alt = columns[6]
+            snp138JJG = columns[7]
+            Func_refGene = columns[8]
+            Gene_refGene = columns[9]
+            ExonicFunc_refGene = columns[10]
+            AAChange_refGene = columns[11]
+            Func_knownGene = columns[12]
+            Gene_knownGene = columns[13]
+            ExonicFunc_knownGene = columns[14]
+            AAChange_knownGene = columns[15]
+            Func_ensGene = columns[16]
+            Gene_ensGene = columns[17]
+            ExonicFunc_ensGene = columns[18]
+            AAChange_ensGene = columns[19]
+            apr_all = columns[20]
+            apr_eur = columns[21]
+            apr_amr = columns[22]
+            apr_asn = columns[23]
+            apr_afr = columns[24]
+            variant_key = columns[25]
+            source_of_RNA_used_for_sequencing = columns[33]
+            tumor_reads1 = columns[35]
+            tumor_reads2 = columns[36]
+            tumor_var_freq = columns[37].replace('%','')
+            read1_plus = columns[39]
+            read1_minus = columns[40]
+            read2_plus = columns[41]
+            read2_minus = columns[42]
+            to_write = '\t'.join([str(x) for x in [sampleID, Chr, Start, End, Ref, Alt, snp138JJG, tumor_reads1,
+                                                   tumor_reads2, tumor_var_freq, apr_all, Func_refGene, Gene_refGene,
+                                                   ExonicFunc_refGene, AAChange_refGene, Func_knownGene, Gene_knownGene,
+                                                   ExonicFunc_knownGene, AAChange_knownGene, Func_ensGene, Gene_ensGene,
+                                                   ExonicFunc_ensGene, AAChange_ensGene, apr_eur, apr_amr, apr_asn,
+                                                   apr_afr, read1_plus, read1_minus, read2_plus, read2_minus, tumor_type,
+                                                   source_of_RNA_used_for_sequencing, variant_key]])
+            if (re.search(r'nonsynonymous', ExonicFunc_refGene) or re.search(r'frame', ExonicFunc_refGene) or re.search(r'stop', ExonicFunc_refGene)\
+                    or re.search(r'nonsynonymous', ExonicFunc_knownGene) or re.search(r'frame', ExonicFunc_knownGene) or re.search(r'stop', ExonicFunc_knownGene)\
+                    or re.search(r'nonsynonymous', ExonicFunc_ensGene) or re.search(r'frame', ExonicFunc_ensGene) or re.search(r'stop', ExonicFunc_ensGene)):
+                nonsyn_file.write(to_write + '\n')
             else:
-                all_file.write(to_write)
+                all_file.write(to_write + '\n')
         joined_variants.close()
         nonsyn_file.close()
         all_file.close()
@@ -285,12 +268,10 @@ def RNA_seq_pipeline(sample1,
         fpkm_lines = fpkm.readlines()
         firstline = fpkm_lines.pop(0)
         FPKM_ins = open('FPKM_SQL_insert.txt', 'w')
-        header = 'NAME\tSEQ_CENTER\tSAMPLE_ID\tSOURCE\tTUMOUR\tSAMPLE_NOTE\tSAMPLE_ID\tSEQ_CENTER\t' + firstline
+        header = 'SAMPLE_ID\tTUMOUR\t' + firstline
         FPKM_ins.write(header)
-        # TODO remove unnecessary fields
         for line in fpkm_lines:
-            FPKM_ins.write(str(MRN) + '\t' + str(SEQ_CENTER) + '\t' + str(sampleID) + '\t' + str(SOURCE) + '\t' + str(tumor_type)\
-                           + '\t' + str(SAMPLE_NOTE) + '\t' + str(sampleID) + ' ' + str(SEQ_CENTER) + '\t' + line)
+            FPKM_ins.write('{}\t{}\t{}'.format(sampleID, tumor_type, line))
         FPKM_ins.close()
         fpkm.close()
 

@@ -179,6 +179,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                 sample_covR.append(cov)
         else:
             print("Variant {} is not present in the RNA data".format(key))
+            sample_covR = ['-;-,-,-,-']
 
         if len(sample_cov) >= 1:
             # Loop through epitopes for this position and write a line for each individual mut25mer

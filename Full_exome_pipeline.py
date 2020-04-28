@@ -8,19 +8,16 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
     nonsyn_snv_lines = nonsyn_snv.readlines()[1:]
     nonsyn_file = open(output, 'w' if header else 'a')
     all_file = open(output_other, 'w' if header else 'a')
-    date = datetime.datetime.now().replace(microsecond=0)
     if header:
-        header = 'NAME\tSEQ_CENTER\tSAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tColumna1\tColumna2\tsnp138NonFlagged\tTUMOR_READ1' \
+        header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tsnp138NonFlagged\tTUMOR_READ1' \
                  '\tTUMOR_READ2\tFunc.refGene\tGene.refGene\tExonicFunc.refGene\tAAChange.refGene\tFunc.knownGene\tGene.knownGene' \
                  '\tExonicFunc.knownGene\tAAChange.knownGene\tFunc.ensGene\tGene.ensGene\tExonicFunc.ensGene\tAAChange.ensGene' \
                  '\tALL.sites.2015_08\tEUR.sites.2015_08\tAMR.sites.2015_08\tEAS.sites.2015_08\tAFR.sites.2015_08\tNORMAL_READ1' \
                  '\tNORMAL_READ2\tTRFOR-DP4\tTRREV-DP4\tTVFOR-DP4\tTVREV-DP4\tNRFOR-DP4\tNRREV-DP4\tNVFOR-DP4\tNVAF\tNVREV-DP4' \
-                 '\tTVAF\tSOMATIC\tPVAL\tSAMPLE_ID_CHR:START\tCALLERS\tCHR:START\tTUMOUR\tSOURCE\tSAMPLE-NOTE_SOURCE_SEQ-CENTER' \
-                 '\tTCOV\tNCOV\tSAMPLE-NOTE\tVARIANT-KEY\tCOSMIC70\tDATE\tRESECTION-DATE\tRUN-DATE\tSEQUENCER\tKIT\tNOTE\tINDEX\n'
+                 '\tTVAF\tPVAL\tCALLERS\tTUMOUR\tTCOV\tNCOV\tVARIANT-KEY\tCOSMIC70\n'
         nonsyn_file.write(header)
         all_file.write(header)
-    #TODO use header names instead
-    #TODO remove unnecessary fields
+    #TODO use header names instead to access the fields
     for line in nonsyn_snv_lines:
         if line.startswith('#'):
             continue
@@ -35,7 +32,6 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
         known_gene_detail = columns[12]
         ens_gene_detail = columns[17]
         COSMIC = columns[26]
-        gDNA = 'chr' + Chr + ':' + start
         variant_key = str(Chr) + ':' + str(start) + '-' + str(end) + ' ' + str(ref) + '>' + str(alt)
         if ref_gene_detail != 'NA':
             columns[9] = columns[7]
@@ -46,7 +42,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
         # Can be missing keys if the annotation and the combined variants do not have the same chromosomes
         try:
             p_val = vcf_cov_dict[ID]['pval']
-            Note = vcf_cov_dict[ID]['Note']
+            callers = vcf_cov_dict[ID]['Note']
             trfor = vcf_cov_dict[ID]['trfor']
             trrev = vcf_cov_dict[ID]['trrev']
             tvfor = vcf_cov_dict[ID]['tvfor']
@@ -63,22 +59,17 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
             tfreq = vcf_cov_dict[ID]['tumor_freq']
             ncov = vcf_cov_dict[ID]['normal_coverage']
             nfreq = vcf_cov_dict[ID]['normal_freq']
-            to_write = str(MRN) + '\t' + str(SEQ_CENTER) + '\t' + str(sampleID) + "\t" + str('\t'.join(columns[0:5])) + '\t-\t-\t' + str(columns[20]) \
-                       + '\t' + str(tumor_read1) + '\t' + str(tumor_read2) + '\t' + str('\t'.join(columns[5:7])) + '\t' + str('\t'.join(columns[8:12])) \
-                       + '\t' + str('\t'.join(columns[13:17])) + '\t' + str('\t'.join(columns[18:20])) + '\t' + str('\t'.join(columns[21:26])) \
-                       + '\t' + str(normal_read1) + '\t' + str(normal_read2) + '\t' + str(trfor) + '\t' + str(trrev) + '\t' + str(tvfor) \
-                       + '\t' + str(tvrev) + '\t' + str(nrfor) + '\t' + str(nrrev) + '\t' + str(nvfor) + '\t' + str(nfreq) + '\t' + str(nvrev) \
-                       + '\t' + str(tfreq) + '\tSomatic\t' + str(p_val) + '\t' + str(sampleID) + ' chr' + str(Chr) + ':' + str(start) + '\t' + str(Note) \
-                       + '\t' + str(gDNA) + '\t' + str(tumor_type) + '\t' + str(SOURCE) + '\t' + str(SAMPLE_NOTE) + ' ' + str(SOURCE) \
-                       + ' ' + str(SEQ_CENTER) + '\t' + str(tcov) + '\t' + str(ncov) + '\t' + str(SAMPLE_NOTE) + '\t' + str(variant_key) \
-                       + '\t' + str(COSMIC) + '\t' + str(date) + '\t' + RESECTION_DATE + '\t' + RUN_DATE + '\t' + SEQUENCER + '\t' \
-                       + KIT + '\t' + NOTE + '\t' + INDEX + '\n'
+            to_write = '\t'.join([str(x) for x in [sampleID, '\t'.join(columns[0:5]), columns[20], tumor_read1, tumor_read2,
+                                                   '\t'.join(columns[5:7]), '\t'.join(columns[8:12]), '\t'.join(columns[13:17]),
+                                                   '\t'.join(columns[18:20]), '\t'.join(columns[21:26]), normal_read1, normal_read2,
+                                                   trfor, trrev, tvfor, tvrev, nrfor, nrrev, nvfor, nfreq, nvrev, tfreq, p_val,
+                                                   callers, tumor_type, tcov, ncov, variant_key, COSMIC]])
             if (re.search(r'nonsynonymous', columns[8]) or re.search(r'frame', columns[8]) or re.search(r'stop', columns[8]) \
                     or re.search(r'nonsynonymous', columns[13]) or re.search(r'frame', columns[13]) or re.search(r'stop', columns[13]) \
                     or re.search(r'nonsynonymous', columns[18]) or re.search(r'frame', columns[18]) or re.search(r'stop', columns[18])):
-                nonsyn_file.write(to_write)
+                nonsyn_file.write(to_write + '\n')
             else:
-                all_file.write(to_write)
+                all_file.write(to_write + '\n')
         except KeyError:
             print("Missing variant for {}".format(ID))
     nonsyn_file.close()
@@ -179,10 +170,10 @@ def Full_exome_pipeline(R1_NORMAL,
         # Add headers
         print("Adding headers")
         cmd = '{} AddOrReplaceReadGroups I=aligned_cancer_merged.bam O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}' \
-              ' RGCN={} RGDS={}'.format(PICARD, sample1_ID, LIBRARY, sample1_ID, sample1_ID, SEQ_CENTER, tumor_type)
+              ' RGCN={} RGDS={}'.format(PICARD, sample1_ID, 'DNA', sample1_ID, sample1_ID, 'VHIO', tumor_type)
         exec_command(cmd)
         cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}' \
-              ' RGCN={} RGDS={}'.format(PICARD, sample2_ID, LIBRARY, sample2_ID, sample2_ID, SEQ_CENTER, tumor_type)
+              ' RGCN={} RGDS={}'.format(PICARD, sample2_ID, 'DNA', sample2_ID, sample2_ID, 'VHIO', tumor_type)
         exec_command(cmd)
 
         # Mark duplicates
@@ -583,12 +574,8 @@ def Full_exome_pipeline(R1_NORMAL,
         snv_lines = snv.readlines()
         header = snv_lines.pop(0).strip().split('\t')
         epitope_file = open('Formatted_epitope_variant.txt', 'w')
-        # TODO remove unnecessary fields
         for line in snv_lines:
             columns = line.strip().split('\t')
-            sample_gDNA = columns[header.index('SAMPLE_ID_CHR:START')]
-            gDNA = columns[header.index('CHR:START')]
-            sample_center = columns[header.index('SAMPLE-NOTE_SOURCE_SEQ-CENTER')]
             variant_key = columns[header.index('VARIANT-KEY')]
             chrom = columns[header.index('CHR')]
             start = columns[header.index('START')]
@@ -606,25 +593,42 @@ def Full_exome_pipeline(R1_NORMAL,
             AA_change_ensGene = columns[header.index('AAChange.ensGene')].split(',')
             if re.search(r'nonsynonymous', exonic_func_ref) or re.search(r'frame', exonic_func_ref):
                 for entry in AA_change_refGene:
-                    epitope_file.write(
-                        MRN + '\t' + SEQ_CENTER + '\t' + sampleID + '\t' + SOURCE + '\t' + tumor_type + '\t' + SAMPLE_NOTE + '\t' \
-                        + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
-                        + stop + '\t' + ref + '\t' + alt + '\t' + func_ref_gene + '\t' + exonic_func_ref + '\t' + str(sub(':', '\t', (entry))) + '\n')
+                    epitope_file.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(sampleID,
+                                                                                         variant_key,
+                                                                                         chrom,
+                                                                                         start,
+                                                                                         stop,
+                                                                                         ref,
+                                                                                         alt,
+                                                                                         func_ref_gene,
+                                                                                         exonic_func_ref,
+                                                                                         sub(':', '\t', entry)))
             if re.search(r'nonsynonymous', exonic_func_UCSC) or re.search(r'frame', exonic_func_UCSC):
                 for entry in AA_change_UCSCGene:
-                    epitope_file.write(
-                        MRN + '\t' + SEQ_CENTER + '\t' + sampleID + '\t' + SOURCE + '\t' + tumor_type + '\t' + SAMPLE_NOTE + '\t' \
-                        + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
-                        + stop + '\t' + ref + '\t' + alt + '\t' + func_UCSC_gene + '\t' + exonic_func_UCSC + '\t' + str(sub(':', '\t', (entry))) + '\n')
+                    epitope_file.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(sampleID,
+                                                                                         variant_key,
+                                                                                         chrom,
+                                                                                         start,
+                                                                                         stop,
+                                                                                         ref,
+                                                                                         alt,
+                                                                                         func_UCSC_gene,
+                                                                                         exonic_func_UCSC,
+                                                                                         sub(':', '\t', entry)))
             if re.search(r'nonsynonymous', exonic_func_ens) or re.search(r'frame', exonic_func_ens):
                 for entry in AA_change_ensGene:
-                    epitope_file.write(
-                        MRN + '\t' + SEQ_CENTER + '\t' + sampleID + '\t' + SOURCE + '\t' + tumor_type + '\t' + SAMPLE_NOTE + '\t' \
-                        + sample_gDNA + '\t' + gDNA + '\t' + sample_center + '\t' + variant_key + '\t' + chrom + '\t' + start + '\t' \
-                        + stop + '\t' + ref + '\t' + alt + '\t' + func_ens_gene + '\t' + exonic_func_ens + '\t' + str(sub(':', '\t', (entry))) + '\n')
+                    epitope_file.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(sampleID,
+                                                                                         variant_key,
+                                                                                         chrom,
+                                                                                         start,
+                                                                                         stop,
+                                                                                         ref,
+                                                                                         alt,
+                                                                                         func_ens_gene,
+                                                                                         exonic_func_ens,
+                                                                                         sub(':', '\t', entry)))
         epitope_file.close()
         snv.close()
-        print('Formatted file created')
 
         # Create list of AA and cDNA sequences
         print('Creating epitopes')
@@ -642,19 +646,16 @@ def Full_exome_pipeline(R1_NORMAL,
         dict2.close()
         epitope_file = open('SQL_Epitopes.txt', 'w')
         input_file = open('Formatted_epitope_variant.txt')
-        header = 'NAME\tSEQ_CENTER\tSAMPLE_ID\tSOURCE\tTUMOUR\tSAMPLE_NOTE\tSAMPLE_ID_CHR:START\tCHR:START\tSAMPLE_CENTER\tVARIANT-KEY' \
-                 '\tCHR\tSTART\tSTOP\tREF\tALT\tfunc_ref_gene\texonic_func_ref\tGene\tTranscript_ID\tExon_Numb\tNT_CHANGE\tAA_CHANGE' \
-                 '\tPOSITION\tERRORS\tWT25MER\tMUT25MER\tVARIANT-KEY\tTRANSCRIPT\n'
+        header = 'SAMPLE_ID\tVARIANT-KEY\tCHR\tSTART\tSTOP\tREF\tALT\tfunc_ref_gene\texonic_func_ref\tGene\t' \
+                 'Transcript_ID\tExon_Numb\tNT_CHANGE\tAA_CHANGE\tPOSITION\tERRORS\tWT25MER\tMUT25MER\n'
         epitope_file.write(header)
-        # TODO remove unnecessary fields
         for line in input_file:
             columns = line.rstrip('\n').split('\t')
-            variant_key = columns[9].strip()
-            ref = columns[13].strip()
-            exonic_func = columns[16].strip()
-            transcriptID = columns[18].strip()
-            cDNA_strip = columns[20].strip()
-            protein_strip = columns[21].strip()
+            ref = columns[5].strip()
+            exonic_func = columns[8].strip()
+            transcriptID = columns[10].strip()
+            cDNA_strip = columns[12].strip()
+            protein_strip = columns[13].strip()
             errors = ' '
             WT_25mer = ' '
             Mut_25mer = ' '
@@ -830,14 +831,11 @@ def Full_exome_pipeline(R1_NORMAL,
             elif re.search(r'^stop', exonic_func ):
                 position = ''.join([s for s in protein_strip if s.isdigit()])
                 errors = 'Stop mutation'
-            epitope_file.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:]),
-                                                                    position,
-                                                                    errors,
-                                                                    WT_25mer,
-                                                                    Mut_25mer,
-                                                                    variant_key,
-                                                                    transcriptID))
-        print('Epitopes have been created...')
+            epitope_file.write('{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:]),
+                                                             position,
+                                                             errors,
+                                                             WT_25mer,
+                                                             Mut_25mer))
         input_file.close()
         epitope_file.close()
 
