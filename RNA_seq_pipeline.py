@@ -204,7 +204,7 @@ def RNA_seq_pipeline(sample1,
                  '\tTUMOR_VAR_FREQ\tAPR_ALL\tFunc_refGene\tGene_refGene\tExonicFunc_refGene\tAAChange_refGene\tFunc_knownGene' \
                  '\tGene_knownGene\tExonicFunc_knownGene\tAAChange_knownGene\tFunc_ensGene\tGene\texonic_func\tNT-AA_CHANGE' \
                  '\tAPR_AMR2\tAPR_ASN3\tAPR_AFR4\tREAD1_PLUS\tREAD1_MINUS\tREAD2_PLUS\tREAD2_MINUS' \
-                 '\tsource_of_RNA_used_for_sequencing\tVARIANT-KEY\n'
+                 '\ttumour_type\tsource_of_RNA_used_for_sequencing\tVARIANT-KEY\n'
         nonsyn_file.write(header)
         all_file.write(header)
         # TODO remove unnecessary fields
