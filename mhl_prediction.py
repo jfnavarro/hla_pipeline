@@ -1,40 +1,28 @@
+import re
+import sys
+from collections import Counter
+import itertools
+import subprocess
+import os
+from time import sleep
+import pandas as pd
+import math
+import numpy as np
 
-def netMHC_netChop_analysis(loc,mrn):
-    import re
-    import sys
-    from collections import Counter
-    import itertools
-    import subprocess
-    import os
-    from time import sleep
-    import pandas as pd
-    import math
-    import numpy as np
-    ############################
-    ##Set path to to locations##
-    ##of MHC lists and our HLA##
-    ##Database                ##
-    ############################
+def compute_MHC(hla_exome, hla_rna, epiopes):
+
     a=open(HLA_location)
     b=open(MHCI_list)
     c=open(MHCII_list)
-    #################################################
-    ##Create a list of all the predicted HLAs      ##
-    ##We sometimes run many samples which leads    ##
-    ##To a some HLAs that disagree.  In these      ##
-    ##Instances I want to only run the the HLAs    ##
-    ##with the most evidence.To do this I create   ##
-    ##lists for each HLA and then count extracting ##
-    ##The top two most occuring.  in event of a    ##
-    ##tie I will take more than two                ##
-    #################################################
+    # Extract HLAs
     HLA_A=[]
     HLA_B=[]
     HLA_C=[]
     HLA_DQA1=[]
     HLA_DQB1=[]
     HLA_DRB1=[]
-    used_lines=set()##in event of duplicates in table (usually the same normal)
+
+
     for line in a:
         columns=line.split('\t')
         if columns[0] == mrn and line not in used_lines:

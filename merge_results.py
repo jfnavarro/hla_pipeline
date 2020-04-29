@@ -74,7 +74,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
     # Compute mean expression and percentiles
     for gene, sample in FPKM_dict.items():
         FPKM_mean_dict[gene] = statistics.mean([float(x['expression']) for x in sample.values()])
-    quartiles = np.percentile(list(FPKM_mean_dict.values()), [0, 25, 50, 75, 100])
+    quartiles = [round(x,3) for x in np.percentile(list(FPKM_mean_dict.values()), [0, 25, 50, 75, 100])]
 
     print('Loading epitopes..')
     # NOTE these two can be used how many times a given variant occurs in its neighbours (+20 nt or +10 aa)

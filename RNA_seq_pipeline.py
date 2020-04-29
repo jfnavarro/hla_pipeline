@@ -81,23 +81,27 @@ def RNA_seq_pipeline(sample1,
               + ' --min-var-freq .01 --p-value 0.99 > varscan.pileup'
         exec_command(cmd)
 
-        # TODO apply a filter to the variants
-
-        # Run annovar to annotate variants
-        print('Running annovar')
-        cmd = '{} -format vcf4 varscan.vcf --comment --includeinfo -outfile snp.av'.format(
-            os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
-        exec_command(cmd)
-        cmd = '{} snp.av {} -thread {} -out snp.sum -remove -protocol {}'.format(
-            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovar_db, THREADS, annovar_anno)
-        exec_command(cmd)
-
         # Running Cufflinks (output is genes.fpkm_tracking)
         print('Running Cufflinks')
         cmd = '{} -p {} -G {} --library-type fr-firststrand sample_dedup.bam'.format(CUFFLINKS, THREADS, annotation)
         exec_command(cmd)
 
     if 'filter' in steps:
+        # TODO apply a better filter on alleles frecuency
+        print('Filtering varscan variants')
+        cmd = '{} --vcf varscan.vcf --minGQ 15 --minDP 10 --remove-filtered-all --recode ' \
+              '--out varscan_filtered.vcf'.format(VCFTOOLS)
+        exec_command(cmd)
+
+        # Run annovar to annotate variants
+        print('Running annovar')
+        cmd = '{} -format vcf4 varscan_filtered.vcf --comment --includeinfo -outfile snp.av'.format(
+            os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
+        exec_command(cmd)
+        cmd = '{} snp.av {} -thread {} -out snp.sum -remove -protocol {}'.format(
+            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovar_db, THREADS, annovar_anno)
+        exec_command(cmd)
+
         print('Formatting Varscan variants')
         snv = open('snp.sum.hg19_multianno.txt')
         snv_lines = snv.readlines()
