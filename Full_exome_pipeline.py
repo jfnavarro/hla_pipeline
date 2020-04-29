@@ -656,7 +656,7 @@ def Full_exome_pipeline(R1_NORMAL,
             transcriptID = columns[10].strip()
             cDNA_strip = columns[12].strip()
             protein_strip = columns[13].strip()
-            errors = '-'
+            errors = 'Flags:'
             WT_25mer = '-'
             Mut_25mer = '-'
             position = 0
@@ -681,9 +681,9 @@ def Full_exome_pipeline(R1_NORMAL,
                             WT_25mer = protein_seq[0:position + 12]
                             Mut_25mer = protein_seq[0:position - 1] + var_AA + protein_seq[position:position + 12]
                         if position == 1:
-                            errors += 'mutation occurs in start codon'
+                            errors += ' mutation occurs in start codon'
                     elif FASTA_AA != ref_AA and not errors.startswith('AA_seq not'):
-                        errors += 'Ref in AA_seq does not match file Ref'
+                        errors += ' Ref in AA_seq does not match file Ref'
             # 1st frameshift deletions
             elif exonic_func == 'frameshift deletion' and re.search(r'^p\.', protein_strip):
                 ref_cDNA_seq = cDNA_seq.get(transcriptID, 'cDNA not present for this transcript').strip()
@@ -772,7 +772,7 @@ def Full_exome_pipeline(R1_NORMAL,
             elif exonic_func == 'nonframeshift deletion' and re.search(r'^p\.', protein_strip):
                 ref_cDNA_seq = cDNA_seq.get(transcriptID, 'cDNA not present for this transcript').strip()
                 if ref_cDNA_seq == 'cDNA not present for this transcript':
-                    errors += 'cDNA not present for this transcript '
+                    errors += ' cDNA not present for this transcript'
                 else:
                     len_del = len(ref)
                     cDNA_pos = int(re.findall(r'\d+', cDNA_strip)[0])
@@ -827,10 +827,10 @@ def Full_exome_pipeline(R1_NORMAL,
                     if not ref_cDNA_seq.startswith('ATG') and not errors.startswith(' cDNA not'):
                         errors += ' No ATG start codon for this transcript cDNA'
                     if position == 1:
-                        errors += 'mutation occurs in start codon'
+                        errors += ' mutation occurs in start codon'
             elif re.search(r'^stop', exonic_func ):
                 position = ''.join([s for s in protein_strip if s.isdigit()])
-                errors = 'Stop mutation'
+                errors += ' Stop mutation'
             epitope_file.write('{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:]),
                                                              position,
                                                              errors,
