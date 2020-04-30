@@ -86,15 +86,11 @@ def RNA_seq_pipeline(sample1,
         exec_command(cmd)
 
     if 'filter' in steps:
-        # TODO apply a better filter on alleles frequency
-        print('Filtering varscan variants')
-        cmd = '{} --vcf varscan.vcf --minGQ 15 --minDP 20 --remove-filtered-all --recode ' \
-              '--out varscan_filtered.vcf'.format(VCFTOOLS)
-        exec_command(cmd)
+        # TODO apply a filter here with vcftools on varsca.vcf
 
         # Run annovar to annotate variants
         print('Running annovar')
-        cmd = '{} -format vcf4 varscan_filtered.vcf.recode.vcf --comment --includeinfo -outfile snp.av'.format(
+        cmd = '{} -format vcf4 varscan.vcf --comment --includeinfo -outfile snp.av'.format(
             os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
         exec_command(cmd)
         cmd = '{} snp.av {} -thread {} -out snp.sum -remove -protocol {}'.format(
@@ -182,9 +178,8 @@ def RNA_seq_pipeline(sample1,
             join_key = gDNA
             if re.search(r'-', alt):
                 join_key = 'chr' + Chr + ':' + str(int(start) + 1)
-            to_write = '\t'.join([str(x) for x in [join_key, sampleID, Chr, start, ref, alt, cons,
-                                                   cov, read1, read2, freq, p_val, r1_plus, r1_minus, r2_plus,
-                                                   r2_minus, p_val2]])
+            to_write = '\t'.join([str(x) for x in [join_key, sampleID, Chr, start, ref, alt, cons, cov, read1, read2,
+                                                   freq, p_val, r1_plus, r1_minus, r2_plus, r2_minus, p_val2]])
             insert_file.write(to_write + "\n")
         pileup.close()
         insert_file.close()
@@ -213,7 +208,7 @@ def RNA_seq_pipeline(sample1,
         for line in joined_variants:
             columns = line.rstrip('\n').split('\t')
             # Very ugly way to check that the variant was called by the two methods (TODO improve)
-            if len(columns) < 42:
+            if len(columns) < 41:
                 continue
             Chr = columns[2]
             Start = columns[3]
