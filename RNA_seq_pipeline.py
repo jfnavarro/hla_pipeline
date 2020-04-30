@@ -182,7 +182,7 @@ def RNA_seq_pipeline(sample1,
             join_key = gDNA
             if re.search(r'-', alt):
                 join_key = 'chr' + Chr + ':' + str(int(start) + 1)
-            to_write = '\t'.join([str(x) for x in [join_key, sampleID, Chr, start, end, ref, alt, cons,
+            to_write = '\t'.join([str(x) for x in [join_key, sampleID, Chr, start, ref, alt, cons,
                                                    cov, read1, read2, freq, p_val, r1_plus, r1_minus, r2_plus,
                                                    r2_minus, p_val2]])
             insert_file.write(to_write + "\n")
@@ -213,7 +213,7 @@ def RNA_seq_pipeline(sample1,
         for line in joined_variants:
             columns = line.rstrip('\n').split('\t')
             # Very ugly way to check that the variant was called by the two methods (TODO improve)
-            if len(columns) < 44:
+            if len(columns) < 42:
                 continue
             Chr = columns[2]
             Start = columns[3]
@@ -239,14 +239,14 @@ def RNA_seq_pipeline(sample1,
             apr_asn = columns[23]
             apr_afr = columns[24]
             variant_key = columns[25]
-            source_of_RNA_used_for_sequencing = columns[33]
-            tumor_reads1 = columns[34]
-            tumor_reads2 = columns[35]
-            tumor_var_freq = columns[36].replace('%','')
-            read1_plus = columns[38]
-            read1_minus = columns[39]
-            read2_plus = columns[40]
-            read2_minus = columns[41]
+            source_of_RNA_used_for_sequencing = columns[32]
+            tumor_reads1 = columns[33]
+            tumor_reads2 = columns[34]
+            tumor_var_freq = columns[35].replace('%','')
+            read1_plus = columns[37]
+            read1_minus = columns[38]
+            read2_plus = columns[39]
+            read2_minus = columns[40]
             to_write = '\t'.join([str(x) for x in [sampleID, Chr, Start, End, Ref, Alt, snp138JJG, tumor_reads1,
                                                    tumor_reads2, tumor_var_freq, apr_all, Func_refGene, Gene_refGene,
                                                    ExonicFunc_refGene, AAChange_refGene, Func_knownGene, Gene_knownGene,
