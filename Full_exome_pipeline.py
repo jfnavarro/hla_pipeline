@@ -34,11 +34,11 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
         COSMIC = columns[26]
         variant_key = str(Chr) + ':' + str(start) + '-' + str(end) + ' ' + str(ref) + '>' + str(alt)
         if ref_gene_detail != 'NA':
-            columns[9] = columns[7]
+            columns[9] = ref_gene_detail
         if known_gene_detail != 'NA':
-            columns[14] = columns[12]
+            columns[14] = known_gene_detail
         if ens_gene_detail != 'NA':
-            columns[19] = columns[17]
+            columns[19] = ens_gene_detail
         # Can be missing keys if the annotation and the combined variants do not have the same chromosomes
         try:
             p_val = vcf_cov_dict[ID]['pval']

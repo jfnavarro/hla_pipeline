@@ -68,7 +68,7 @@ def HLA_predictionRNA(sample, threads):
     exec_command(cmd)
 
 def HLA_LA(bamfile, sampleID, outfile, threads):
-    OUT_DIR = os.path.abspath('out_hla')
+    OUT_DIR = os.path.abspath(os.path.join('out_hla_', os.path.splitext(outfile)[0]))
     os.makedirs(OUT_DIR, exist_ok=True)
     
     cmd = '{} --BAM {} --workingDir {} --graph {} --sampleID {}'\
@@ -84,13 +84,7 @@ def HLA_LA(bamfile, sampleID, outfile, threads):
         allele_dict['HLA_' + k] = allele
 
     # Create formatted output file
-    today = datetime.datetime.now().strftime('%B_%d_%Y')
     a = open(outfile, 'w')
-    for x in sorted(allele_dict):
-        a.write('{}\t{}\tExome\t{}\t{}\t{}\t{}\tPRG-HLA-LA\t-\t-\n'.format(MRN,
-                                                                          sampleID,
-                                                                          today,
-                                                                          x,
-                                                                          allele_dict[x][0],
-                                                                          allele_dict[x][1]))
+    for key,value in sorted(allele_dict).items():
+        a.write('{}\t{}\t{}\n'.format(sampleID, key, '\t'.join(value)))
     a.close()

@@ -1,6 +1,5 @@
 from common import *
 import re
-import datetime
 import os
 
 def RNA_seq_pipeline(sample1,
@@ -87,7 +86,7 @@ def RNA_seq_pipeline(sample1,
         exec_command(cmd)
 
     if 'filter' in steps:
-        # TODO apply a better filter on alleles frecuency
+        # TODO apply a better filter on alleles frequency
         print('Filtering varscan variants')
         cmd = '{} --vcf varscan.vcf --minGQ 15 --minDP 10 --remove-filtered-all --recode ' \
               '--out varscan_filtered.vcf'.format(VCFTOOLS)
