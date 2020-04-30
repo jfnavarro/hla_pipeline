@@ -88,13 +88,13 @@ def RNA_seq_pipeline(sample1,
     if 'filter' in steps:
         # TODO apply a better filter on alleles frequency
         print('Filtering varscan variants')
-        cmd = '{} --vcf varscan.vcf --minGQ 15 --minDP 10 --remove-filtered-all --recode ' \
+        cmd = '{} --vcf varscan.vcf --minGQ 15 --minDP 20 --remove-filtered-all --recode ' \
               '--out varscan_filtered.vcf'.format(VCFTOOLS)
         exec_command(cmd)
 
         # Run annovar to annotate variants
         print('Running annovar')
-        cmd = '{} -format vcf4 varscan_filtered.vcf --comment --includeinfo -outfile snp.av'.format(
+        cmd = '{} -format vcf4 varscan_filtered.vcf.recode.vcf --comment --includeinfo -outfile snp.av'.format(
             os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
         exec_command(cmd)
         cmd = '{} snp.av {} -thread {} -out snp.sum -remove -protocol {}'.format(
