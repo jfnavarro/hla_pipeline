@@ -178,14 +178,13 @@ def RNA_seq_pipeline(sample1,
             r2_plus = columns3[3]
             r2_minus = columns3[4]
             p_val2 = columns3[5]
-            variant_key = Chr + ':' + start + '-' + end + ' ' + ref + '>' + alt
             gDNA = 'chr' + Chr + ':' + start
             join_key = gDNA
             if re.search(r'-', alt):
                 join_key = 'chr' + Chr + ':' + str(int(start) + 1)
             to_write = '\t'.join([str(x) for x in [join_key, sampleID, Chr, start, end, ref, alt, cons,
                                                    cov, read1, read2, freq, p_val, r1_plus, r1_minus, r2_plus,
-                                                   r2_minus, p_val2, variant_key]])
+                                                   r2_minus, p_val2]])
             insert_file.write(to_write + "\n")
         pileup.close()
         insert_file.close()
