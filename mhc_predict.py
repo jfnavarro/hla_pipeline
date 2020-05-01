@@ -63,7 +63,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
                                                         columns[header.index('transcript ID')],
                                                         columns[header.index('cDNA change')],
                                                         columns[header.index('AA change')])
-                    protein_seq = columns[header.index('Mut Epitope')].strip()
+                    protein_seq = columns[header.index('Mut Epitope')].strip().replace('*','')
                     if protein_seq != '-':
                         fwrite.write('>{}\n{}\n'.format(protein_name, protein_seq))
 
