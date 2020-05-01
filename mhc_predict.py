@@ -71,7 +71,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     # Run prediction
     print('Predicting MHCs..')
     cmd = 'mhcflurry-predict-scan protein_sequences.fasta --alleles {} ' \
-          '--results-all --out predictions.csv --peptide-lengths 8 9 10 11 12'.format(','.join(filtered_hla))
+          '--results-all --out predictions.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla))
     exec_command(cmd)
     print('Completed')
 
