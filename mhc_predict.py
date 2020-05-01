@@ -46,8 +46,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
             header = lines.pop(0).strip().split('\t')
             for line in lines:
                 columns = line.strip().split('\t')
-                if int(columns[header.index('Number of Exomes samples (passing)')]) > 0\
-                        or columns[header.index('Cosmic Info')] != '-':
+                if int(columns[header.index('Number of Exomes samples (passing)')]) > 0:
                     protein_name = '{} {} {} {}'.format(columns[header.index('Variant key')],
                                                         columns[header.index('transcript ID')],
                                                         columns[header.index('cDNA change')],
