@@ -2,7 +2,19 @@ from collections import Counter
 from _collections import  defaultdict
 import json
 import argparse
-from common import exec_command
+import subprocess
+import sys
+
+def exec_command(cmd):
+    print(cmd)
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output, error = p.communicate()
+    if p.returncode != 0:
+        for line in output.decode("utf-8").split("\n") if output else "":
+            print(line.rstrip())
+        for line in error.decode("utf-8").split("\n") if error else "":
+            print(line.rstrip())
+        sys.exit(-1)
 
 def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     HLA_dict = defaultdict(list)
