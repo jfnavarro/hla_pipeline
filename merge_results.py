@@ -220,7 +220,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
     final_file_discarded.write(header_final)
 
     unique_rna = open('overlap_unique_rna.txt', 'w')
-    unique_rna.write('Variant key\tPer sample coverage\tGene\t'\
+    unique_rna.write('Variant key\tPer sample coverage (Sample,read1,read2,variant frequency,coverage)\tGene\t'\
                      'RNA-seq samples (passing)\tNumber of RNA-seq samples (passing)\t'\
                      'RNA-seq samples (failing)\tNumber of RNA-seq samples (failing)\t'\
                      'Mutation type\tFPKM info pers sample (locus,exp)\tFPKM mean(all samples)\tFPKM quartiles (all genes)\n')
@@ -307,7 +307,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                                                   mutation_type, fpkm_info, fpkm_mean, quartiles])
             unique_rna.write(to_write + '\n')
         else:
-            print("Variant {} was only detected in epitopes in either or exome, strange!".format(key))
+            print("Variant {} was only detected in either epitopes or exome, strange!".format(key))
 
     final_file.close()
     final_file_discarded.close()
