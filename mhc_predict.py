@@ -20,7 +20,6 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     HLA_dict = defaultdict(list)
 
     # First parse hla_exome_cancer and normal (HLA-LA format)
-    # MHCflurry format (HLA-A*02:01)
     print('Loading DNA tumor HLAs..')
     with open(hla_exome_cancer) as f:
         for line in f.readlines():
@@ -37,10 +36,9 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
             HLA_dict[hla].extend(alleles)
 
     # Parse RNA hlas (arcasHLA JSON format)
-    # MHCflurry format (HLA-A*02:01)
     print('Loading RNA HLAs..')
     with open(hla_rna) as f:
-        HLA_dict.update({'HLA-{}'.format(k): v for k, v in json.load(f).items()})
+        HLA_dict.update(json.load(f))
 
     # Filter HLAs by occurrences
     filtered_hla = []
@@ -49,6 +47,8 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
         items = f.most_common()
         cutoff = items[0][1] if len(items) == 1 else items[1][1]
         filtered_hla += [y[0] for y in items if y[1] >= cutoff]
+    # MHCflurry format (HLA-A*02:01)
+    filtered_hla = ['HLA-{}'.format(x) for x in filtered_hla]
 
     # Create protein FASTA file
     print('Creating protein sequencess..')
