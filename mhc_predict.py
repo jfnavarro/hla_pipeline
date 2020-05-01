@@ -64,14 +64,14 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     exec_command(cmd)
     print('Completed')
 
-parser = argparse.ArgumentParser(description='Script to predict MHC using MHCflurry and data from from Jareds pipeline '
+parser = argparse.ArgumentParser(description='Script to predict MHCs using MHCflurry and data from from Jareds pipeline '
                                              '(adjusted by Jose Fernandez) <jc.fernandes.navarro@gmail.com>',
                                  prog='mhc_predict.py',
                                  usage='mhc_predict.py [options] '
                                        '--hla-dna-normal [file with HLA predictions from DNA (Normal)] '
                                        '--hla-dna-tumor [file with HLA predictions from DNA (Tumor)] '
                                        '--hla-rna [file with HLA predictions from RNA]'
-                                       '--final-table [file with the final variants generated with merge_results.py]')
+                                       '--variants [file with the final variants generated with merge_results.py]')
 
 parser.add_argument('--hla-dna-normal', default=None, required=True,
                     help='A file containing predicted HLAs from normal DNA (table format)')
@@ -79,8 +79,8 @@ parser.add_argument('--hla-dna-tumor', default=None, required=True,
                     help='A file containing predicted HLAs from tumor DNA (table format)')
 parser.add_argument('--hla-rna', default=None, required=True,
                     help='A file containing predicted HLAs from RNA (JSON format)')
-parser.add_argument('--final-table', default=None, required=True,
+parser.add_argument('--variants', default=None, required=True,
                     help='A file with the final variants generated with merge_results.py (table format)')
 
 args = parser.parse_args()
-compute_MHC(args.hla_dna_tumor, args.hla_dna_normal, args.hla_rna, args.final_table)
+compute_MHC(args.hla_dna_tumor, args.hla_dna_normal, args.hla_rna, args.variants)

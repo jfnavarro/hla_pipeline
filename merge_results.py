@@ -274,7 +274,6 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                         fpkm_info = 'NA'
                         fpkm_mean = 'NA'
                     flags = add_flags(transcript_name, key, transcript_dict, mer_len=25)
-                    print(flags)
                     to_write = '\t'.join(str(x) for x in [key, ','.join(exome_samples_pass), len(exome_samples_pass),
                                                           ','.join(rna_samples_pass), len(rna_samples_pass),
                                                           ','.join(exome_samples_fail), len(exome_samples_fail),
