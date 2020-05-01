@@ -25,14 +25,14 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
         for line in f.readlines():
             columns = line.strip().split('\t')
             hla = columns[1].split("_")[-1]
-            alleles = columns[1:]
+            alleles = columns[2:]
             HLA_dict[hla].extend(alleles)
     print('Loading DNA normal HLAs..')
     with open(hla_exome_normal) as f:
         for line in f.readlines():
             columns = line.strip().split('\t')
             hla = columns[1].split("_")[-1]
-            alleles = columns[1:]
+            alleles = columns[2:]
             HLA_dict[hla].extend(alleles)
 
     # Parse RNA hlas (arcasHLA JSON format)
@@ -48,9 +48,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
         cutoff = items[0][1] if len(items) == 1 else items[1][1]
         filtered_hla += [y[0] for y in items if y[1] >= cutoff]
     # MHCflurry format (HLA-A*02:01)
-    print(filtered_hla)
-    filtered_hla = ['HLA-{}'.format(x) for x in filtered_hla]
-    print(filtered_hla)
+    filtered_hla = ['HLA-{}'.format(x).encode('utf8') for x in filtered_hla]
 
     # Create protein FASTA file
     print('Creating protein sequencess..')
