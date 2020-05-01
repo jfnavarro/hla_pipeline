@@ -204,7 +204,6 @@ def RNA_seq_pipeline(sample1,
                  '\ttumour_type\tsource_of_RNA_used_for_sequencing\tVARIANT-KEY\n'
         nonsyn_file.write(header)
         all_file.write(header)
-        # TODO remove unnecessary fields
         for line in joined_variants:
             columns = line.rstrip('\n').split('\t')
             # Very ugly way to check that the variant was called by the two methods (TODO improve)

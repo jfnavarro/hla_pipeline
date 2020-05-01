@@ -223,7 +223,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
     unique_rna.write('Variant key\tPer sample coverage\tGene\t'\
                      'RNA-seq samples (passing)\tNumber of RNA-seq samples (passing)\t'\
                      'RNA-seq samples (failing)\tNumber of RNA-seq samples (failing)\t'\
-                     'FPKM info pers sample (locus,exp)\tFPKM mean(all samples)\tFPKM quartiles (all genes)\n')
+                     'Mutation type\tFPKM info pers sample (locus,exp)\tFPKM mean(all samples)\tFPKM quartiles (all genes)\n')
 
     for key,value in variant_dict.items():
 
@@ -292,6 +292,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
         elif 'RNA' in value:
             # Assuming the gene name is the same in every sample where this variant was detected
             ENS_gene_name = list(value['RNA'].values())[0]['data'][header_rna.index('Gene')]
+            mutation_type = list(value['RNA'].values())[0]['data'][header_rna.index('exonic_func')]
             if ENS_gene_name in FPKM_dict:
                 fpkm_info = '|'.join(
                     ['{},{}'.format(x['locus'], x['expression']) for x in FPKM_dict[ENS_gene_name].values()])
@@ -303,7 +304,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
             to_write = '\t'.join(str(x) for x in [key, rna_cov, ENS_gene_name,
                                                   ','.join(rna_samples_pass), len(rna_samples_pass),
                                                   ','.join(rna_samples_fail), len(rna_samples_fail),
-                                                  fpkm_info, fpkm_mean, quartiles])
+                                                  mutation_type, fpkm_info, fpkm_mean, quartiles])
             unique_rna.write(to_write + '\n')
         else:
             print("Variant {} was only detected in epitopes in either or exome, strange!".format(key))
@@ -315,8 +316,11 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
 parser = argparse.ArgumentParser(description='Script to aggregate results from Jareds pipeline '
                                              '(adjusted by Jose Fernandez) <jc.fernandes.navarro@gmail.com>',
                                  prog='merge_results.py',
-                                 usage='merge_results.py [options] --exome [exome results files] '
-                                       '--epitote [epitote results files] --rna [rna results files] --fpkm [rna fpkm results]')
+                                 usage='merge_results.py [options] '
+                                       '--exome [exome results files] '
+                                       '--epitote [epitote results files] '
+                                       '--rna [rna results files] '
+                                       '--fpkm [rna fpkm results]')
 
 parser.add_argument('--exome', nargs='+', default=None, required=True,
                     help='List of files with the results of the exome variants')
