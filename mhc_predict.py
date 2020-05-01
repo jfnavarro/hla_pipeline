@@ -40,7 +40,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     # MHCflurry format (HLA-A*02:01)
     print('Loading RNA HLAs..')
     with open(hla_rna) as f:
-        HLA_dict.update(json.load(f))
+        HLA_dict.update({'HLA-{}'.format(k): v for k, v in json.load(f).items()})
 
     # Filter HLAs by occurrences
     filtered_hla = []
@@ -71,7 +71,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     # Run prediction
     print('Predicting MHCs..')
     cmd = 'mhcflurry-predict-scan protein_sequences.fasta --alleles {} ' \
-          '--peptide-lengths 8 9 10 11 12'.format(','.join(filtered_hla))
+          '–results-all --out predictions.csv --peptide-lengths 8 9 10 11 12'.format(','.join(filtered_hla))
     exec_command(cmd)
     print('Completed')
 
