@@ -54,7 +54,8 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     # Filter HLAs by allowed alleles in MHCflurry
     allowed_alleles = set()
     with open("alleles.txt") as f:
-        allowed_alleles.add(x.strip() for x in f.readlines())
+        for x in f.readlines():
+            allowed_alleles.add(x.strip())
     print("Number of allowled alleles {}".format(len(allowed_alleles)))
     filtered_hla = [x for x in filtered_hla if x in allowed_alleles]
     print('Alleles present in MHCflurry: {}'.format(','.join(filtered_hla)))
