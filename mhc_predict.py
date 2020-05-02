@@ -49,13 +49,15 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
         filtered_hla += [y[0] for y in items if y[1] >= cutoff]
     # MHCflurry format (HLA-A*02:01)
     filtered_hla = ['HLA-{}'.format(':'.join(x.split(':')[0:2])) for x in filtered_hla]
+    print('Alleles found: {}'.format(','.join(filtered_hla)))
 
     # Filter HLAs by allowed alleles in MHCflurry
     allowed_alleles = set()
     with open("alleles.txt") as f:
         allowed_alleles.add(x.strip() for x in f.readlines())
     filtered_hla = [x for x in filtered_hla if x in allowed_alleles]
-    
+    print('Alleles present in MHCflurry: {}'.format(','.join(filtered_hla)))
+
     # Create protein FASTA file
     print('Creating protein sequencess..')
     with open('protein_sequences.fasta', 'w') as fwrite:
