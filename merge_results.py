@@ -312,8 +312,8 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
     final_file_discarded.close()
     unique_rna.close()
 
-parser = argparse.ArgumentParser(description='Script to aggregate results from Jareds pipeline '
-                                             '(adjusted by Jose Fernandez) <jc.fernandes.navarro@gmail.com>',
+parser = argparse.ArgumentParser(description='Script to aggregate results and create a final report from the exome and rna-seq pipelines results '
+                                             '(created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='merge_results.py',
                                  usage='merge_results.py [options] '
                                        '--exome [exome results files] '

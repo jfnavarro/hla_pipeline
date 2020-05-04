@@ -2,7 +2,6 @@ import subprocess
 import os
 import sys
 import re
-import datetime
 import pandas as pd
 from Bio.Seq import translate
 

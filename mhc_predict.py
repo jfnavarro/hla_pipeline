@@ -85,8 +85,8 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     exec_command(cmd)
     print('Completed')
 
-parser = argparse.ArgumentParser(description='Script to predict MHCs using MHCflurry and data from from Jareds pipeline '
-                                             '(adjusted by Jose Fernandez) <jc.fernandes.navarro@gmail.com>',
+parser = argparse.ArgumentParser(description='Script to predict MHCs using MHCflurry and data from the exome and rnaseq variant calling pipelines '
+                                             '(created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='mhc_predict.py',
                                  usage='mhc_predict.py [options] '
                                        '--hla-dna-normal [file with HLA predictions from DNA (Normal)] '

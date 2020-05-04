@@ -89,7 +89,7 @@ def RNAseq_pipeline(sample1,
         exec_command(cmd)
 
     if 'filter' in steps:
-        # TODO apply a filter here with vcftools on varsca.vcf
+        # TODO apply a filter here with vcftools on varscan.vcf
 
         # Run annovar to annotate variants
         print('Running annovar')
@@ -212,6 +212,7 @@ def RNAseq_pipeline(sample1,
             # Very ugly way to check that the variant was called by the two methods (TODO improve)
             if len(columns) < 41:
                 continue
+            #TODO use header names instead
             Chr = columns[2]
             Start = columns[3]
             End = columns[4]
