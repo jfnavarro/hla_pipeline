@@ -62,6 +62,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
 
     # Create protein FASTA file
     print('Creating protein sequencess..')
+    added_proteins = set()
     with open('protein_sequences.fasta', 'w') as fwrite:
         with open(overlap_final, 'r') as fread:
             lines = fread.readlines()
@@ -74,8 +75,9 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
                                                         columns[header.index('cDNA change')],
                                                         columns[header.index('AA change')])
                     protein_seq = columns[header.index('Mut Epitope')].strip().replace('*','')
-                    if protein_seq != '-':
+                    if protein_seq != '-' and protein_seq not in added_proteins:
                         fwrite.write('>{}\n{}\n'.format(protein_name, protein_seq))
+                        added_proteins.add(protein_seq)
 
 
     # Run prediction
