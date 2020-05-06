@@ -195,7 +195,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                 FPKM_dict[gene_id][sample] = {}
             FPKM_dict[gene_id][sample]['locus'] = locus
             FPKM_dict[gene_id][sample]['expression'] = float(fpkm_value)
-            FPKM_dict_sample[sample].append(fpkm_value)
+            FPKM_dict_sample[sample].append(float(fpkm_value))
         FPKM_file.close()
     # Compute mean expression and percentiles
     FPKM_mean_dict = {}
