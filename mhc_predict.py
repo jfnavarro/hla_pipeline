@@ -4,6 +4,7 @@ import json
 import argparse
 import subprocess
 import sys
+import pandas as pd
 
 def exec_command(cmd):
     print(cmd)
@@ -56,9 +57,8 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     with open("alleles.txt") as f:
         for x in f.readlines():
             allowed_alleles.add(x.strip())
-    print("Number of allowled alleles {}".format(len(allowed_alleles)))
     filtered_hla = [x for x in filtered_hla if x in allowed_alleles]
-    print('Alleles present in MHCflurry: {}'.format(','.join(filtered_hla)))
+    print('Alleles allowed in MHCflurry: {}'.format(','.join(filtered_hla)))
 
     # Create protein FASTA file
     print('Creating protein sequencess..')

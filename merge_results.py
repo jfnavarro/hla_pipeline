@@ -5,6 +5,8 @@ import argparse
 import re
 import numpy as np
 import math
+from scipy import stats
+from _collections import defaultdict
 
 def add_flags(transcript, variant_key, transcript_info, mer_len=25):
     cDNA_flanks = (math.floor(mer_len / 2)) * 3
@@ -176,7 +178,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
 
     print('Loading FPKM data..')
     FPKM_dict = {}
-    FPKM_mean_dict = {}
+    FPKM_dict_sample = defaultdict(list)
     for file in rna_fpkm:
         FPKM_file = open(file)
         FPKM_file_lines = FPKM_file.readlines()
@@ -192,14 +194,17 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
             if sample not in FPKM_dict[gene_id]:
                 FPKM_dict[gene_id][sample] = {}
             FPKM_dict[gene_id][sample]['locus'] = locus
-            FPKM_dict[gene_id][sample]['expression'] = fpkm_value
-
+            FPKM_dict[gene_id][sample]['expression'] = float(fpkm_value)
+            FPKM_dict_sample[sample].append(fpkm_value)
         FPKM_file.close()
     # Compute mean expression and percentiles
-    for gene, sample in FPKM_dict.items():
-        FPKM_mean_dict[gene] = statistics.mean([float(x['expression']) for x in sample.values()])
-    quartiles = [round(x,3) for x in np.percentile(list(FPKM_mean_dict.values()), [0, 25, 50, 75, 100])]
-
+    FPKM_mean_dict = {}
+    FPKM_quan_dict = {}
+    for gene, samples in FPKM_dict.items():
+        FPKM_mean_dict[gene] = statistics.mean([x['expression'] for x in samples.values()])
+        FPKM_quan_dict[gene] = ['{}:{}'.format(sample,
+                                               stats.percentileofscore(FPKM_dict_sample[sample],
+                                                                       x['expression'])) for sample, x in samples.items()]
 
     print('Creating final files..')
     header_final = 'Variant key\tExomes samples (passing)\tNumber of Exomes samples (passing)\t' \
@@ -213,7 +218,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                    'Mut Epitope\tExome Coverage info (Sample,Tumor coverage,Normal Coverage,Tumor var freq,'\
                    'Normal var freq,Tumor variant reads,p_value (varscan),callers)\tError flags\t'\
                    'RNA Coverage info (Sample,read1,read2,variant frequency,coverage)\t' \
-                   'FPKM info per sample (locus,exp)\tFPKM mean(all samples)\tFPKM quartiles (all genes)\n'
+                   'FPKM info per sample (locus,exp)\tFPKM mean(all samples)\tFPKM percentile (all samples)\n'
     final_file = open('overlap_final.txt', 'w')
     final_file.write(header_final)
     final_file_discarded = open('overlap_final_discarded.txt', 'w')
@@ -223,7 +228,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
     unique_rna.write('Variant key\tPer sample coverage (Sample,read1,read2,variant frequency,coverage)\tGene\t'\
                      'RNA-seq samples (passing)\tNumber of RNA-seq samples (passing)\t'\
                      'RNA-seq samples (failing)\tNumber of RNA-seq samples (failing)\t'\
-                     'Mutation type\tFPKM info pers sample (locus,exp)\tFPKM mean(all samples)\tFPKM quartiles (all genes)\n')
+                     'Mutation type\tFPKM info pers sample (locus,exp)\tFPKM mean(all samples)\tFPKM percentile (all samples)\n')
 
     for key,value in variant_dict.items():
 
@@ -270,9 +275,11 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                         fpkm_info = '|'.join(
                             ['{},{}'.format(x['locus'], x['expression']) for x in FPKM_dict[ENS_gene_name].values()])
                         fpkm_mean = FPKM_mean_dict[ENS_gene_name]
+                        percentile = ','.join(FPKM_quan_dict[ENS_gene_name])
                     else:
                         fpkm_info = 'NA'
                         fpkm_mean = 'NA'
+                        percentile = 'NA'
                     flags = add_flags(transcript_name, key, transcript_dict, mer_len=25)
                     to_write = '\t'.join(str(x) for x in [key, ','.join(exome_samples_pass), len(exome_samples_pass),
                                                           ','.join(rna_samples_pass), len(rna_samples_pass),
@@ -283,7 +290,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                                                           ENS_gene_name, ENS_gene_mut, ENS_gene_change, genome_all,
                                                           dbSNP_ID, cosmic, gene_name, transcript_name, mutation_type,
                                                           exon, cdna_change, aa_change, aa_position, error_flags, wt_mer,
-                                                          mu_mer, exome_cov, flags, rna_cov, fpkm_info, fpkm_mean, quartiles])
+                                                          mu_mer, exome_cov, flags, rna_cov, fpkm_info, fpkm_mean, percentile])
                     if len(exome_samples_pass) >= 1:
                         final_file.write(to_write + '\n')
                     else:
@@ -296,14 +303,16 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                 fpkm_info = '|'.join(
                     ['{},{}'.format(x['locus'], x['expression']) for x in FPKM_dict[ENS_gene_name].values()])
                 fpkm_mean = FPKM_mean_dict[ENS_gene_name]
+                percentile = ','.join(FPKM_quan_dict[ENS_gene_name])
             else:
                 fpkm_info = 'NA'
                 fpkm_mean = 'NA'
+                percentile = 'NA'
             # TODO add more fields to file
             to_write = '\t'.join(str(x) for x in [key, rna_cov, ENS_gene_name,
                                                   ','.join(rna_samples_pass), len(rna_samples_pass),
                                                   ','.join(rna_samples_fail), len(rna_samples_fail),
-                                                  mutation_type, fpkm_info, fpkm_mean, quartiles])
+                                                  mutation_type, fpkm_info, fpkm_mean, percentile])
             unique_rna.write(to_write + '\n')
         else:
             print("Variant {} was only detected in either epitopes or exome, strange!".format(key))
