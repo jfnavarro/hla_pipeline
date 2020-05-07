@@ -187,24 +187,27 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
             columns = line.strip().split('\t')
             gene_id = columns[header_fpkm.index('gene_id')]
             locus = columns[header_fpkm.index('locus')]
-            fpkm_value = columns[header_fpkm.index('FPKM')]
+            fpkm_value = float(columns[header_fpkm.index('FPKM')])
             sample = columns[header_fpkm.index('SAMPLE_ID')]
             if gene_id not in FPKM_dict:
                 FPKM_dict[gene_id] = {}
             if sample not in FPKM_dict[gene_id]:
                 FPKM_dict[gene_id][sample] = {}
-            FPKM_dict[gene_id][sample]['locus'] = locus
-            FPKM_dict[gene_id][sample]['expression'] = float(fpkm_value)
-            FPKM_dict_sample[sample].append(float(fpkm_value))
+            #NOTE check for precision errors here
+            if fpkm_value != 0:
+                FPKM_dict[gene_id][sample]['locus'] = locus
+                FPKM_dict[gene_id][sample]['expression'] = fpkm_value
+                FPKM_dict_sample[sample].append(fpkm_value)
         FPKM_file.close()
     # Compute mean expression and percentiles
     FPKM_mean_dict = {}
     FPKM_quan_dict = {}
+    #TODO this is slow and ugly, improve!
     for gene, samples in FPKM_dict.items():
         FPKM_mean_dict[gene] = statistics.mean([x['expression'] for x in samples.values()])
         FPKM_quan_dict[gene] = ['{}:{}'.format(sample,
-                                               stats.percentileofscore(FPKM_dict_sample[sample],
-                                                                       x['expression'])) for sample, x in samples.items()]
+                                               np.around(stats.percentileofscore(FPKM_dict_sample[sample],2),
+                                                         x['expression'])) for sample, x in samples.items()]
 
     print('Creating final files..')
     header_final = 'Variant key\tExomes samples (passing)\tNumber of Exomes samples (passing)\t' \
