@@ -207,7 +207,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
         FPKM_mean_dict[gene] = statistics.mean([x['expression'] for x in samples.values()])
         FPKM_quan_dict[gene] = ['{}:{}'.format(sample,
                                                np.around(
-                                                   stats.percentileofscore(FPKM_dict_sample[sample], x['expression'])))
+                                                   stats.percentileofscore(FPKM_dict_sample[sample], x['expression'], rank='weak'), 3))
                                 for sample, x in samples.items()]
 
     print('Creating final files..')
