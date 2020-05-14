@@ -32,7 +32,7 @@ def RNAseq_pipeline(sample1,
         cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired'\
               ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs'\
               ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c'\
-              ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, max(int(THREADS/2),1))
+              ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, THREADS)
         exec_command(cmd)
 
         # Add headers
@@ -283,7 +283,7 @@ parser = argparse.ArgumentParser(description='RNA-seq variant calling pipeline (
 parser.add_argument('R1_RNA', help='FASTQ file R1 (RNA)')
 parser.add_argument('R2_RNA', help='FASTQ file R2 (RNA)')
 parser.add_argument('--genome',
-                    help='Path to the reference Genome FASTA file (must contain BWA index)', required=True)
+                    help='Path to the reference Genome FASTA file', required=True)
 parser.add_argument('--genome-star',
                     help='Path to the reference Genome STAR index folder', required=True)
 parser.add_argument('--genome-ref',
@@ -301,7 +301,7 @@ parser.add_argument('--known2',
 parser.add_argument('--snpsites',
                     help='Path to the file with the SNPs (GATK buldle)', required=True)
 parser.add_argument('-steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
-                    help='Steps to apply in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
+                    help='Steps to perform in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 
 # Parse arguments
 args = parser.parse_args()
