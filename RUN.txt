@@ -4,7 +4,7 @@ export GATK3_PATH="~/shared/gatk3.8.jar"
 export ARCASHLA_PATH="~/shared/arcasHLA"
 export PATH="~/shared/gitlfs:$PATH"
 
-conda activate jared
+conda activate hla
 
 python hla_pipeline/exome_pipeline.py \
   --genome ~/shared/GRCh37/human_g1k_v37_decoy.fasta \
@@ -16,9 +16,10 @@ python hla_pipeline/exome_pipeline.py \
   --known2 ~/shared/GRCh37/1000G_phase1.indels.b37.vcf \
   --snpsites ~/shared/GRCh37/dbsnp_138.b37.vcf \
   --germline ~/shared/GRCh37/gnomAD.r2.1.1.GRCh37.PASS.AC.AF.only.vcf.gz \
+  -pon ~/shared/GRCh37/dummy_PON.gnomAD.GRCh37.WGS.AF.GT.01.vcf.gz
   --fastaAA ~/shared/FASTA_AA.dict \
   --fastacDNA ~/shared/FASTA_cDNA.dict  \
-  NormalR1.fastq.gz NormalR2.fastq.gz \
+  NormalR1.fastq.gz NormalR2.fastq.gz \
   TumorR1.fastq.gz TumorR2.fastq.gz
 
 python hla_pipeline/rnaseq_pipeline.py \

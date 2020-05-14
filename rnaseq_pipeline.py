@@ -317,7 +317,7 @@ THREADS = multiprocessing.cpu_count() - 1
 KNOWN_SITE1 = os.path.abspath(args.known1)
 KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
-RNA_STEPS = args.rna_steps
+RNA_STEPS = args.steps
 
 # Move to output dir
 os.makedirs(os.path.abspath(DIR), exist_ok=True)

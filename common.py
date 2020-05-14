@@ -84,6 +84,6 @@ def HLA_LA(bamfile, sampleID, outfile, threads):
 
     # Create formatted output file
     a = open(outfile, 'w')
-    for key,value in sorted(allele_dict).items():
+    for key,value in allele_dict.items():
         a.write('{}\t{}\t{}\n'.format(sampleID, key, '\t'.join(value)))
     a.close()
