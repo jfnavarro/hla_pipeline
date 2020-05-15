@@ -654,6 +654,8 @@ def exome_pipeline(R1_NORMAL,
         epitope_file.write(header)
         for line in input_file:
             columns = line.rstrip('\n').split('\t')
+            if len(columns) < 13:
+                continue
             ref = columns[5].strip()
             exonic_func = columns[8].strip()
             transcriptID = columns[10].strip()
