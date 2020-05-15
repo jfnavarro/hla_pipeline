@@ -1,5 +1,5 @@
-conda create -n jared python=3.6.1
-conda activate jared
+conda create -n hla python=3.6.1
+conda activate hla
 
 mkdir -p ~/shared
 cd ~/shared

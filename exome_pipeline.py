@@ -878,7 +878,7 @@ parser.add_argument('--fastaAA',
 parser.add_argument('--fastacDNA',
                     help='Path to the file with the dictionary of FASTA to cDNA', required=True)
 parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
-                    help='Steps to apply in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
+                    help='Steps to perform in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 
 # Parse arguments
 args = parser.parse_args()
