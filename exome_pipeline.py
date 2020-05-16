@@ -834,7 +834,7 @@ def exome_pipeline(R1_NORMAL,
                                                                  WT_25mer,
                                                                  Mut_25mer))
             except Exception as err:
-                print('An uknown error {}\t happend parsing epitote {}'.format(err, ','.join(columns)))
+                print('An unknown error {}\t happened parsing epitote {}'.format(err, ','.join(columns)))
         input_file.close()
         epitope_file.close()
 
