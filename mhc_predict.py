@@ -1,11 +1,12 @@
+#! /usr/bin/env python
 from collections import Counter
-from _collections import  defaultdict
+from _collections import defaultdict
 import json
 import argparse
 import subprocess
-buimport sys
-import pandas as pd
+import sys
 
+#TODO duplicated function
 def exec_command(cmd):
     print(cmd)
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
