@@ -23,24 +23,30 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
 
     # First parse hla_exome_cancer and normal (HLA-LA format)
     print('Loading DNA tumor HLAs..')
-    with open(hla_exome_cancer) as f:
-        for line in f.readlines():
-            columns = line.strip().split('\t')
-            hla = columns[1].split("_")[-1]
-            alleles = columns[2:]
-            HLA_dict[hla].extend(alleles)
+    for file in hla_exome_cancer:
+        with open(file) as f:
+            for line in f.readlines():
+                columns = line.strip().split('\t')
+                hla = columns[1].split("_")[-1]
+                alleles = columns[2:]
+                HLA_dict[hla].extend(alleles)
+
     print('Loading DNA normal HLAs..')
-    with open(hla_exome_normal) as f:
-        for line in f.readlines():
-            columns = line.strip().split('\t')
-            hla = columns[1].split("_")[-1]
-            alleles = columns[2:]
-            HLA_dict[hla].extend(alleles)
+    for file in hla_exome_normal:
+        with open(file) as f:
+            for line in f.readlines():
+                columns = line.strip().split('\t')
+                hla = columns[1].split("_")[-1]
+                alleles = columns[2:]
+                HLA_dict[hla].extend(alleles)
 
     # Parse RNA hlas (arcasHLA JSON format)
     print('Loading RNA HLAs..')
-    with open(hla_rna) as f:
-        HLA_dict.update(json.load(f))
+    for file in hla_rna:
+        with open(file) as f:
+            local_dict = json.load(f)
+            for hla,alleles in local_dict.items():
+                HLA_dict[hla].extend(alleles)
 
     # Filter HLAs by occurrences
     filtered_hla = []
@@ -92,17 +98,17 @@ parser = argparse.ArgumentParser(description='Script to predict MHCs using MHCfl
                                              '(created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='mhc_predict.py',
                                  usage='mhc_predict.py [options] '
-                                       '--hla-dna-normal [file with HLA predictions from DNA (Normal)] '
-                                       '--hla-dna-tumor [file with HLA predictions from DNA (Tumor)] '
-                                       '--hla-rna [file with HLA predictions from RNA]'
+                                       '--hla-dna-normal [file/s with HLA predictions from DNA (Normal)] '
+                                       '--hla-dna-tumor [file/s with HLA predictions from DNA (Tumor)] '
+                                       '--hla-rna [file/s with HLA predictions from RNA]'
                                        '--variants [file with the final variants generated with merge_results.py]')
 
-parser.add_argument('--hla-dna-normal', default=None, required=True,
-                    help='A file containing predicted HLAs from normal DNA (table format)')
-parser.add_argument('--hla-dna-tumor', default=None, required=True,
-                    help='A file containing predicted HLAs from tumor DNA (table format)')
-parser.add_argument('--hla-rna', default=None, required=True,
-                    help='A file containing predicted HLAs from RNA (JSON format)')
+parser.add_argument('--hla-dna-normal', nargs='+', default=None, required=True,
+                    help='A file or files containing predicted HLAs from normal DNA (table format)')
+parser.add_argument('--hla-dna-tumor', nargs='+', default=None, required=True,
+                    help='A file or files containing predicted HLAs from tumor DNA (table format)')
+parser.add_argument('--hla-rna', nargs='+', default=None, required=True,
+                    help='A file or files containing predicted HLAs from RNA (JSON format)')
 parser.add_argument('--variants', default=None, required=True,
                     help='A file with the final variants generated with merge_results.py (table format)')
 
