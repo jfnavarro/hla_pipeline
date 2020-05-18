@@ -671,7 +671,7 @@ def exome_pipeline(R1_NORMAL,
                 protein_seq = AA_seq.get(transcriptID, 'AA_seq not present for this transcript')
                 ref_cDNA_seq = cDNA_seq.get(transcriptID, 'cDNA not present for this transcript').strip()
                 # Nonsynonymous point mutations to 25 mers
-                if exonic_func == 'nonsynonymous SNV' and re.search(r'^p\.', protein_strip):
+                if exonic_func == 'nonsynonymous SNV':
                     # extract the AA change info
                     ref_AA = protein_strip[protein_strip.find('.') + 1]
                     var_AA = protein_strip[len(protein_strip) - 1]
@@ -693,7 +693,7 @@ def exome_pipeline(R1_NORMAL,
                         else:
                             errors += ' Ref in AA_seq does not match file Ref'
                 # 1st frameshift deletions
-                elif exonic_func == 'frameshift deletion' and re.search(r'^p\.', protein_strip) and re.search(r'^c\.', cDNA_strip):
+                elif exonic_func == 'frameshift deletion':
                     if ref_cDNA_seq == 'cDNA not present for this transcript':
                         errors += ' cDNA not present for this transcript'
                     else:
@@ -728,7 +728,7 @@ def exome_pipeline(R1_NORMAL,
                         if position == 1:
                             errors += ' mutation occurs in start codon'
                 # 2nd frameshift insertions
-                elif exonic_func == 'frameshift insertion' and re.search(r'^p\.', protein_strip) and re.search(r'^c\.', cDNA_strip):
+                elif exonic_func == 'frameshift insertion':
                     if ref_cDNA_seq == 'cDNA not present for this transcript':
                         errors += ' cDNA not present for this transcript'
                     else:
@@ -766,7 +766,7 @@ def exome_pipeline(R1_NORMAL,
                         if position == 1:
                             errors += ' mutation occurs in start codon'
                 # 3rd nonframeshift deletions to 25mers
-                elif exonic_func == 'nonframeshift deletion' and re.search(r'^p\.', protein_strip) and re.search(r'^c\.', cDNA_strip):
+                elif exonic_func == 'nonframeshift deletion':
                     if ref_cDNA_seq == 'cDNA not present for this transcript':
                         errors += ' cDNA not present for this transcript'
                     else:
@@ -793,7 +793,7 @@ def exome_pipeline(R1_NORMAL,
                         if position == 1:
                             errors += ' mutation occurs in start codon'
                 # 4th nonframeshift insertions to 25mers
-                elif exonic_func == 'nonframeshift insertion' and re.search(r'^p\.', protein_strip) and re.search(r'^c\.', cDNA_strip):
+                elif exonic_func == 'nonframeshift insertion':
                     if ref_cDNA_seq == 'cDNA not present for this transcript':
                         errors += ' cDNA not present for this transcript'
                     else:
@@ -827,14 +827,14 @@ def exome_pipeline(R1_NORMAL,
                     position = ''.join([s for s in protein_strip if s.isdigit()])
                     errors += ' Stop mutation'
                 else:
-                    errors += ' Unknown error'
+                    errors += ' Unknown exonic function'
                 epitope_file.write('{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:]),
                                                                  position,
                                                                  errors,
                                                                  WT_25mer,
                                                                  Mut_25mer))
             except Exception as err:
-                print('An unknown error {}\t happened parsing epitote {}'.format(err, ','.join(columns)))
+                print('An unknown error {}\t happened parsing epitope {}'.format(err, ','.join(columns)))
         input_file.close()
         epitope_file.close()
 
