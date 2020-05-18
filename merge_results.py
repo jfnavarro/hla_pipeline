@@ -119,6 +119,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
         for line in epitopes_lines:
             columns = line.strip().split('\t')
             key = columns[header_epitopes.index('VARIANT-KEY')]
+            sample = columns[header_epitopes.index('SAMPLE_ID')]
             # Load variant data variant -> mut -> transcript
             if key in variant_dict:
                 transcript = columns[header_epitopes.index('Transcript_ID')]
