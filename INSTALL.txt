@@ -4,7 +4,7 @@ conda activate hla
 mkdir -p ~/shared
 cd ~/shared
 
-conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan cufflinks picard trim-galore star somatic-sniper bedtools biopython nextflow mhcflurry
+conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan cufflinks picard trim-galore star somatic-sniper bedtools biopython mhcflurry awscli
 
 mhcflurry-downloads fetch models_class1_presentation
 
@@ -30,60 +30,47 @@ wget https://github.com/Illumina/strelka/releases/download/v2.9.10/strelka-2.9.1
 tar -xjf strelka-2.9.10.centos6_x86_64.tar.bz2
 mv strelka-2.9.10.centos6_x86_64 ~/shared/strelka
 
-# Download link may be expired (email the developer for new link)
+# Download link may be expired (email the developer for new link if expired)
 cd ~/shared
 wget http://www.openbioinformatics.org/annovar/download/0wgxR2rIVP/annovar.latest.tar.gz
 tar -xvf annovar.latest.tar.gz
 mv annovar.latest ~/shared/annovar
 cd ~/shared/annovar
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar knownGene humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar ensGene humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar snp138NonFlagged humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar 1000g2015aug humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar cosmic70 humandb/
-wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/kgXref.txt.gz humandb/hg19_kgXref.txt.gz
-gunzip humandb/hg19_kgXref.txt.gz
+./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar knownGene humandb/
+./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar ensGene humandb/
+./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar refGene humandb/
+./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar snp138NonFlagged humandb/
+./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar 1000g2015aug humandb/
+./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar cosmic70 humandb/
+wget http://hgdownload.cse.ucsc.edu/goldenpath/hg38/database/kgXref.txt.gz humandb/hg38_kgXref.txt.gz
+gunzip humandb/hg38_kgXref.txt.gz
 
-cd ~/shared/
-mkdir -p hg19
-cd hg19
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/Mills_and_1000G_gold_standard.indels.hg19.sites.vcf.gz.tbi
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/1000G_phase1.indels.hg19.sites.vcf.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/1000G_phase1.indels.hg19.sites.vcf.gz.tbi
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/dbsnp_138.hg19.vcf.gz.tbi
-gsutil cp gs://gatk-best-practices/somatic-b37/af-only-gnomad.raw.sites.vcf .
-gsutil cp gs://gatk-best-practices/somatic-b37/af-only-gnomad.raw.sites.vcf.idx
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.fasta.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.dict.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg19/ucsc.hg19.fasta.fai.gz
-wget https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/genes/hg19.refGene.gtf.gz
-bwa index ucsc.hg19.fasta.gz
-STAR --runMode genomeGenerate --runThreadN 40 --genomeDir STARIndex/ --genomeFastaFiles ucsc.hg19..fasta --sjdbGTFfile hg19.refGene.gtf --sjdbOverhang 99
-
-cd ~/shared/
-mkdir -p GRCh37
-cd GRCh37
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/1000G_phase1.indels.b37.vcf.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/1000G_phase1.indels.b37.vcf.idx.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/dbsnp_138.b37.vcf.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/dbsnp_138.b37.vcf.idx.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/Mills_and_1000G_gold_standard.indels.b37.vcf.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/Mills_and_1000G_gold_standard.indels.b37.vcf.idx.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/Mutect2/af-only-gnomad.raw.sites.b37.vcf.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/Mutect2/af-only-gnomad.raw.sites.b37.vcf.gz.tbi
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.fasta.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.dict.gz
-wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/b37/human_g1k_v37_decoy.fasta.fai.gz
-wget ftp://ftp.ensembl.org/pub/release-75/gtf/homo_sapiens/Homo_sapiens.GRCh37.75.gtf.gz
-bwa index human_g1k_v37_decoy.fasta.gz
-STAR --runMode genomeGenerate --runThreadN 40 --genomeDir STARIndex/ --genomeFastaFiles human_g1k_v37_decoy.fasta --sjdbGTFfile Homo_sapiens.GRCh37.75.gtf --sjdbOverhang 99
+cd ~/shared
+mkdir -p GRCh38
+cd GRCh38
+aws --no-sign-request s3 sync s3://ngi-igenomes/igenomes/Homo_sapiens/GATK/GRCh38/ .
+ln -s Sequence/WholeGenomeFasta/Homo_sapiens_assembly38.fasta Sequence/BWAIndex/Homo_sapiens_assembly38.fasta
+mkdir -p Annotation/Genes
+mkdir -p Annotation/cDNA
+mkdir -p Annotation/Protein
+wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.primary_assembly.annotation.gtf.gz
+gunzip gencode.v34.primary_assembly.annotation.gtf.gz
+mv gencode.v34.primary_assembly.annotation.gtf Annotation/Genes
+wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.pc_transcripts.fa.gz
+gunzip gencode.v34.pc_transcripts.fa.gz
+mv gencode.v34.pc_transcripts.fa Annotation/cDNA
+wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.pc_translations.fa.gz
+gunzip gencode.v34.pc_translations.fa.gz
+mv gencode.v34.pc_translations.fa Annotation/Protein
+cd Sequence
+mkdir -p STARIndex
+STAR --runMode genomeGenerate --runThreadN 20 --genomeDir STARIndex \
+  --genomeFastaFiles WholeGenomeFasta/Homo_sapiens_assembly38.fasta \
+  --sjdbGTFfile ../Annotation/Genes/gencode.v34.primary_assembly.annotation.gtf --sjdbOverhang 100
 
 mkdir -p ~/Analysis
 cd ~/Analysis
 git clone hla_pipeline
 cd hla_pipeline
 cp hla_pipeline/shared/* ~/shared/
-# un-comment this to over-write Strelka´s settings with Jared´s ones
-#cp hla_pipeline/shared/configureStrelkaSomaticWorkflow.py.ini ~/shared/strelka/bin/
 python setup.py install

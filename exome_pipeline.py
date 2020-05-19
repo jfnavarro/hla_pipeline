@@ -5,6 +5,7 @@ from filters import *
 import shutil
 import argparse
 import multiprocessing
+from Bio import SeqIO
 
 def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_type, header=True):
     nonsyn_snv = open(input)
@@ -635,18 +636,14 @@ def exome_pipeline(R1_NORMAL,
 
         # Create list of AA and cDNA sequences
         print('Creating epitopes')
-        dict1 = open(FASTA_AA_DICT, encoding="utf-8")
         AA_seq = dict()
-        for line in dict1:
-            entry = line.rstrip("\n").split(":")
-            AA_seq[entry[0]] = entry[1]
-        dict1.close()
-        dict2 = open(FASTA_cDNA_DICT, encoding="utf-8")
+        with open(FASTA_AA_DICT, "rU") as handle:
+            for record in SeqIO.parse(handle, "fasta"):
+                AA_seq[record.id.split("|")[0]] = record.seq
         cDNA_seq = dict()
-        for line in dict2:
-            entry = line.rstrip("\n").split(":")
-            cDNA_seq[entry[0]] = entry[1]
-        dict2.close()
+        with open(FASTA_cDNA_DICT, "rU") as handle:
+            for record in SeqIO.parse(handle, "fasta"):
+                cDNA_seq[record.id.split("|")[0]] = record.seq
         epitope_file = open('SQL_Epitopes.txt', 'w')
         input_file = open('Formatted_epitope_variant.txt')
         header = 'SAMPLE_ID\tVARIANT-KEY\tCHR\tSTART\tSTOP\tREF\tALT\tfunc_ref_gene\texonic_func_ref\tGene\t' \
@@ -655,7 +652,7 @@ def exome_pipeline(R1_NORMAL,
         for line in input_file:
             columns = line.rstrip('\n').split('\t')
             if len(columns) != 14:
-                print("Formatted epitote with wrong number of lines {}".format(','.format(columns)))
+                print("Formatted epitote with wrong number of columns {}".format(','.format(columns)))
                 continue
             try:
                 ref = columns[5].strip()
@@ -668,7 +665,7 @@ def exome_pipeline(R1_NORMAL,
                 Mut_25mer = '-'
                 position = int(re.findall(r'\d+', protein_strip)[0])
                 cDNA_pos = int(re.findall(r'\d+', cDNA_strip)[0])
-                protein_seq = AA_seq.get(transcriptID, 'AA_seq not present for this transcript')
+                protein_seq = AA_seq.get(transcriptID, 'AA_seq not present for this transcript').strip()
                 ref_cDNA_seq = cDNA_seq.get(transcriptID, 'cDNA not present for this transcript').strip()
                 # Nonsynonymous point mutations to 25 mers
                 if exonic_func == 'nonsynonymous SNV':
@@ -823,6 +820,12 @@ def exome_pipeline(R1_NORMAL,
                             errors += ' No ATG start codon for this transcript cDNA'
                         if position == 1:
                             errors += ' mutation occurs in start codon'
+                elif exonic_func == 'frameshift substitution':
+                    #TODO implement
+                    errors += ' Not implemented'
+                elif exonic_func == 'nonframeshift substitution':
+                    #TODO implement
+                    errors += ' Not implemented'
                 elif re.search(r'^stop', exonic_func ):
                     position = ''.join([s for s in protein_strip if s.isdigit()])
                     errors += ' Stop mutation'
@@ -868,9 +871,9 @@ parser.add_argument('--germline',
 parser.add_argument('--pon',
                     help='Path to the file with the panel of normals (GATK buldle)', required=True)
 parser.add_argument('--fastaAA',
-                    help='Path to the file with the dictionary of FASTA to AA', required=True)
+                    help='Path to the fasta file with the protein sequences (transcripts)', required=True)
 parser.add_argument('--fastacDNA',
-                    help='Path to the file with the dictionary of FASTA to cDNA', required=True)
+                    help='Path to the fasta file with the cDNA sequences (transcripts)', required=True)
 parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                     help='Steps to perform in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 
