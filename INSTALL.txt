@@ -40,11 +40,19 @@ cd ~/shared/annovar
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar knownGene humandb/
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar ensGene humandb/
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar refGene humandb/
-./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar snp138NonFlagged humandb/
+./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar avsnp150 humandb/
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar 1000g2015aug humandb/
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar cosmic70 humandb/
 wget http://hgdownload.cse.ucsc.edu/goldenpath/hg38/database/kgXref.txt.gz humandb/hg38_kgXref.txt.gz
 gunzip humandb/hg38_kgXref.txt.gz
+./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar knownGene humandb/
+./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar ensGene humandb/
+./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar refGene humandb/
+./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar avsnp150 humandb/
+./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar 1000g2015aug humandb/
+./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar cosmic70 humandb/
+wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/database/kgXref.txt.gz humandb/hg19_kgXref.txt.gz
+gunzip humandb/hg19_kgXref.txt.gz
 
 cd ~/shared
 mkdir -p GRCh38
@@ -57,18 +65,33 @@ gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_asse
 gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz* .
 gsutil -m cp -r gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz* .
 gsutil -m cp -r gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz* .
-wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.primary_assembly.annotation.gtf.gz
-gunzip gencode.v34.primary_assembly.annotation.gtf.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.pc_transcripts.fa.gz
-gunzip gencode.v34.pc_transcripts.fa.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.pc_translations.fa.gz
-gunzip gencode.v34.pc_translations.fa.gz
-wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/GRCh38.primary_assembly.genome.fa.gz
-gunzip GRCh38.primary_assembly.genome.fa.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.annotation.gtf.gz
+gunzip gencode*
 mkdir -p STARIndex
 STAR --runMode genomeGenerate --runThreadN 20 --genomeDir STARIndex \
-  --genomeFastaFiles GRCh38.primary_assembly.genome.fa \
-  --sjdbGTFfile gencode.v34.primary_assembly.annotation.gtf --sjdbOverhang 99
+  --genomeFastaFiles Homo_sapiens_assembly38.fasta \
+  --sjdbGTFfile gencode.v34.annotation.gtf --sjdbOverhang 99
+
+cd ~/shared
+mkdir -p hg19
+cd hg19
+gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta* .
+gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.dict* .
+gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/Mills_and_1000G_gold_standard.indels.b37.vcf.gz* .
+gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/1000G_phase1.snps.high_confidence.b37.vcf.gz* .
+gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/dbsnp_138.b37.vcf.gz* .
+gsutil -m cp -r gs://gatk-best-practices/somatic-b37/af-only-gnomad.raw.sites.vcf* .
+gsutil -m cp -r gs://gatk-best-practices/somatic-b37/Mutect2-exome-panel.vcf* .
+wget ftp://ftp.ensembl.org/pub/grch37/release-100/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz
+wget ftp://ftp.ensembl.org/pub/grch37/release-100/fasta/homo_sapiens/pep/Homo_sapiens.GRCh37.pep.all.fa.gz
+wget ftp://ftp.ensembl.org/pub/grch37/release-100/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh37.cdna.all.fa.gz
+gunzip Homo_sapiens*
+mkdir -p STARIndex
+STAR --runMode genomeGenerate --runThreadN 20 --genomeDir STARIndex \
+  --genomeFastaFiles Homo_sapiens_assembly19.fasta \
+  --sjdbGTFfile Homo_sapiens.GRCh37.87.gtf --sjdbOverhang 99
 
 mkdir -p ~/Analysis
 cd ~/Analysis

@@ -132,7 +132,7 @@ def RNAseq_pipeline(sample1,
             ens_gene_detail = columns[header.index('GeneDetail.ensGene')]
             exonic_ens_ref = columns[header.index('ExonicFunc.ensGene')]
             AA_change_ensGene = columns[header.index('AAChange.ensGene')]
-            snp138NonFlagged = columns[header.index('snp138NonFlagged')]
+            avsnp150 = columns[header.index('avsnp150')]
             apr_all = columns[header.index('ALL.sites.2015_08')]
             apr_eur = columns[header.index('EUR.sites.2015_08')]
             apr_amr = columns[header.index('AMR.sites.2015_08')]
@@ -146,7 +146,7 @@ def RNAseq_pipeline(sample1,
                 AA_change_knownGene = known_gene_detail
             if ens_gene_detail != 'NA':
                 AA_change_ensGgene = ens_gene_detail
-            to_write = '\t'.join([str(x) for x in [gDNA, sampleID, Chr, start, end, ref, alt, snp138NonFlagged,
+            to_write = '\t'.join([str(x) for x in [gDNA, sampleID, Chr, start, end, ref, alt, avsnp150,
                                                    func_ref_gene, gene_ref_gene, exonic_func_ref, AA_change_refGene,
                                                    func_known_gene, gene_known_gene, exonic_known_ref, AA_change_knownGene,
                                                    func_ens_gene, gene_ens_gene, exonic_ens_ref, AA_change_ensGene,

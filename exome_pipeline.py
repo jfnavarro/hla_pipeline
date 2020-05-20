@@ -13,7 +13,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
     nonsyn_file = open(output, 'w' if header else 'a')
     all_file = open(output_other, 'w' if header else 'a')
     if header:
-        header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tsnp138NonFlagged\tTUMOR_READ1' \
+        header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\avsnp150\tTUMOR_READ1' \
                  '\tTUMOR_READ2\tFunc.refGene\tGene.refGene\tExonicFunc.refGene\tAAChange.refGene\tFunc.knownGene\tGene.knownGene' \
                  '\tExonicFunc.knownGene\tAAChange.knownGene\tFunc.ensGene\tGene.ensGene\tExonicFunc.ensGene\tAAChange.ensGene' \
                  '\tALL.sites.2015_08\tEUR.sites.2015_08\tAMR.sites.2015_08\tEAS.sites.2015_08\tAFR.sites.2015_08\tNORMAL_READ1' \
@@ -576,7 +576,7 @@ def exome_pipeline(R1_NORMAL,
                        vcf_cov_dict, sampleID, tumor_type, header=False)
 
         # Extract peptides
-        print("Extracting pepdides")
+        print("Extracting peptides")
         snv = open('nonsyn_SQL_insert.txt')
         snv_lines = snv.readlines()
         header = snv_lines.pop(0).strip().split('\t')
@@ -692,7 +692,7 @@ def exome_pipeline(R1_NORMAL,
                                 errors += ' mutation occurs in start codon'
                         else:
                             errors += ' Ref in AA_seq does not match file Ref'
-                # frameshift/non-frameshift deletions
+                # frameshift/non-frameshift insertions/deletions/substitutions
                 elif 'frameshift' in exonic_func:
                     if ref_cDNA_seq == 'cDNA not present for this transcript':
                         errors += ' cDNA not present for this transcript'
@@ -789,15 +789,15 @@ parser.add_argument('--known1',
 parser.add_argument('--known2',
                     help='Path to the file with 1000G phase indels (GATK bundle)', required=True)
 parser.add_argument('--snpsites',
-                    help='Path to the file with the SNPs (GATK buldle)', required=True)
+                    help='Path to the file with the SNPs (GATK bundle)', required=True)
 parser.add_argument('--germline',
-                    help='Path to the file with the germline resources Nomad (GATK buldle)', required=True)
+                    help='Path to the file with the germline resources Nomad for Mutect2 (GATK bundle)', required=True)
 parser.add_argument('--pon',
-                    help='Path to the file with the panel of normals (GATK buldle)', required=True)
+                    help='Path to the file with the panel of normals for Mutect2 (GATK bundle)', required=True)
 parser.add_argument('--fastaAA',
-                    help='Path to the fasta file with the protein sequences (transcripts)', required=True)
+                    help='Path to the fasta file with the protein sequences (of transcripts)', required=True)
 parser.add_argument('--fastacDNA',
-                    help='Path to the fasta file with the cDNA sequences (transcripts)', required=True)
+                    help='Path to the fasta file with the cDNA sequences (of transcripts)', required=True)
 parser.add_argument('--annovar-db',
                     help='String indicated what annovar database to use (default: humandb)', 
                     default='humandb', required=False)

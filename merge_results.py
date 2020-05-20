@@ -264,7 +264,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                     ENS_gene_mut = exome['data'][header_exome.index('ExonicFunc.ensGene')]
                     ENS_gene_change = exome['data'][header_exome.index('AAChange.ensGene')]
                     genome_all = exome['data'][header_exome.index('ALL.sites.2015_08')]
-                    dbSNP_ID = exome['data'][header_exome.index('snp138NonFlagged')]
+                    dbSNP_ID = exome['data'][header_exome.index('avsnp150')]
                     cosmic = exome['data'][header_exome.index('COSMIC70')]
                     gene_name = transcript[header_epitopes.index('Gene')]
                     transcript_name = transcript[header_epitopes.index('Transcript_ID')]
