@@ -104,7 +104,7 @@ def RNAseq_pipeline(sample1,
         exec_command(cmd)
 
         print('Formatting Varscan variants')
-        snv = open('snp.sum.hg19_multianno.txt')
+        snv = open('snp.sum.{}_multianno.txt'.format(ANNOVAR_VERSION))
         snv_lines = snv.readlines()
         header = snv_lines.pop(0).strip().split('\t')
         insert_file = open('SQL_variant_input.txt', 'w')
