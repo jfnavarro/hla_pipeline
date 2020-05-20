@@ -96,6 +96,8 @@ def exome_pipeline(R1_NORMAL,
                    SNPSITES,
                    GERMLINE,
                    PON,
+                   ANNOVAR_DB,
+                   ANNOVAR_VERSION,
                    steps):
     print("Exome pipeline")
 
@@ -268,12 +270,13 @@ def exome_pipeline(R1_NORMAL,
         exec_command(cmd)
 
         # Annotate with Annovar
+        annovardb = '{} -buildver {}'.format(os.path.join(ANNOVAR_PATH, ANNOVAR_DB), ANNOVAR_VERSION)
         print('Running annovar (SNV)')
         cmd = '{} -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'.format(
             os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
         exec_command(cmd)
         cmd = '{} snp.av {} -thread {} -out snp.sum -remove -protocol {}'.format(
-            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovar_db, THREADS,  annovar_anno)
+            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, THREADS,  annovar_anno)
         exec_command(cmd)
 
         # Combine with GATK
@@ -290,7 +293,7 @@ def exome_pipeline(R1_NORMAL,
             os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
         exec_command(cmd)
         cmd = '{} indel.av {} -thread {} -out indel.sum -remove -protocol {}'.format(
-            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovar_db, THREADS, annovar_anno)
+            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, THREADS, annovar_anno)
         exec_command(cmd)
 
         # Extract coverage info from vcf file and add to annotation data
@@ -795,6 +798,12 @@ parser.add_argument('--fastaAA',
                     help='Path to the fasta file with the protein sequences (transcripts)', required=True)
 parser.add_argument('--fastacDNA',
                     help='Path to the fasta file with the cDNA sequences (transcripts)', required=True)
+parser.add_argument('--annovar-db',
+                    help='String indicated what annovar database to use (default: humandb)', 
+                    default='humandb', required=False)
+parser.add_argument('--annovar-version',
+                    help='String indicated what version of the annovar database to use (default: hg19)', 
+                    default='hg19', required=False)
 parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                     help='Steps to perform in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 
@@ -818,6 +827,8 @@ SNPSITES = os.path.abspath(args.snpsites)
 GERMLINE = os.path.abspath(args.germline)
 PON = os.path.abspath(args.pon)
 DNA_STEPS = args.steps
+ANNOVAR_DB = args.annovar_db
+ANNOVAR_VERSION = args.annovar_version
 
 # Move to output dir
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -840,4 +851,6 @@ exome_pipeline(R1_NORMAL,
                SNPSITES,
                GERMLINE,
                PON,
+               ANNOVAR_DB,
+               ANNOVAR_VERSION,
                DNA_STEPS)

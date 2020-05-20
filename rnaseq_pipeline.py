@@ -16,6 +16,8 @@ def RNAseq_pipeline(sample1,
                     KNOWN_SITE1,
                     KNOWN_SITE2,
                     THREADS,
+                    ANNOVAR_DB,
+                    ANNOVAR_VERSION,
                     steps):
     print("RNA-seq pipeline")
 
@@ -93,11 +95,12 @@ def RNAseq_pipeline(sample1,
 
         # Run annovar to annotate variants
         print('Running annovar')
+        annovardb = '{} -buildver {}'.format(os.path.join(ANNOVAR_PATH, ANNOVAR_DB), ANNOVAR_VERSION)
         cmd = '{} -format vcf4 varscan.vcf --comment --includeinfo -outfile snp.av'.format(
             os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
         exec_command(cmd)
         cmd = '{} snp.av {} -thread {} -out snp.sum -remove -protocol {}'.format(
-            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovar_db, THREADS, annovar_anno)
+            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, THREADS, annovar_anno)
         exec_command(cmd)
 
         print('Formatting Varscan variants')
@@ -300,6 +303,12 @@ parser.add_argument('--known2',
                     help='Path to the file with 1000G phase indels (GATK bundle)', required=True)
 parser.add_argument('--snpsites',
                     help='Path to the file with the SNPs (GATK buldle)', required=True)
+parser.add_argument('--annovar-db',
+                    help='String indicated what annovar database to use (default: humandb)', 
+                    default='humandb', required=False)
+parser.add_argument('--annovar-version',
+                    help='String indicated what version of the annovar database to use (default: hg19)', 
+                    default='hg19', required=False)
 parser.add_argument('-steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                     help='Steps to perform in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 
@@ -318,6 +327,8 @@ KNOWN_SITE1 = os.path.abspath(args.known1)
 KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
 RNA_STEPS = args.steps
+ANNOVAR_DB = args.annovar_db
+ANNOVAR_VERSION = args.annovar_version
 
 # Move to output dir
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -335,4 +346,6 @@ RNAseq_pipeline(R1_RNA,
                 KNOWN_SITE1,
                 KNOWN_SITE2,
                 THREADS,
+                ANNOVAR_DB,
+                ANNOVAR_VERSION,
                 RNA_STEPS)
