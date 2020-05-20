@@ -689,143 +689,64 @@ def exome_pipeline(R1_NORMAL,
                                 errors += ' mutation occurs in start codon'
                         else:
                             errors += ' Ref in AA_seq does not match file Ref'
-                # 1st frameshift deletions
-                elif exonic_func == 'frameshift deletion':
+                # frameshift/non-frameshift deletions
+                elif 'frameshift' in exonic_func:
                     if ref_cDNA_seq == 'cDNA not present for this transcript':
                         errors += ' cDNA not present for this transcript'
-                    else:
+                    elif exonic_func in ['frameshift deletion', 'nonframeshift deletion']:
                         len_del = len(ref)
-                        if not protein_strip.startswith('p.'):
-                            position = 0
-                        elif protein_strip.startswith('p.X'):
-                            position = 0
-                            errors += ' frameshift deletion occurs in stop codon'
                         mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos - 1]
                         mut_cDNA_right = ref_cDNA_seq[cDNA_pos + len_del - 1:]
                         mut_cDNA_seq = mut_cDNA_left + mut_cDNA_right
-                        ref_FASTA = translate_dna(ref_cDNA_seq)
-                        mut_FASTA = translate_dna(mut_cDNA_seq)
-                        mut_stop = int(mut_FASTA.find('X'))
-                        if position >= 13 and mut_stop > 0:
-                            WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[position - 13:mut_stop]
-                        elif position < 13 and position > 0 and mut_stop > 0:
-                            WT_25mer = ref_FASTA[0:position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[0:mut_stop]
-                        elif position >= 13 and mut_stop < 0:
-                            WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[position - 13:]
-                        elif position < 13 and position > 0 and mut_stop < 0:
-                            WT_25mer = ref_FASTA[0:position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[0:]
-                        elif position == 0 or ref_cDNA_seq.startswith('cDNA'):
-                            errors += ' can not code for this mutated AA_position'
-                        if not ref_cDNA_seq.startswith('ATG'):
-                            errors += ' No ATG start codon for this transcript cDNA'
-                        if position == 1:
-                            errors += ' mutation occurs in start codon'
-                # 2nd frameshift insertions
-                elif exonic_func == 'frameshift insertion':
-                    if ref_cDNA_seq == 'cDNA not present for this transcript':
-                        errors += ' cDNA not present for this transcript'
-                    else:
+                    elif exonic_func in  ['frameshift insertion', 'nonframeshift insertion']:
                         if re.search(r'dup', cDNA_strip):
                             ins = cDNA_strip[int(cDNA_strip.find('dup')) + 3:]
                         elif re.search(r'ins', cDNA_strip):
                             ins = cDNA_strip[int(cDNA_strip.find('ins')) + 3:]
+                        else:
+                            errors += ' could not find mutation in cDNA'
+                            ins = ''
                         mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos]
                         mut_cDNA_right = ref_cDNA_seq[cDNA_pos:]
                         mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
-                        if protein_strip.startswith('p.X'):
-                            position = 0
-                            errors += ' frameshift insertion occurs in stop codon'
-                        elif not protein_strip.startswith('p.'):
-                            position = 0
-                        ref_FASTA = translate_dna(ref_cDNA_seq)
-                        mut_FASTA = translate_dna(mut_cDNA_seq)
-                        mut_stop = int(mut_FASTA.find('X'))
-                        if position >= 13 and mut_stop > 0:
-                            WT_25mer = ref_FASTA[(position - 13):position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[(position - 13):mut_stop]
-                        elif position < 13 and position > 0 and mut_stop > 0:
-                            WT_25mer = ref_FASTA[0: position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[0:mut_stop]
-                        elif position >= 13 and mut_stop < 0:
-                            WT_25mer = ref_FASTA[(position - 13):position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[(position - 13):]
-                        elif position < 13 and position > 0 and mut_stop < 0:
-                            WT_25mer = ref_FASTA[0: position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[0:]
-                        elif position == 0:
-                            errors += ' can not code for this mutated AA_position '
-                        if not ref_cDNA_seq.startswith('ATG'):
-                            errors += ' No ATG start codon for this transcript cDNA'
-                        if position == 1:
-                            errors += ' mutation occurs in start codon'
-                # 3rd nonframeshift deletions to 25mers
-                elif exonic_func == 'nonframeshift deletion':
-                    if ref_cDNA_seq == 'cDNA not present for this transcript':
-                        errors += ' cDNA not present for this transcript'
-                    else:
-                        len_del = len(ref)
-                        if not protein_strip.startswith('p.'):
-                            position = 0
-                        elif protein_strip.startswith('p.X'):
-                            errors += ' deletion occurs in stop codon'
-                        mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos - 1]
-                        mut_cDNA_right = ref_cDNA_seq[cDNA_pos + len_del - 1:]
-                        mut_cDNA_seq = mut_cDNA_left + mut_cDNA_right
-                        ref_FASTA = translate_dna(ref_cDNA_seq)
-                        mut_FASTA = translate_dna(mut_cDNA_seq)
-                        if position >= 13:
-                            WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[position - 13:position + 12].replace('X', '')
-                        elif position < 13 and position > 0:
-                            WT_25mer = ref_FASTA[0:position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[0: position + 12].replace('X', '')
-                        elif position == 0:
-                            errors += ' can not code for this mutated AA position'
-                        if not ref_cDNA_seq.startswith('ATG'):
-                            errors += ' No ATG start codon for this transcript cDNA'
-                        if position == 1:
-                            errors += ' mutation occurs in start codon'
-                # 4th nonframeshift insertions to 25mers
-                elif exonic_func == 'nonframeshift insertion':
-                    if ref_cDNA_seq == 'cDNA not present for this transcript':
-                        errors += ' cDNA not present for this transcript'
-                    else:
-                        if re.search(r'dup', cDNA_strip):
-                            ins = cDNA_strip[int(cDNA_strip.find('dup')) + 3:]
-                        elif re.search(r'ins', cDNA_strip):
-                            ins = cDNA_strip[int(cDNA_strip.find('ins')) + 3:]
+                    elif exonic_func in ['frameshift substitution', 'nonframeshift substitution']:
+                        if re.search(r'delins', cDNA_strip):
+                            subs = DNA_strip[int(cDNA_strip.find('delins')) + 6:]
+                        else:
+                            errors += ' could not find mutation in cDNA'
+                            subs = ''
                         mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos]
                         mut_cDNA_right = ref_cDNA_seq[cDNA_pos:]
                         mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
-                        if not protein_strip.startswith('p.'):
-                            position = 0
-                        elif protein_strip.startswith('p.X'):
-                            position = 0
-                            errors += ' deletion occurs in stop codon'
-                        ref_FASTA = translate_dna(ref_cDNA_seq)
-                        mut_FASTA = translate_dna(mut_cDNA_seq)
-                        if position >= 13:
-                            WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[position - 13:position + 12].replace('X', '')
-                        elif position < 13 and position > 0:
-                            WT_25mer = ref_FASTA[0: position + 12].replace('X', '')
-                            Mut_25mer = mut_FASTA[0: position + 12].replace('X', '')
-                        elif position == 0:
-                            WT_25mer = 'can not code for this mutated AA postion'
-                        if not ref_cDNA_seq.startswith('ATG'):
-                            errors += ' No ATG start codon for this transcript cDNA'
-                        if position == 1:
-                            errors += ' mutation occurs in start codon'
-                elif exonic_func == 'frameshift substitution':
-                    #TODO implement
-                    errors += ' Not implemented'
-                elif exonic_func == 'nonframeshift substitution':
-                    #TODO implement
-                    errors += ' Not implemented'
+                    else:
+                        mut_cDNA_seq = ref_cDNA_seq
+                        errors += ' Unknown exonic function'
+                    if not protein_strip.startswith('p.'):
+                        position = 0
+                    elif protein_strip.startswith('p.X'):
+                        position = 0
+                        errors += ' mutation occurs in stop codon'
+                    ref_FASTA = translate_dna(ref_cDNA_seq)
+                    mut_FASTA = translate_dna(mut_cDNA_seq)
+                    mut_stop = int(mut_FASTA.find('X'))
+                    if position >= 13 and mut_stop > 0:
+                        WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
+                        Mut_25mer = mut_FASTA[position - 13:mut_stop]
+                    elif position < 13 and position > 0 and mut_stop > 0:
+                        WT_25mer = ref_FASTA[0:position + 12].replace('X', '')
+                        Mut_25mer = mut_FASTA[0:mut_stop]
+                    elif position >= 13 and mut_stop < 0:
+                        WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
+                        Mut_25mer = mut_FASTA[position - 13:]
+                    elif position < 13 and position > 0 and mut_stop < 0:
+                        WT_25mer = ref_FASTA[0:position + 12].replace('X', '')
+                        Mut_25mer = mut_FASTA[0:]
+                    elif position == 0:
+                        errors += ' can not code for this mutated AA_position'
+                    if not ref_cDNA_seq.startswith('ATG'):
+                        errors += ' No ATG start codon for this transcript cDNA'
+                    if position == 1:
+                        errors += ' mutation occurs in start codon'
                 elif re.search(r'^stop', exonic_func ):
                     position = ''.join([s for s in protein_strip if s.isdigit()])
                     errors += ' Stop mutation'
