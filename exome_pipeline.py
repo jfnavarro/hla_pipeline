@@ -720,7 +720,7 @@ def exome_pipeline(R1_NORMAL,
                             subs = ''
                         mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos]
                         mut_cDNA_right = ref_cDNA_seq[cDNA_pos:]
-                        mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
+                        mut_cDNA_seq = mut_cDNA_left + subs + mut_cDNA_right
                     else:
                         mut_cDNA_seq = ref_cDNA_seq
                         errors += ' Unknown exonic function'
