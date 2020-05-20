@@ -468,7 +468,8 @@ def exome_pipeline(R1_NORMAL,
         vcf.close()
 
         print('Adding annotated SNVs to final report')
-        final_variants('snp.sum.hg19_multianno.txt', 'nonsyn_SQL_insert.txt', 'all_other_mutations.txt',
+        final_variants('snp.sum.{}_multianno.txt'.format(ANNOVAR_VERSION), 
+                       'nonsyn_SQL_insert.txt', 'all_other_mutations.txt',
                        vcf_cov_dict, sampleID, tumor_type, header=True)
 
         # Extract coverage info from vcf file
@@ -572,7 +573,8 @@ def exome_pipeline(R1_NORMAL,
         vcf.close()
 
         print('Adding annotated indels to final report')
-        final_variants('indel.sum.hg19_multianno.txt', 'nonsyn_SQL_insert.txt', 'all_other_mutations.txt',
+        final_variants('indel.sum.{}_multianno.txt'.format(ANNOVAR_VERSION), 
+                       'nonsyn_SQL_insert.txt', 'all_other_mutations.txt',
                        vcf_cov_dict, sampleID, tumor_type, header=False)
 
         # Extract peptides
