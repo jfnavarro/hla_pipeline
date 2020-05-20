@@ -13,7 +13,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
     nonsyn_file = open(output, 'w' if header else 'a')
     all_file = open(output_other, 'w' if header else 'a')
     if header:
-        header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\avsnp150\tTUMOR_READ1' \
+        header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tavsnp150\tTUMOR_READ1' \
                  '\tTUMOR_READ2\tFunc.refGene\tGene.refGene\tExonicFunc.refGene\tAAChange.refGene\tFunc.knownGene\tGene.knownGene' \
                  '\tExonicFunc.knownGene\tAAChange.knownGene\tFunc.ensGene\tGene.ensGene\tExonicFunc.ensGene\tAAChange.ensGene' \
                  '\tALL.sites.2015_08\tEUR.sites.2015_08\tAMR.sites.2015_08\tEAS.sites.2015_08\tAFR.sites.2015_08\tNORMAL_READ1' \
