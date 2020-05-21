@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 """
 DNA (WES and WGS) and RNA-Seq variant calling pipeline with HLA and MHC predictions
 

@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 @author: jfnavarro
 """
@@ -304,8 +303,8 @@ def RNAseq_pipeline(sample1,
 
     print("COMPLETED!")
 
-parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA prediction '
-                                 'pipeline (created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
+parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA prediction pipeline'
+                                 '(created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='rnaseq_pipeline.py',
                                  usage='rnaseq_pipeline.py [options] R1(RNA) R2(RNA)')
 parser.add_argument('R1_RNA', help='FASTQ file R1 (RNA)')

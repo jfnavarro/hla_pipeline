@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 @author: jfnavarro
 """
@@ -796,8 +795,8 @@ def exome_pipeline(R1_NORMAL,
 
     print("COMPLETED!")
 
-parser = argparse.ArgumentParser(description='Exome variant calling and HLA prediction '
-                                 'pipeline (created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
+parser = argparse.ArgumentParser(description='Exome variant calling and HLA prediction pipeline '
+                                 '(created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='exome_pipeline.py',
                                  usage='exome_pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer)')
 parser.add_argument('R1_NORMAL', help='FASTQ file R1 (Normal)')
