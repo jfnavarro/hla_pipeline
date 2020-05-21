@@ -8,7 +8,6 @@ from _collections import defaultdict
 import json
 import argparse
 
-
 def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     HLA_dict = defaultdict(list)
 
@@ -52,7 +51,8 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
 
     # Filter HLAs by allowed alleles in MHCflurry
     allowed_alleles = set()
-    with open("alleles.txt") as f:
+    # TODO pass alleles as parameter
+    with open('alleles.txt') as f:
         for x in f.readlines():
             allowed_alleles.add(x.strip())
     filtered_hla = [x for x in filtered_hla if x in allowed_alleles]
