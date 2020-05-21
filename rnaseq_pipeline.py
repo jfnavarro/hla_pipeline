@@ -1,5 +1,12 @@
 #! /usr/bin/env python
-from common import *
+# -*- coding: utf-8 -*-
+"""
+Created on Thu May 21 10:30:18 2020
+
+@author: jfnavarro
+"""
+from hla.common import *
+from hla.tools import *
 import re
 import os
 import argparse
@@ -280,7 +287,8 @@ def RNAseq_pipeline(sample1,
 
     print("COMPLETED!")
 
-parser = argparse.ArgumentParser(description='RNA-seq variant calling pipeline (created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
+parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA prediction '\
+                                 'pipeline (created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='rnaseq_pipeline.py',
                                  usage='rnaseq_pipeline.py [options] R1(RNA) R2(RNA)')
 parser.add_argument('R1_RNA', help='FASTQ file R1 (RNA)')

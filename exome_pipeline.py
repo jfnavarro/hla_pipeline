@@ -1,7 +1,14 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Created on Thu May 21 10:30:18 2020
+
+@author: jfnavarro
+"""
 from re import sub
-from common import *
-from filters import *
+from hla.common import *
+from hla.tools import *
+from hla.filters import *
 import shutil
 import argparse
 import multiprocessing
@@ -209,8 +216,8 @@ def exome_pipeline(R1_NORMAL,
     if 'hla' in steps:
         # HLA-LA predictions
         print('Performing HLA-LA predictions')
-        HLA_LA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
-        HLA_LA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
+        HLA_predictionDNA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+        HLA_predictionDNA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
 
     if 'variant' in steps:
         # Variant calling (Samtools pile-ups)
@@ -769,7 +776,8 @@ def exome_pipeline(R1_NORMAL,
 
     print("COMPLETED!")
 
-parser = argparse.ArgumentParser(description='Exome variant calling pipeline (created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
+parser = argparse.ArgumentParser(description='Exome variant calling and HLA prediction '\
+                                 'pipeline (created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='exome_pipeline.py',
                                  usage='exome_pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer)')
 parser.add_argument('R1_NORMAL', help='FASTQ file R1 (Normal)')
@@ -785,7 +793,7 @@ parser.add_argument('--sample',
 parser.add_argument('--tumor',
                     help='Tumor type. Default is Tumor', default='Tumor')
 parser.add_argument('--dir',
-                    help='Path to the output files', required=True)
+                    help='Path to the output folder where output files will be placed', required=True)
 parser.add_argument('--known1',
                     help='Path to the file with Mill and 1000G gold standards (GATK bundle)', required=True)
 parser.add_argument('--known2',

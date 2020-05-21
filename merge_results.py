@@ -1,4 +1,10 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Created on Thu May 21 10:30:18 2020
+
+@author: jfnavarro
+"""
 import statistics
 from re import sub
 import argparse
@@ -326,7 +332,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
     final_file_discarded.close()
     unique_rna.close()
 
-parser = argparse.ArgumentParser(description='Script to aggregate results and create a final report from the exome and rna-seq pipelines results '
+parser = argparse.ArgumentParser(description='Script to aggregate results and create a final report from the exome and rna-seq pipelines '
                                              '(created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='merge_results.py',
                                  usage='merge_results.py [options] '

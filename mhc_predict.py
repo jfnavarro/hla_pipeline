@@ -1,4 +1,11 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Created on Thu May 21 10:30:18 2020
+
+@author: jfnavarro
+"""
+from hla.common import *
 from collections import Counter
 from _collections import defaultdict
 import json
@@ -6,17 +13,6 @@ import argparse
 import subprocess
 import sys
 
-#TODO duplicated function
-def exec_command(cmd):
-    print(cmd)
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    output, error = p.communicate()
-    if p.returncode != 0:
-        for line in output.decode("utf-8").split("\n") if output else "":
-            print(line.rstrip())
-        for line in error.decode("utf-8").split("\n") if error else "":
-            print(line.rstrip())
-        sys.exit(-1)
 
 def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     HLA_dict = defaultdict(list)
@@ -94,7 +90,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     exec_command(cmd)
     print('Completed')
 
-parser = argparse.ArgumentParser(description='Script to predict MHCs using MHCflurry and data from the exome and rnaseq variant calling pipelines '
+parser = argparse.ArgumentParser(description='Script to predict MHCs using the data from the exome and rnaseq variant calling pipelines '
                                              '(created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='mhc_predict.py',
                                  usage='mhc_predict.py [options] '
