@@ -1,7 +1,7 @@
 # DNA (WES and WGS) and RNA-Seq variant calling pipeline with HLA and MHC predictions
 This a private repository that contains a simplified, more generic, up-to-date
 and optimized version of a pipeline provided by Jared Gartner <jared.gartner@nhi.gov>
-The pipeline can process WES/WGS (tumor and norma) and RNA-seq data (tumor)
+The pipeline can process WES/WGS (tumor and normal) and RNA-seq data (tumor)
 and generate a list of variants, HLAs and MHCs. 
 
 The DNA and RNA pipelines use the GATK4 best-practices.
