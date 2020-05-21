@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# coding: utf-8
 """
 @author: jfnavarro
 """
@@ -866,7 +865,6 @@ ANNOVAR_VERSION = args.annovar_version
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
 
-# Exome pìpeline
 exome_pipeline(R1_NORMAL,
                R2_NORMAL,
                R1_CANCER,
