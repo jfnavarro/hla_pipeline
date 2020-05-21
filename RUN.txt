@@ -49,4 +49,5 @@ mhc_predict.py \
   --hla-dna-normal out/exome/PRG-HLA-LA_Normal_output.txt \
   --hla-dna-tumor out/exome/PRG-HLA-LA_Tumor_output.txt \
   --hla-rna out/rna/hla/sample_header.genotype.json \
-  --variants out/overlap_final.txt
+  --variants out/overlap_final.txt \
+  --alleles ~/shared/alleles.txt

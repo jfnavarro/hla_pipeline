@@ -8,7 +8,7 @@ from _collections import defaultdict
 import json
 import argparse
 
-def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
+def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final, alleles):
     HLA_dict = defaultdict(list)
 
     # First parse hla_exome_cancer and normal (HLA-LA format)
@@ -51,8 +51,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
 
     # Filter HLAs by allowed alleles in MHCflurry
     allowed_alleles = set()
-    # TODO pass alleles as parameter
-    with open('alleles.txt') as f:
+    with open(alleles) as f:
         for x in f.readlines():
             allowed_alleles.add(x.strip())
     filtered_hla = [x for x in filtered_hla if x in allowed_alleles]
@@ -101,6 +100,8 @@ parser.add_argument('--hla-rna', nargs='+', default=None, required=True,
                     help='A file or files containing predicted HLAs from RNA (JSON format)')
 parser.add_argument('--variants', default=None, required=True,
                     help='A file with the final variants generated with merge_results.py (table format)')
+parser.add_argument('--alleles', default=None, required=True,
+                    help='A file containing the allowed alleles in MHCflurry')
 
 args = parser.parse_args()
-compute_MHC(args.hla_dna_tumor, args.hla_dna_normal, args.hla_rna, args.variants)
+compute_MHC(args.hla_dna_tumor, args.hla_dna_normal, args.hla_rna, args.variants, args.alleles)
