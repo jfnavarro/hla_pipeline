@@ -1,11 +1,10 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Created on Thu May 21 10:30:18 2020
 
 @author: jfnavarro
 """
-from hla.common import *
+from hlapipeline.common import exec_command
 from collections import Counter
 from _collections import defaultdict
 import json

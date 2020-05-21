@@ -1,14 +1,13 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Created on Thu May 21 10:30:18 2020
 
 @author: jfnavarro
 """
 from re import sub
-from hla.common import *
-from hla.tools import *
-from hla.filters import *
+from hlapipeline.common import *
+from hlapipeline.tools import *
+from hlapipeline.filters import *
 import shutil
 import argparse
 import multiprocessing

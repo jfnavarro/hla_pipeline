@@ -1,12 +1,11 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Created on Thu May 21 10:30:18 2020
 
 @author: jfnavarro
 """
-from hla.common import *
-from hla.tools import *
+from hlapipeline.common import exec_command, HLA_predictionRNA
+from hlapipeline.tools import *
 import re
 import os
 import argparse
