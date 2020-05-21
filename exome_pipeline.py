@@ -7,14 +7,16 @@ from hlapipeline.common import *
 from hlapipeline.tools import *
 from hlapipeline.filters import *
 import shutil
+import re
 import argparse
 import multiprocessing
+import os
+import pandas as pd
 from Bio import SeqIO
 
 def HLA_predictionDNA(bamfile, sampleID, outfile, threads):
     OUT_DIR = os.path.abspath(os.path.join('out_hla_', os.path.splitext(outfile)[0]))
     os.makedirs(OUT_DIR, exist_ok=True)
-    
     cmd = '{} --BAM {} --workingDir {} --graph {} --sampleID {}'\
           ' --maxTHREADS {}'.format(HLALA, bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
     exec_command(cmd)
@@ -29,7 +31,7 @@ def HLA_predictionDNA(bamfile, sampleID, outfile, threads):
 
     # Create formatted output file
     a = open(outfile, 'w')
-    for key,value in allele_dict.items():
+    for key, value in allele_dict.items():
         a.write('{}\t{}\t{}\n'.format(sampleID, key, '\t'.join(value)))
     a.close()
     
@@ -47,7 +49,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
                  '\tTVAF\tPVAL\tCALLERS\tTUMOUR\tTCOV\tNCOV\tVARIANT-KEY\tCOSMIC70\n'
         nonsyn_file.write(header)
         all_file.write(header)
-    #TODO use header names instead to access the fields
+    # TODO use header names instead to access the fields
     for line in nonsyn_snv_lines:
         if line.startswith('#'):
             continue
@@ -494,7 +496,7 @@ def exome_pipeline(R1_NORMAL,
         vcf.close()
 
         print('Adding annotated SNVs to final report')
-        final_variants('snp.sum.{}_multianno.txt'.format(ANNOVAR_VERSION), 
+        final_variants('snp.sum.{}_multianno.txt'.format(ANNOVAR_VERSION),
                        'nonsyn_SQL_insert.txt', 'all_other_mutations.txt',
                        vcf_cov_dict, sampleID, tumor_type, header=True)
 
@@ -599,7 +601,7 @@ def exome_pipeline(R1_NORMAL,
         vcf.close()
 
         print('Adding annotated indels to final report')
-        final_variants('indel.sum.{}_multianno.txt'.format(ANNOVAR_VERSION), 
+        final_variants('indel.sum.{}_multianno.txt'.format(ANNOVAR_VERSION),
                        'nonsyn_SQL_insert.txt', 'all_other_mutations.txt',
                        vcf_cov_dict, sampleID, tumor_type, header=False)
 
@@ -729,7 +731,7 @@ def exome_pipeline(R1_NORMAL,
                         mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos - 1]
                         mut_cDNA_right = ref_cDNA_seq[cDNA_pos + len_del - 1:]
                         mut_cDNA_seq = mut_cDNA_left + mut_cDNA_right
-                    elif exonic_func in  ['frameshift insertion', 'nonframeshift insertion']:
+                    elif exonic_func in ['frameshift insertion', 'nonframeshift insertion']:
                         if re.search(r'dup', cDNA_strip):
                             ins = cDNA_strip[int(cDNA_strip.find('dup')) + 3:]
                         elif re.search(r'ins', cDNA_strip):
@@ -742,7 +744,7 @@ def exome_pipeline(R1_NORMAL,
                         mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
                     elif exonic_func in ['frameshift substitution', 'nonframeshift substitution']:
                         if re.search(r'delins', cDNA_strip):
-                            subs = DNA_strip[int(cDNA_strip.find('delins')) + 6:]
+                            subs = cDNA_strip[int(cDNA_strip.find('delins')) + 6:]
                         else:
                             errors += ' could not find mutation in cDNA'
                             subs = ''
@@ -778,7 +780,7 @@ def exome_pipeline(R1_NORMAL,
                         errors += ' No ATG start codon for this transcript cDNA'
                     if position == 1:
                         errors += ' mutation occurs in start codon'
-                elif re.search(r'^stop', exonic_func ):
+                elif re.search(r'^stop', exonic_func):
                     position = ''.join([s for s in protein_strip if s.isdigit()])
                     errors += ' Stop mutation'
                 else:
@@ -828,10 +830,10 @@ parser.add_argument('--fastaAA',
 parser.add_argument('--fastacDNA',
                     help='Path to the fasta file with the cDNA sequences (of transcripts)', required=True)
 parser.add_argument('--annovar-db',
-                    help='String indicated what annovar database to use (default: humandb)', 
+                    help='String indicated what annovar database to use (default: humandb)',
                     default='humandb', required=False)
 parser.add_argument('--annovar-version',
-                    help='String indicated what version of the annovar database to use (default: hg19)', 
+                    help='String indicated what version of the annovar database to use (default: hg19)',
                     default='hg19', required=False)
 parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                     help='Steps to perform in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])

@@ -36,7 +36,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
     for file in hla_rna:
         with open(file) as f:
             local_dict = json.load(f)
-            for hla,alleles in local_dict.items():
+            for hla, alleles in local_dict.items():
                 HLA_dict[hla].extend(alleles)
 
     # Filter HLAs by occurrences
@@ -72,11 +72,10 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final):
                                                         columns[header.index('transcript ID')],
                                                         columns[header.index('cDNA change')],
                                                         columns[header.index('AA change')])
-                    protein_seq = columns[header.index('Mut Epitope')].strip().replace('*','')
+                    protein_seq = columns[header.index('Mut Epitope')].strip().replace('*', '')
                     if protein_seq != '-' and protein_seq not in added_proteins:
                         fwrite.write('>{}\n{}\n'.format(protein_name, protein_seq))
                         added_proteins.add(protein_seq)
-
 
     # Run prediction
     print('Predicting MHCs..')

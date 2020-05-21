@@ -35,11 +35,11 @@ def add_flags(transcript, variant_key, transcript_info, mer_len=25):
                 status_str = 'Passing' if status else 'Failing'
                 if mut == 'stopgain' and ss_seen is None:
                     ss_seen = '{} filters upstream stopgain ({})'.format(status_str, aa)
-                elif mut == 'stopgain' and not ss_seen is None:
+                elif mut == 'stopgain' and ss_seen is not None:
                     ss_seen += ', {} filters upstream stopgain ({})'.format(status_str, aa)
                 if re.search('frame', mut) and ss_seen is None:
                     ss_seen = '{} filters upstream fs ({})'.format(status_str, aa)
-                elif re.search('frame', mut) and  not ss_seen is None:
+                elif re.search('frame', mut) and ss_seen is not None:
                     ss_seen += ', {} filters upstream fs ({})'.format(status_str, aa)
                 # Create flag if this variant is within distance of note to ours
                 if target_pos - pos == 1:
@@ -91,8 +91,8 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
             # Compute coverage and pass/fail
             N_cov = int(columns[header_exome.index('NCOV')])
             T_cov = float(columns[header_exome.index('TCOV')])
-            T_freq = float(columns[header_exome.index('TVAF')].replace('%',''))
-            N_freq = float(columns[header_exome.index('NVAF')].replace('%',''))
+            T_freq = float(columns[header_exome.index('TVAF')].replace('%', ''))
+            N_freq = float(columns[header_exome.index('NVAF')].replace('%', ''))
             T_reads = float(columns[header_exome.index('TUMOR_READ2')])
             P_val = columns[header_exome.index('PVAL')]
             callers = columns[header_exome.index('CALLERS')]
@@ -176,7 +176,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
             cov = '{};{},{},{},{}'.format(sample, r1, r2, rfreq, rcov)
             # Storage coverage, data and status
             variant_dict[variant_key]['RNA'][sample]['data'] = columns[0:]
-            variant_dict[variant_key]['RNA'][sample]['status'] = rfreq >=5 and rcov >= 5
+            variant_dict[variant_key]['RNA'][sample]['status'] = rfreq >= 5 and rcov >= 5
             variant_dict[variant_key]['RNA'][sample]['coverage'] = cov
         RNA_nonsyn.close()
 
@@ -193,7 +193,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
             locus = columns[header_fpkm.index('locus')]
             fpkm_value = float(columns[header_fpkm.index('FPKM')])
             sample = columns[header_fpkm.index('SAMPLE_ID')]
-            #NOTE check for precision errors here
+            # NOTE check for precision errors here
             if fpkm_value != 0:
                 if gene_id not in FPKM_dict:
                     FPKM_dict[gene_id] = {}
@@ -206,7 +206,7 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
     # Compute mean expression and percentiles
     FPKM_mean_dict = {}
     FPKM_quan_dict = {}
-    #TODO this is slow and ugly, improve!
+    # TODO this is slow and ugly, improve!
     for gene, samples in FPKM_dict.items():
         FPKM_mean_dict[gene] = statistics.mean([x['expression'] for x in samples.values()])
         FPKM_quan_dict[gene] = ['{}:{}'.format(sample,
@@ -233,20 +233,20 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
     final_file_discarded.write(header_final)
 
     unique_rna = open('overlap_unique_rna.txt', 'w')
-    unique_rna.write('Variant key\tPer sample coverage (Sample,read1,read2,variant frequency,coverage)\tGene\t'\
-                     'RNA-seq samples (passing)\tNumber of RNA-seq samples (passing)\t'\
-                     'RNA-seq samples (failing)\tNumber of RNA-seq samples (failing)\t'\
+    unique_rna.write('Variant key\tPer sample coverage (Sample,read1,read2,variant frequency,coverage)\tGene\t'
+                     'RNA-seq samples (passing)\tNumber of RNA-seq samples (passing)\t'
+                     'RNA-seq samples (failing)\tNumber of RNA-seq samples (failing)\t'
                      'Mutation type\tFPKM info pers sample (locus,exp)\tFPKM mean(all samples)\tFPKM percentile (all samples)\n')
 
-    for key,value in variant_dict.items():
+    for key, value in variant_dict.items():
 
         rna_cov = ["-;-,-,-,-"]
         rna_samples_pass = []
         rna_samples_fail = []
         if 'RNA' in value:
             rna_cov = '|'.join(x['coverage'] for x in value['RNA'].values())
-            rna_samples_pass = [key for key,value in value['RNA'].items() if value['status']]
-            rna_samples_fail = [key for key,value in value['RNA'].items() if not value['status']]
+            rna_samples_pass = [key for key, value in value['RNA'].items() if value['status']]
+            rna_samples_fail = [key for key, value in value['RNA'].items() if not value['status']]
 
         if 'Epitopes' in value and 'Exome' in value:
             # Loop through epitopes for this position and write a line for each individual mut25mer
@@ -254,8 +254,8 @@ def overlap_analysis(exome_variants, exome_epitopes, rna_variants, rna_fpkm):
                 for transcript in sorted(mer.values(), reverse=True):
                     sampleID = transcript[header_epitopes.index('SAMPLE_ID')]
                     exome = value['Exome'][sampleID]
-                    exome_samples_pass = [key for key,value in value['Exome'].items() if value['status']]
-                    exome_samples_fail = [key for key,value in value['Exome'].items() if not value['status']]
+                    exome_samples_pass = [key for key, value in value['Exome'].items() if value['status']]
+                    exome_samples_fail = [key for key, value in value['Exome'].items() if not value['status']]
                     exome_cov = '|'.join(x['coverage'] for x in value['Exome'].values())
                     ref_gene_name = exome['data'][header_exome.index('Gene.refGene')]
                     ref_gene_mut = exome['data'][header_exome.index('ExonicFunc.refGene')]

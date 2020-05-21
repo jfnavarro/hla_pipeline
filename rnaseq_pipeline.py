@@ -168,7 +168,7 @@ def RNAseq_pipeline(sample1,
             if known_gene_detail != 'NA':
                 AA_change_knownGene = known_gene_detail
             if ens_gene_detail != 'NA':
-                AA_change_ensGgene = ens_gene_detail
+                AA_change_ensGene = ens_gene_detail
             to_write = '\t'.join([str(x) for x in [gDNA, sampleID, Chr, start, end, ref, alt, avsnp150,
                                                    func_ref_gene, gene_ref_gene, exonic_func_ref, AA_change_refGene,
                                                    func_known_gene, gene_known_gene, exonic_known_ref, AA_change_knownGene,
@@ -238,7 +238,7 @@ def RNAseq_pipeline(sample1,
             # Very ugly way to check that the variant was called by the two methods (TODO improve)
             if len(columns) < 41:
                 continue
-            #TODO use header names instead
+            # TODO use header names instead
             Chr = columns[2]
             Start = columns[3]
             End = columns[4]
@@ -266,7 +266,7 @@ def RNAseq_pipeline(sample1,
             source_of_RNA_used_for_sequencing = columns[32]
             tumor_reads1 = columns[33]
             tumor_reads2 = columns[34]
-            tumor_var_freq = columns[35].replace('%','')
+            tumor_var_freq = columns[35].replace('%', '')
             read1_plus = columns[37]
             read1_minus = columns[38]
             read2_plus = columns[39]
@@ -328,10 +328,10 @@ parser.add_argument('--known2',
 parser.add_argument('--snpsites',
                     help='Path to the file with the SNPs (GATK buldle)', required=True)
 parser.add_argument('--annovar-db',
-                    help='String indicated what annovar database to use (default: humandb)', 
+                    help='String indicated what annovar database to use (default: humandb)',
                     default='humandb', required=False)
 parser.add_argument('--annovar-version',
-                    help='String indicated what version of the annovar database to use (default: hg19)', 
+                    help='String indicated what version of the annovar database to use (default: hg19)',
                     default='hg19', required=False)
 parser.add_argument('-steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                     help='Steps to perform in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])

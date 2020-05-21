@@ -2,10 +2,7 @@
 @author: jfnavarro
 """
 import subprocess
-import os
 import sys
-import re
-import pandas as pd
 from Bio.Seq import translate
 
 def index_column_substring(your_list, substring):
@@ -27,4 +24,3 @@ def exec_command(cmd):
         for line in error.decode("utf-8").split("\n") if error else "":
             print(line.rstrip())
         sys.exit(-1)
-
