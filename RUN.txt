@@ -1,3 +1,4 @@
+# You man want to add these to your .bashrc or .bash_profile
 export STRELKA_PATH="~/shared/strelka"
 export ANNOVAR_PATH="~/shared/annovar"
 export GATK3_PATH="~/shared/gatk3.8.jar"

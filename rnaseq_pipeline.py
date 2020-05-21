@@ -3,12 +3,31 @@
 """
 @author: jfnavarro
 """
-from hlapipeline.common import exec_command, HLA_predictionRNA
+from hlapipeline.common import exec_command
 from hlapipeline.tools import *
 import re
 import os
 import argparse
 import multiprocessing
+
+def HLA_predictionRNA(sample, threads):
+    cmd = '{} extract --threads {} --paired {}'.format(ARCASHLA, threads, sample)
+    exec_command(cmd)
+
+    clean_name = os.path.splitext(sample)[0]
+
+    cmd = '{} genotype --threads {} {}.extracted.1.fq.gz {}.extracted.2.fq.gz'.format(ARCASHLA,
+                                                                                      threads,
+                                                                                      clean_name,
+                                                                                      clean_name)
+    exec_command(cmd)
+
+    cmd = '{} partial --threads {} -G {}.genotype.json {}.extracted.1.fq.gz {}.extracted.2.fq.gz'.format(ARCASHLA,
+                                                                                                         threads,
+                                                                                                         clean_name,
+                                                                                                         clean_name,
+                                                                                                         clean_name)
+    exec_command(cmd)
 
 def RNAseq_pipeline(sample1,
                     sample2,
@@ -285,7 +304,7 @@ def RNAseq_pipeline(sample1,
 
     print("COMPLETED!")
 
-parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA prediction '\
+parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA prediction '
                                  'pipeline (created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='rnaseq_pipeline.py',
                                  usage='rnaseq_pipeline.py [options] R1(RNA) R2(RNA)')
