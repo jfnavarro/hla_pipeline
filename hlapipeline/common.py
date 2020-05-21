@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu May 21 10:30:18 2020
-
 @author: jfnavarro
 """
 import subprocess
