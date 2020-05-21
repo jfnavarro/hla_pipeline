@@ -42,17 +42,21 @@ See INSTALL.txt for installation instructions.
 See RUN.txt for running instructions.
 
 Main output files:
+
 **exome_pipeline.py** 
 - nonsyn_SQL_insert.txt (nonsynonymous variants filtered and annotated)
 - all_other_mutations.txt (synonymous variants filtered and annotated)
 - SQL_Epitopes.txt (all the epitotes for the differents exons in each variant including the reference and mutated sequences)
+
 **rnaseq_pipeline.py** 
 - nonsyn_SQL_insert.txt (nonsynonymous variants filtered and annotated)
 - all_other_mutations.txt (synonymous variants filtered and annotated)
 - FPKM_SQL_insert.txt (all the FPKM values of the genes found)
+
 **merge_resuls.py** 
 - overlap_final.txt (all the AND and RNA variants/epitotes collapsed and filtered with useful information)
 - overlap_final_discarded.txt (all the discarded AND and RNA variants/epitotes collapsed with useful information)
+
 **mhc_predict.py** 
 - predictions.csv (all the prediction MHCs)
 
