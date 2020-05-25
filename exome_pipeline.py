@@ -629,6 +629,7 @@ def exome_pipeline(R1_NORMAL,
             exonic_func_ens = columns[header.index('ExonicFunc.ensGene')]
             AA_change_ensGene = columns[header.index('AAChange.ensGene')].split(',')
             if re.search(r'nonsynonymous', exonic_func_ref) or re.search(r'frame', exonic_func_ref):
+                # RefSeq Annotation
                 for entry in AA_change_refGene:
                     epitope_file.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(sampleID,
                                                                                          variant_key,
@@ -640,6 +641,7 @@ def exome_pipeline(R1_NORMAL,
                                                                                          func_ref_gene,
                                                                                          exonic_func_ref,
                                                                                          sub(':', '\t', entry)))
+                # UCSC annotation
             if re.search(r'nonsynonymous', exonic_func_UCSC) or re.search(r'frame', exonic_func_UCSC):
                 for entry in AA_change_UCSCGene:
                     epitope_file.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(sampleID,
@@ -652,6 +654,7 @@ def exome_pipeline(R1_NORMAL,
                                                                                          func_UCSC_gene,
                                                                                          exonic_func_UCSC,
                                                                                          sub(':', '\t', entry)))
+                # Ensembl annotation
             if re.search(r'nonsynonymous', exonic_func_ens) or re.search(r'frame', exonic_func_ens):
                 for entry in AA_change_ensGene:
                     epitope_file.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(sampleID,
@@ -672,11 +675,11 @@ def exome_pipeline(R1_NORMAL,
         AA_seq = dict()
         with open(FASTA_AA_DICT, "rU") as handle:
             for record in SeqIO.parse(handle, "fasta"):
-                AA_seq[record.id.split("|")[0]] = record.seq
+                AA_seq[record.id.split("|")[0]] = str(record.seq)
         cDNA_seq = dict()
         with open(FASTA_cDNA_DICT, "rU") as handle:
             for record in SeqIO.parse(handle, "fasta"):
-                cDNA_seq[record.id.split("|")[0]] = record.seq
+                cDNA_seq[record.id.split("|")[0]] = str(record.seq)
         epitope_file = open('SQL_Epitopes.txt', 'w')
         input_file = open('Formatted_epitope_variant.txt')
         header = 'SAMPLE_ID\tVARIANT-KEY\tCHR\tSTART\tSTOP\tREF\tALT\tfunc_ref_gene\texonic_func_ref\tGene\t' \
@@ -707,7 +710,7 @@ def exome_pipeline(R1_NORMAL,
                     var_AA = protein_strip[len(protein_strip) - 1]
                     # gather AA seq for transcript
                     if protein_seq == 'AA_seq not present for this transcript':
-                        errors += 'AA_seq not present for this transcript '
+                        errors += ' AA_seq not present for this transcript'
                     else:
                         # check annotation is correct
                         FASTA_AA = protein_seq[position - 1:position]
@@ -726,65 +729,66 @@ def exome_pipeline(R1_NORMAL,
                 elif 'frameshift' in exonic_func:
                     if ref_cDNA_seq == 'cDNA not present for this transcript':
                         errors += ' cDNA not present for this transcript'
-                    elif exonic_func in ['frameshift deletion', 'nonframeshift deletion']:
-                        len_del = len(ref)
-                        mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos - 1]
-                        mut_cDNA_right = ref_cDNA_seq[cDNA_pos + len_del - 1:]
-                        mut_cDNA_seq = mut_cDNA_left + mut_cDNA_right
-                    elif exonic_func in ['frameshift insertion', 'nonframeshift insertion']:
-                        if re.search(r'dup', cDNA_strip):
-                            ins = cDNA_strip[int(cDNA_strip.find('dup')) + 3:]
-                        elif re.search(r'ins', cDNA_strip):
-                            ins = cDNA_strip[int(cDNA_strip.find('ins')) + 3:]
-                        else:
-                            errors += ' could not find mutation in cDNA'
-                            ins = ''
-                        mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos]
-                        mut_cDNA_right = ref_cDNA_seq[cDNA_pos:]
-                        mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
-                    elif exonic_func in ['frameshift substitution', 'nonframeshift substitution']:
-                        if re.search(r'delins', cDNA_strip):
-                            subs = cDNA_strip[int(cDNA_strip.find('delins')) + 6:]
-                        else:
-                            errors += ' could not find mutation in cDNA'
-                            subs = ''
-                        mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos]
-                        mut_cDNA_right = ref_cDNA_seq[cDNA_pos:]
-                        mut_cDNA_seq = mut_cDNA_left + subs + mut_cDNA_right
                     else:
-                        mut_cDNA_seq = ref_cDNA_seq
-                        errors += ' Unknown exonic function'
-                    if not protein_strip.startswith('p.'):
-                        position = 0
-                    elif protein_strip.startswith('p.X'):
-                        position = 0
-                        errors += ' mutation occurs in stop codon'
-                    ref_FASTA = str(translate_dna(ref_cDNA_seq.replace(' ', '')))
-                    mut_FASTA = str(translate_dna(mut_cDNA_seq.replace(' ', '')))
-                    mut_stop = int(mut_FASTA.find('X'))
-                    if position >= 13 and mut_stop > 0:
-                        WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
-                        Mut_25mer = mut_FASTA[position - 13:mut_stop]
-                    elif position < 13 and position > 0 and mut_stop > 0:
-                        WT_25mer = ref_FASTA[0:position + 12].replace('X', '')
-                        Mut_25mer = mut_FASTA[0:mut_stop]
-                    elif position >= 13 and mut_stop < 0:
-                        WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
-                        Mut_25mer = mut_FASTA[position - 13:]
-                    elif position < 13 and position > 0 and mut_stop < 0:
-                        WT_25mer = ref_FASTA[0:position + 12].replace('X', '')
-                        Mut_25mer = mut_FASTA[0:]
-                    elif position == 0:
-                        errors += ' can not code for this mutated AA_position'
-                    if not ref_cDNA_seq.startswith('ATG'):
-                        errors += ' No ATG start codon for this transcript cDNA'
-                    if position == 1:
-                        errors += ' mutation occurs in start codon'
+                        if exonic_func in ['frameshift deletion', 'nonframeshift deletion']:
+                            len_del = len(ref)
+                            mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos - 1]
+                            mut_cDNA_right = ref_cDNA_seq[cDNA_pos + len_del - 1:]
+                            mut_cDNA_seq = mut_cDNA_left + mut_cDNA_right
+                        elif exonic_func in ['frameshift insertion', 'nonframeshift insertion']:
+                            if re.search(r'dup', cDNA_strip):
+                                ins = cDNA_strip[int(cDNA_strip.find('dup')) + 3:]
+                            elif re.search(r'ins', cDNA_strip):
+                                ins = cDNA_strip[int(cDNA_strip.find('ins')) + 3:]
+                            else:
+                                errors += ' could not find mutation in cDNA'
+                                ins = ''
+                            mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos]
+                            mut_cDNA_right = ref_cDNA_seq[cDNA_pos:]
+                            mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
+                        elif exonic_func in ['frameshift substitution', 'nonframeshift substitution']:
+                            if re.search(r'delins', cDNA_strip):
+                                subs = cDNA_strip[int(cDNA_strip.find('delins')) + 6:]
+                            else:
+                                errors += ' could not find mutation in cDNA'
+                                subs = ''
+                            mut_cDNA_left = ref_cDNA_seq[0:cDNA_pos]
+                            mut_cDNA_right = ref_cDNA_seq[cDNA_pos:]
+                            mut_cDNA_seq = mut_cDNA_left + subs + mut_cDNA_right
+                        else:
+                            mut_cDNA_seq = ref_cDNA_seq
+                            errors += ' unknown exonic function'
+                        if not protein_strip.startswith('p.'):
+                            position = 0
+                        elif protein_strip.startswith('p.X'):
+                            position = 0
+                            errors += ' mutation occurs in stop codon'
+                        ref_FASTA = str(translate_dna(ref_cDNA_seq.replace(' ', '')))
+                        mut_FASTA = str(translate_dna(mut_cDNA_seq.replace(' ', '')))
+                        mut_stop = int(mut_FASTA.find('X'))
+                        if position >= 13 and mut_stop > 0:
+                            WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
+                            Mut_25mer = mut_FASTA[position - 13:mut_stop]
+                        elif position < 13 and position > 0 and mut_stop > 0:
+                            WT_25mer = ref_FASTA[0:position + 12].replace('X', '')
+                            Mut_25mer = mut_FASTA[0:mut_stop]
+                        elif position >= 13 and mut_stop < 0:
+                            WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
+                            Mut_25mer = mut_FASTA[position - 13:]
+                        elif position < 13 and position > 0 and mut_stop < 0:
+                            WT_25mer = ref_FASTA[0:position + 12].replace('X', '')
+                            Mut_25mer = mut_FASTA[0:]
+                        elif position == 0:
+                            errors += ' can not code for this mutated AA_position'
+                        if not ref_cDNA_seq.startswith('ATG'):
+                            errors += ' no ATG start codon for this transcript cDNA'
+                        if position == 1:
+                            errors += ' mutation occurs in start codon'
                 elif re.search(r'^stop', exonic_func):
                     position = ''.join([s for s in protein_strip if s.isdigit()])
-                    errors += ' Stop mutation'
+                    errors += ' stop mutation'
                 else:
-                    errors += ' Unknown exonic function'
+                    errors += ' unknown exonic function'
                 epitope_file.write('{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:]),
                                                                  position,
                                                                  errors,
