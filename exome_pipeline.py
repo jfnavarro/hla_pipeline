@@ -684,8 +684,8 @@ def exome_pipeline(R1_NORMAL,
         epitope_file.write(header)
         for line in input_file:
             columns = line.rstrip('\n').split('\t')
-            if len(columns) != 14:
-                print("Formatted epitote with wrong number of columns {}".format(','.format(columns)))
+            if len(columns) < 14:
+                print("Formatted epitote with wrong number of columns {}".format(','.join(columns)))
                 continue
             try:
                 ref = columns[5].strip()
@@ -759,8 +759,8 @@ def exome_pipeline(R1_NORMAL,
                     elif protein_strip.startswith('p.X'):
                         position = 0
                         errors += ' mutation occurs in stop codon'
-                    ref_FASTA = translate_dna(ref_cDNA_seq)
-                    mut_FASTA = translate_dna(mut_cDNA_seq)
+                    ref_FASTA = str(translate(ref_cDNA_seq))
+                    mut_FASTA = str(translate(mut_cDNA_seq))
                     mut_stop = int(mut_FASTA.find('X'))
                     if position >= 13 and mut_stop > 0:
                         WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
