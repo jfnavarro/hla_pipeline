@@ -835,6 +835,8 @@ parser.add_argument('--annovar-db',
 parser.add_argument('--annovar-version',
                     help='String indicated what version of the annovar database to use (default: hg19)',
                     default='hg19', required=False)
+parser.add_argument('--threads',
+                    help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
 parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                     help='Steps to perform in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 
@@ -849,7 +851,7 @@ sampleID = args.sample
 tumor_type = args.tumor
 IILLUMINA_ADAPTERS = os.path.abspath(args.adapter)
 GENOME_REF = os.path.abspath(args.genome)
-THREADS = multiprocessing.cpu_count() - 1
+THREADS = int(args.threads)
 FASTA_AA_DICT = os.path.abspath(args.fastaAA)
 FASTA_cDNA_DICT = os.path.abspath(args.fastacDNA)
 KNOWN_SITE1 = os.path.abspath(args.known1)
