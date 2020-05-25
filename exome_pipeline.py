@@ -685,13 +685,14 @@ def exome_pipeline(R1_NORMAL,
         for line in input_file:
             columns = line.rstrip('\n').split('\t')
             if len(columns) < 14:
-                print("Formatted epitote with different number of columns {}".format(','.join(columns)))
+                print("Formatted epitote with wrong number of columns {}".format(','.join(columns)))
+                continue
             try:
                 ref = columns[5].strip()
                 exonic_func = columns[8].strip()
                 transcriptID = columns[10].strip()
-                cDNA_strip = columns[-2].strip()
-                protein_strip = columns[-1].strip()
+                cDNA_strip = columns[12].strip()
+                protein_strip = columns[13].strip()
                 errors = 'Flags:'
                 WT_25mer = '-'
                 Mut_25mer = '-'
