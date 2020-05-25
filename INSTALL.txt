@@ -71,6 +71,8 @@ wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.
 wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.primary_assembly.annotation.gtf.gz
 gunzip gencode*
 gunzip GRCh38.primary_assembly.genome.fa.gz
+gatk CreateSequenceDictionary -R GRCh38.primary_assembly.genome.fa
+samtools faidx GRCh38.primary_assembly.genome.fa
 mkdir -p STARIndex
 STAR --runMode genomeGenerate --runThreadN 20 --genomeDir STARIndex \
   --genomeFastaFiles GRCh38.primary_assembly.genome.fa \
