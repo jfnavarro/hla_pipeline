@@ -759,8 +759,8 @@ def exome_pipeline(R1_NORMAL,
                     elif protein_strip.startswith('p.X'):
                         position = 0
                         errors += ' mutation occurs in stop codon'
-                    ref_FASTA = str(translate(ref_cDNA_seq))
-                    mut_FASTA = str(translate(mut_cDNA_seq))
+                    ref_FASTA = str(translate(ref_cDNA_seq.replace(' ', '')))
+                    mut_FASTA = str(translate(mut_cDNA_seq.replace(' ', '')))
                     mut_stop = int(mut_FASTA.find('X'))
                     if position >= 13 and mut_stop > 0:
                         WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
