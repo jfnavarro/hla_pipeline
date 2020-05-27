@@ -365,6 +365,7 @@ def exome_pipeline(R1_NORMAL,
                 tumor_read2 = '.'
                 normal_read2 = '.'
                 callers = info.strip().split(';')[-1].replace('set=', '')
+                caller_count = '.'
                 if re.search('Intersection', callers) or re.search('varscan', callers):
                     if callers == 'Intersection':
                         caller_count = 4
@@ -372,8 +373,7 @@ def exome_pipeline(R1_NORMAL,
                     else:
                         caller_count = callers.count('-') + 1
                     if re.search('SPV=', info):
-                        info_split = info.split(';')
-                        for x in info_split:
+                        for x in info.split(';'):
                             if re.search('SPV=', x):
                                 p_val = x.replace('SPV=', '')
                     form = columns[8].split(':')
@@ -526,6 +526,15 @@ def exome_pipeline(R1_NORMAL,
                 nvfor = '.'
                 nvrev = '.'
                 p_val = '.'
+                tumor_read1 = '.'
+                tumor_read2 = '.'
+                normal_read1 = '.'
+                normal_read2 = '.'
+                tcov = '.'
+                nfreq = '.'
+                tfreq = '.'
+                ncov = '.'
+                caller_count = '.'
                 callers = info.strip().split(';')[-1].replace('set=', '')
                 if re.search('Intersection', callers) or re.search('varscan', callers):
                     if callers == 'Intersection':
@@ -534,12 +543,9 @@ def exome_pipeline(R1_NORMAL,
                     else:
                         caller_count = callers.count('-') + 1
                     if re.search('SPV=', info):
-                        info_split = info.split(';')
-                        for x in info_split:
+                        for x in info.split(';'):
                             if re.search('SPV=', x):
                                 p_val = x.replace('SPV=', '')
-                    else:
-                        p_val = '.'
                     form = columns[8].split(':')
                     DP4 = form.index('DP4')
                     Freq = form.index('FREQ')
@@ -574,9 +580,7 @@ def exome_pipeline(R1_NORMAL,
                     t_cov = int(t_split[DP])
                     tfreq = float((tumor_read2 / t_cov) * 100)
                     if normal_read2 != 0:
-                        nfreq = float(normal_read2 / n_cov)
-                    else:
-                        nfreq = 0
+                        nfreq = float(normal_read2 / n_cov)                  
                     tumor_read1 = t_cov - tumor_read2
                     normal_read1 = n_cov - normal_read2
                 vcf_cov_dict[DictID] = {}
@@ -675,7 +679,7 @@ def exome_pipeline(R1_NORMAL,
         AA_seq = dict()
         with open(FASTA_AA_DICT, "rU") as handle:
             for record in SeqIO.parse(handle, "fasta"):
-                AA_seq[record.id.split("|")[0]] = str(record.seq)
+                AA_seq[record.id.split("|")[1]] = str(record.seq)
         cDNA_seq = dict()
         with open(FASTA_cDNA_DICT, "rU") as handle:
             for record in SeqIO.parse(handle, "fasta"):
