@@ -340,7 +340,7 @@ parser = argparse.ArgumentParser(description='Script to aggregate results and cr
 
 parser.add_argument('--exome', nargs='+', default=None, required=True,
                     help='List of files with the results of the exome variants')
-parser.add_argument('--epitote', nargs='+', default=None, required=True,
+parser.add_argument('--epitope', nargs='+', default=None, required=True,
                     help='List of files with the results of the epitotes')
 parser.add_argument('--rna', nargs='+', default=None, required=True,
                     help='List of files with the results of the RNA variants')
@@ -348,4 +348,4 @@ parser.add_argument('--fpkm', nargs='+', default=None, required=True,
                     help='List of files with the results of the RNA FPKM')
 
 args = parser.parse_args()
-overlap_analysis(args.exome, args.epitote, args.rna, args.fpkm)
+overlap_analysis(args.exome, args.epitope, args.rna, args.fpkm)

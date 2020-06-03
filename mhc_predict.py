@@ -7,8 +7,11 @@ from collections import Counter
 from _collections import defaultdict
 import json
 import argparse
+import os
+import pandas as pd
 
-def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final, alleles):
+def compute_MHC(hla_exome_cancer, hla_exome_normal, 
+                hla_rna, overlap_final, alleles, filter):
     HLA_dict = defaultdict(list)
 
     # First parse hla_exome_cancer and normal (HLA-LA format)
@@ -60,6 +63,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final, alle
     # Create protein FASTA file
     print('Creating protein sequencess..')
     added_proteins = set()
+    added_proteins_dict = dict()
     with open('protein_sequences.fasta', 'w') as fwrite:
         with open(overlap_final, 'r') as fread:
             lines = fread.readlines()
@@ -67,7 +71,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final, alle
             for line in lines:
                 columns = line.strip().split('\t')
                 if int(columns[header.index('Number of Exomes samples (passing)')]) > 0:
-                    protein_name = '{} {} {} {}'.format(columns[header.index('Variant key')],
+                    protein_name = '{}_{}_{}_{}'.format(columns[header.index('Variant key')],
                                                         columns[header.index('transcript ID')],
                                                         columns[header.index('cDNA change')],
                                                         columns[header.index('AA change')])
@@ -75,12 +79,22 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal, hla_rna, overlap_final, alle
                     if protein_seq != '-' and protein_seq not in added_proteins:
                         fwrite.write('>{}\n{}\n'.format(protein_name, protein_seq))
                         added_proteins.add(protein_seq)
+                        added_proteins_dict[protein_name] = protein_seq
 
     # Run prediction
     print('Predicting MHCs..')
     cmd = 'mhcflurry-predict-scan protein_sequences.fasta --alleles {} ' \
           '--results-all --out predictions.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla))
     exec_command(cmd)
+    
+    if not os.path.isfile("predictions.csv"):
+        print("Error, output file not present")
+        
+    if filter:
+        results = pd.read_csv("predictions.csv", header=0, index_col=0, sep=",")
+        to_keep = [x for x in results.index if results.loc[x, "peptide"] not in added_proteins_dict[x]]
+        results.loc[to_keep,:].to_csv("predictions_filtered.csv", sep=",")
+        
     print('Completed')
 
 parser = argparse.ArgumentParser(description='Script to predict MHCs using the data from the exome and rnaseq variant calling pipelines '
@@ -102,6 +116,9 @@ parser.add_argument('--variants', default=None, required=True,
                     help='A file with the final variants generated with merge_results.py (table format)')
 parser.add_argument('--alleles', default=None, required=True,
                     help='A file containing the allowed alleles in MHCflurry')
-
+parser.add_argument('--filter',
+                    help='Apply a filter to the output to keep only peptides that are mutated',
+                    action='store_true')
 args = parser.parse_args()
-compute_MHC(args.hla_dna_tumor, args.hla_dna_normal, args.hla_rna, args.variants, args.alleles)
+compute_MHC(args.hla_dna_tumor, args.hla_dna_normal, args.hla_rna, 
+            args.variants, args.alleles, args.filter)
