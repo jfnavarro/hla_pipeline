@@ -92,7 +92,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal,
         
     if filter:
         results = pd.read_csv("predictions.csv", header=0, index_col=0, sep=",")
-        to_keep = [x for x in results.index if results.loc[x, "peptide"] not in added_proteins_dict[x]]
+        to_keep = [index for index,row in results.iterrows() if row["peptide"] not in added_proteins_dict[index]]
         results.loc[to_keep,:].to_csv("predictions_filtered.csv", sep=",")
         
     print('Completed')
