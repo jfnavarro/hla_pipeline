@@ -36,7 +36,9 @@ rnaseq_pipeline.py \
   --known1 ~/shared/GRCh38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
   --known2 ~/shared/GRCh38/1000G_phase1.snps.high_confidence.hg38.vcf.gz \
   --snpsites ~/shared/GRCh38/Homo_sapiens_assembly38.dbsnp138.vcf \
-  --threads 20
+  --fastacDNA ~/shared/GRCh38/gencode.v34.transcripts.fa \
+  --fastaAA ~/shared/GRCh38/gencode.v34.pc_translations.fa \
+  --threads 20 \
   --annovar-db humandb \
   --annovar-version hg38 \
   RNAR1.fastq.gz RNAR2.fastq.gz
@@ -48,8 +50,7 @@ merge_results.py \
   --fpkm out/rna/FPKM_SQL_insert.txt
 
 mhc_predict.py \
-  --hla-dna-normal out/exome/PRG-HLA-LA_Normal_output.txt \
-  --hla-dna-tumor out/exome/PRG-HLA-LA_Tumor_output.txt \
+  --hla-exome out/exome/PRG-HLA-LA_Normal_output.txt out/exome/PRG-HLA-LA_Tumor_output.txt \
   --hla-rna out/rna/hla/sample_header.genotype.json \
   --variants out/overlap_final.txt \
   --alleles ~/shared/alleles.txt
