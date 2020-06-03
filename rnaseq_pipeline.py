@@ -348,7 +348,7 @@ parser.add_argument('--annovar-version',
                     default='hg19', required=False)
 parser.add_argument('--threads',
                     help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
-parser.add_argument('-steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
+parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                     help='Steps to perform in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 
 # Parse arguments
