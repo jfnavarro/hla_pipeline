@@ -7,16 +7,14 @@ from collections import Counter
 from _collections import defaultdict
 import json
 import argparse
-import os
 import sys
-import pandas as pd
 
-def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file, filter):
-    
+def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file):
+
     if not hla_exome and not hla_rna:
         sys.stderr.write("Error, need HLAs as input.\n")
-        sys.exit(1) 
-    
+        sys.exit(1)
+
     HLA_dict = defaultdict(list)
 
     # First parse hla_exome_cancer and normal (HLA-LA format)
@@ -61,7 +59,7 @@ def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file, filter):
     if len(filtered_hla) == 0:
         sys.stderr.write("Error, list of HLAs is empty.\n")
         sys.exit(1)
-        
+
     # Create protein FASTA file
     print('Creating protein sequencess..')
     added_proteins_mu = set()
@@ -92,13 +90,12 @@ def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file, filter):
     cmd = 'mhcflurry-predict-scan protein_sequences_mu.fasta --alleles {} ' \
           '--results-all --out predictions_mut.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla))
     exec_command(cmd)
-    
+
     print('Predicting MHCs with WT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_wt.fasta --alleles {} ' \
           '--results-all --out predictions_wt.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla))
     exec_command(cmd)
 
-        
     print('Completed')
 
 parser = argparse.ArgumentParser(description='Script to predict MHCs using the data from the exome and rnaseq variant calling pipelines '
