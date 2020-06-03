@@ -76,10 +76,11 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal,
                                                         columns[header.index('cDNA change')],
                                                         columns[header.index('AA change')])
                     protein_seq = columns[header.index('Mut Epitope')].strip().replace('*', '')
+                    protein_seq_wt = columns[header.index('Wt Epitope')].strip().replace('*', '')
                     if protein_seq != '-' and protein_seq not in added_proteins:
                         fwrite.write('>{}\n{}\n'.format(protein_name, protein_seq))
                         added_proteins.add(protein_seq)
-                        added_proteins_dict[protein_name] = protein_seq
+                        added_proteins_dict[protein_name] = protein_seq_wt
 
     # Run prediction
     print('Predicting MHCs..')
