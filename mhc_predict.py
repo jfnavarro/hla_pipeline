@@ -11,7 +11,7 @@ import os
 import pandas as pd
 
 def compute_MHC(hla_exome_cancer, hla_exome_normal, 
-                hla_rna, overlap_final, alleles, filter):
+                hla_rna, overlap_final, alleles_file, filter):
     HLA_dict = defaultdict(list)
 
     # First parse hla_exome_cancer and normal (HLA-LA format)
@@ -54,7 +54,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal,
 
     # Filter HLAs by allowed alleles in MHCflurry
     allowed_alleles = set()
-    with open(alleles) as f:
+    with open(alleles_file) as f:
         for x in f.readlines():
             allowed_alleles.add(x.strip())
     filtered_hla = [x for x in filtered_hla if x in allowed_alleles]
