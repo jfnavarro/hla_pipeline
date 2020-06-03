@@ -64,41 +64,40 @@ def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file, filter):
         
     # Create protein FASTA file
     print('Creating protein sequencess..')
-    added_proteins = set()
-    added_proteins_dict = dict()
-    with open('protein_sequences.fasta', 'w') as fwrite:
-        with open(overlap_final, 'r') as fread:
-            lines = fread.readlines()
-            header = lines.pop(0).strip().split('\t')
-            for line in lines:
-                columns = line.strip().split('\t')
-                if int(columns[header.index('Number of Exomes samples (passing)')]) > 0:
-                    protein_name = '{}_{}_{}_{}'.format('_'.join(columns[header.index('Variant key')].split()),
-                                                        columns[header.index('transcript ID')],
-                                                        columns[header.index('cDNA change')],
-                                                        columns[header.index('AA change')])
-                    protein_seq = columns[header.index('Mut Epitope')].strip().replace('*', '')
-                    protein_seq_wt = columns[header.index('Wt Epitope')].strip().replace('*', '')
-                    if protein_seq != '-' and protein_seq not in added_proteins:
-                        fwrite.write('>{}\n{}\n'.format(protein_name, protein_seq))
-                        added_proteins.add(protein_seq)
-                        added_proteins_dict[protein_name] = protein_seq_wt
+    added_proteins_mu = set()
+    added_proteins_wt = set()
+    with open('protein_sequences_mu.fasta', 'w') as fwrite_mu:
+        with open('protein_sequences_wt.fasta', 'w') as fwrite_wt:
+            with open(overlap_final, 'r') as fread:
+                lines = fread.readlines()
+                header = lines.pop(0).strip().split('\t')
+                for line in lines:
+                    columns = line.strip().split('\t')
+                    if int(columns[header.index('Number of Exomes samples (passing)')]) > 0:
+                        protein_name = '{}_{}_{}_{}'.format('_'.join(columns[header.index('Variant key')].split()),
+                                                            columns[header.index('transcript ID')],
+                                                            columns[header.index('cDNA change')],
+                                                            columns[header.index('AA change')])
+                        protein_seq_mu = columns[header.index('Mut Epitope')].strip().replace('*', '')
+                        protein_seq_wt = columns[header.index('Wt Epitope')].strip().replace('*', '')
+                        if protein_seq_mu != '-' and protein_seq_mu not in added_proteins_mu:
+                            fwrite_mu.write('>{}\n{}\n'.format(protein_name, protein_seq_mu))
+                            added_proteins_mu.add(protein_seq_mu)
+                        if protein_seq_wt != '-' and protein_seq_wt not in added_proteins_wt:
+                            fwrite_wt.write('>{}\n{}\n'.format(protein_name, protein_seq_wt))
+                            added_proteins_wt.add(protein_seq_wt)
 
-    # Run prediction
-    print('Predicting MHCs..')
-    cmd = 'mhcflurry-predict-scan protein_sequences.fasta --alleles {} ' \
-          '--results-all --out predictions.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla))
+    # Run predictions
+    print('Predicting MHCs with MUT peptides..')
+    cmd = 'mhcflurry-predict-scan protein_sequences_mu.fasta --alleles {} ' \
+          '--results-all --out predictions_mut.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla))
     exec_command(cmd)
     
-    if not os.path.isfile("predictions.csv"):
-        sys.stderr.write("Error, output file not present\n")
-        sys.exit(1) 
-        
-    if filter:
-        #TOOD this is slow
-        results = pd.read_csv("predictions.csv", header=0, index_col=0, sep=",")
-        to_keep = [index for index,row in results.iterrows() if row["peptide"] not in added_proteins_dict[index]]
-        results.loc[to_keep,:].to_csv("predictions_filtered.csv", sep=",")
+    print('Predicting MHCs with WT peptides..')
+    cmd = 'mhcflurry-predict-scan protein_sequences_wt.fasta --alleles {} ' \
+          '--results-all --out predictions_wt.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla))
+    exec_command(cmd)
+
         
     print('Completed')
 
@@ -119,8 +118,5 @@ parser.add_argument('--variants', default=None, required=True,
                     help='A file with the final variants generated with merge_results.py (table format)')
 parser.add_argument('--alleles', default=None, required=True,
                     help='A file containing the allowed alleles in MHCflurry')
-parser.add_argument('--filter',
-                    help='Apply a filter to the output to keep only peptides that are mutated',
-                    action='store_true')
 args = parser.parse_args()
-compute_MHC(args.hla_exome, args.hla_rna, args.variants, args.alleles, args.filter)
+compute_MHC(args.hla_exome, args.hla_rna, args.variants, args.alleles)
