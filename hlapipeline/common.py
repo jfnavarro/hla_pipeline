@@ -24,3 +24,4 @@ def exec_command(cmd):
         for line in error.decode("utf-8").split("\n") if error else "":
             print(line.rstrip())
         sys.exit(-1)
+        

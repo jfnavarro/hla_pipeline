@@ -11,7 +11,7 @@ import os
 import sys
 import pandas as pd
 
-def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file, filter):
+def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file):
     
     if not hla_exome and not hla_rna:
         sys.stderr.write("Error, need HLAs as input.\n")
@@ -92,12 +92,7 @@ def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file, filter):
     
     if not os.path.isfile("predictions.csv"):
         sys.stderr.write("Error, output file not present\n")
-        sys.exit(1) 
-        
-    if filter:
-        results = pd.read_csv("predictions.csv", header=0, index_col=0, sep=",")
-        to_keep = [index for index,row in results.iterrows() if row["peptide"] not in added_proteins_dict[index]]
-        results.loc[to_keep,:].to_csv("predictions_filtered.csv", sep=",")
+        sys.exit(1)
         
     print('Completed')
 
@@ -118,8 +113,5 @@ parser.add_argument('--variants', default=None, required=True,
                     help='A file with the final variants generated with merge_results.py (table format)')
 parser.add_argument('--alleles', default=None, required=True,
                     help='A file containing the allowed alleles in MHCflurry')
-parser.add_argument('--filter',
-                    help='Apply a filter to the output to keep only peptides that are mutated',
-                    action='store_true')
 args = parser.parse_args()
-compute_MHC(args.hla_exome, args.hla_rna, args.variants, args.alleles, args.filter)
+compute_MHC(args.hla_exome, args.hla_rna, args.variants, args.alleles)

@@ -4,6 +4,7 @@
 """
 from hlapipeline.common import exec_command
 from hlapipeline.tools import *
+from hlapipeline.epitopes import *
 import re
 import os
 import argparse
@@ -38,6 +39,8 @@ def RNAseq_pipeline(sample1,
                     SNPSITES,
                     KNOWN_SITE1,
                     KNOWN_SITE2,
+                    FASTA_AA_DICT,
+                    FASTA_cDNA_DICT,
                     THREADS,
                     ANNOVAR_DB,
                     ANNOVAR_VERSION,
@@ -288,6 +291,12 @@ def RNAseq_pipeline(sample1,
         nonsyn_file.close()
         all_file.close()
 
+        # Extract peptides
+        extract_peptides('nonsyn_SQL_insert.txt', 'Formatted_epitope_variant.txt', sampleID)
+
+        # Create epitopes
+        create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
+                        
         # Reformat FPKM file
         print('Creating FPKM info file')
         fpkm = open('genes.fpkm_tracking')
@@ -327,6 +336,10 @@ parser.add_argument('--known2',
                     help='Path to the file with 1000G phase indels (GATK bundle)', required=True)
 parser.add_argument('--snpsites',
                     help='Path to the file with the SNPs (GATK buldle)', required=True)
+parser.add_argument('--fastaAA',
+                    help='Path to the fasta file with the protein sequences (of transcripts)', required=True)
+parser.add_argument('--fastacDNA',
+                    help='Path to the fasta file with the cDNA sequences (of transcripts)', required=True)
 parser.add_argument('--annovar-db',
                     help='String indicated what annovar database to use (default: humandb)',
                     default='humandb', required=False)
@@ -352,6 +365,8 @@ THREADS = int(args.threads)
 KNOWN_SITE1 = os.path.abspath(args.known1)
 KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
+FASTA_AA_DICT = os.path.abspath(args.fastaAA)
+FASTA_cDNA_DICT = os.path.abspath(args.fastacDNA)
 RNA_STEPS = args.steps
 ANNOVAR_DB = args.annovar_db
 ANNOVAR_VERSION = args.annovar_version
@@ -370,6 +385,8 @@ RNAseq_pipeline(R1_RNA,
                 SNPSITES,
                 KNOWN_SITE1,
                 KNOWN_SITE2,
+                FASTA_AA_DICT,
+                FASTA_cDNA_DICT,
                 THREADS,
                 ANNOVAR_DB,
                 ANNOVAR_VERSION,
