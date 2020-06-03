@@ -229,9 +229,9 @@ def RNAseq_pipeline(sample1,
         joined_variants = open('joined_coverage_variants.txt')
         nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
         all_file = open('all_other_mutations.txt', 'w')
-        header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tsnp138JJG\tTUMOR_READ1\tTUMOR_READ2' \
-                 '\tTUMOR_VAR_FREQ\tAPR_ALL\tFunc_refGene\tGene_refGene\tExonicFunc_refGene\tAAChange_refGene\tFunc_knownGene' \
-                 '\tGene_knownGene\tExonicFunc_knownGene\tAAChange_knownGene\tFunc_ensGene\tGene\texonic_func\tNT-AA_CHANGE' \
+        header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tavsnp150\tTUMOR_READ1\tTUMOR_READ2' \
+                 '\tTUMOR_VAR_FREQ\tAPR_ALL\tFunc.refGene\tGene.refGene\tExonicFunc.refGene\tAAChange.refGene\tFunc.knownGene' \
+                 '\tGene.knownGene\tExonicFunc.knownGene\tAAChange.knownGene\tFunc.ensGene\tGene.ensGene\tExonicFunc.ensGene\tAAChange.ensGene' \
                  '\tAPR_EUR\tAPR_AMR2\tAPR_ASN3\tAPR_AFR4\tREAD1_PLUS\tREAD1_MINUS\tREAD2_PLUS\tREAD2_MINUS' \
                  '\ttumour_type\tsource_of_RNA_used_for_sequencing\tVARIANT-KEY\n'
         nonsyn_file.write(header)
@@ -247,7 +247,7 @@ def RNAseq_pipeline(sample1,
             End = columns[4]
             Ref = columns[5]
             Alt = columns[6]
-            snp138JJG = columns[7]
+            tavsnp150 = columns[7]
             Func_refGene = columns[8]
             Gene_refGene = columns[9]
             ExonicFunc_refGene = columns[10]
@@ -274,7 +274,7 @@ def RNAseq_pipeline(sample1,
             read1_minus = columns[38]
             read2_plus = columns[39]
             read2_minus = columns[40]
-            to_write = '\t'.join([str(x) for x in [sampleID, Chr, Start, End, Ref, Alt, snp138JJG, tumor_reads1,
+            to_write = '\t'.join([str(x) for x in [sampleID, Chr, Start, End, Ref, Alt, tavsnp150, tumor_reads1,
                                                    tumor_reads2, tumor_var_freq, apr_all, Func_refGene, Gene_refGene,
                                                    ExonicFunc_refGene, AAChange_refGene, Func_knownGene, Gene_knownGene,
                                                    ExonicFunc_knownGene, AAChange_knownGene, Func_ensGene, Gene_ensGene,
