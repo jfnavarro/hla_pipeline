@@ -581,7 +581,7 @@ def exome_pipeline(R1_NORMAL,
                     tcov = int(t_split[DP])
                     tfreq = float((tumor_read2 / tcov) * 100)
                     if normal_read2 != 0:
-                        nfreq = float(normal_read2 / ncov)              
+                        nfreq = float(normal_read2 / ncov)
                     tumor_read1 = tcov - tumor_read2
                     normal_read1 = ncov - normal_read2
                 vcf_cov_dict[DictID] = {}
