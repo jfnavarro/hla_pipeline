@@ -8,38 +8,36 @@ from _collections import defaultdict
 import json
 import argparse
 import os
+import sys
 import pandas as pd
 
-def compute_MHC(hla_exome_cancer, hla_exome_normal, 
-                hla_rna, overlap_final, alleles_file, filter):
+def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file, filter):
+    
+    if not hla_exome and not hla_rna:
+        sys.stderr.write("Error, need HLAs as input.\n")
+        sys.exit(1) 
+    
     HLA_dict = defaultdict(list)
 
     # First parse hla_exome_cancer and normal (HLA-LA format)
-    print('Loading DNA tumor HLAs..')
-    for file in hla_exome_cancer:
-        with open(file) as f:
-            for line in f.readlines():
-                columns = line.strip().split('\t')
-                hla = columns[1].split("_")[-1]
-                alleles = columns[2:]
-                HLA_dict[hla].extend(alleles)
-
-    print('Loading DNA normal HLAs..')
-    for file in hla_exome_normal:
-        with open(file) as f:
-            for line in f.readlines():
-                columns = line.strip().split('\t')
-                hla = columns[1].split("_")[-1]
-                alleles = columns[2:]
-                HLA_dict[hla].extend(alleles)
+    if hla_exome:
+        print('Loading Exome HLAs..')
+        for file in hla_exome:
+            with open(file) as f:
+                for line in f.readlines():
+                    columns = line.strip().split('\t')
+                    hla = columns[1].split("_")[-1]
+                    alleles = columns[2:]
+                    HLA_dict[hla].extend(alleles)
 
     # Parse RNA hlas (arcasHLA JSON format)
-    print('Loading RNA HLAs..')
-    for file in hla_rna:
-        with open(file) as f:
-            local_dict = json.load(f)
-            for hla, alleles in local_dict.items():
-                HLA_dict[hla].extend(alleles)
+    if hla_rna:
+        print('Loading RNA HLAs..')
+        for file in hla_rna:
+            with open(file) as f:
+                local_dict = json.load(f)
+                for hla, alleles in local_dict.items():
+                    HLA_dict[hla].extend(alleles)
 
     # Filter HLAs by occurrences
     filtered_hla = []
@@ -60,6 +58,10 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal,
     filtered_hla = [x for x in filtered_hla if x in allowed_alleles]
     print('Alleles allowed in MHCflurry: {}'.format(','.join(filtered_hla)))
 
+    if len(filtered_hla) == 0:
+        sys.stderr.write("Error, list of HLAs is empty.\n")
+        sys.exit(1)
+        
     # Create protein FASTA file
     print('Creating protein sequencess..')
     added_proteins = set()
@@ -89,7 +91,8 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal,
     exec_command(cmd)
     
     if not os.path.isfile("predictions.csv"):
-        print("Error, output file not present")
+        sys.stderr.write("Error, output file not present\n")
+        sys.exit(1) 
         
     if filter:
         results = pd.read_csv("predictions.csv", header=0, index_col=0, sep=",")
@@ -107,11 +110,9 @@ parser = argparse.ArgumentParser(description='Script to predict MHCs using the d
                                        '--hla-rna [file/s with HLA predictions from RNA]'
                                        '--variants [file with the final variants generated with merge_results.py]')
 
-parser.add_argument('--hla-dna-normal', nargs='+', default=None, required=True,
+parser.add_argument('--hla-exome', nargs='+', default=None, required=False,
                     help='A file or files containing predicted HLAs from normal DNA (table format)')
-parser.add_argument('--hla-dna-tumor', nargs='+', default=None, required=True,
-                    help='A file or files containing predicted HLAs from tumor DNA (table format)')
-parser.add_argument('--hla-rna', nargs='+', default=None, required=True,
+parser.add_argument('--hla-rna', nargs='+', default=None, required=False,
                     help='A file or files containing predicted HLAs from RNA (JSON format)')
 parser.add_argument('--variants', default=None, required=True,
                     help='A file with the final variants generated with merge_results.py (table format)')
@@ -121,5 +122,4 @@ parser.add_argument('--filter',
                     help='Apply a filter to the output to keep only peptides that are mutated',
                     action='store_true')
 args = parser.parse_args()
-compute_MHC(args.hla_dna_tumor, args.hla_dna_normal, args.hla_rna, 
-            args.variants, args.alleles, args.filter)
+compute_MHC(args.hla_exome, args.hla_rna, args.variants, args.alleles, args.filter)
