@@ -71,7 +71,7 @@ def compute_MHC(hla_exome_cancer, hla_exome_normal,
             for line in lines:
                 columns = line.strip().split('\t')
                 if int(columns[header.index('Number of Exomes samples (passing)')]) > 0:
-                    protein_name = '{}_{}_{}_{}'.format(columns[header.index('Variant key')],
+                    protein_name = '{}_{}_{}_{}'.format('_'.join(columns[header.index('Variant key')].split()),
                                                         columns[header.index('transcript ID')],
                                                         columns[header.index('cDNA change')],
                                                         columns[header.index('AA change')])
