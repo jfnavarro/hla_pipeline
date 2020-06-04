@@ -276,10 +276,10 @@ def overlap_analysis(exome_variants, epitopes, rna_variants, rna_fpkm):
                 for transcript in sorted(mer.values(), reverse=True):
                     sampleID = transcript[header_epitopes.index('SAMPLE_ID')]
                     # We assume that the same variant in exactly the same position has the same annotation
-                    if has_exome and sampleID in value['Exome'][sampleID]:
+                    if has_exome and sampleID in value['Exome']:
                         data = value['Exome'][sampleID]['data']
                         header = header_exome
-                    elif has_rna and sampleID in value['RNA'][sampleID]:
+                    elif has_rna and sampleID in value['RNA']:
                         data = value['RNA'][sampleID]['data']
                         header = header_rna
                     else:
