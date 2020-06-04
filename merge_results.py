@@ -272,7 +272,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
             
         if 'Epitopes' in value:
             # Loop through epitopes for this position and write a line for each individual mut25mer
-            for mer in sorted(value['Epitopes'].values()):
+            for mer in value['Epitopes'].values():
                 for transcript in sorted(mer.values(), reverse=True):
                     sampleID = transcript[header_epitopes.index('SAMPLE_ID')]
                     # We assume that the same variant in exactly the same position has the same annotation

@@ -119,7 +119,7 @@ parser.add_argument('--variants', default=None, required=True,
 parser.add_argument('--alleles', default=None, required=True,
                     help='A file containing the allowed alleles in MHCflurry')
 parser.add_argument('--mode', default=['either'],
-                    help='Mode to use to extract sequences from the variants (both (DNA and RNA), DNA, RNA or either)', 
+                    help='Mode to use to extract sequences from the variants (both (DNA and RNA), only DNA, only RNA or either)', 
                     choices=['both', 'dna', 'rna', 'either'])
 args = parser.parse_args()
 compute_MHC(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode)
