@@ -18,6 +18,8 @@ kept. Annotation is done using Annovar.
 The pipeline uses bwa to align, trimmomatic to quality trim and GATK4
 best practices. The filters are applied based on allele frecuency and reads
 frecuency. The pipeline will also perform HLA predictions with HLA-LA.
+The exome pipeline can be used with RNA-seq data as input using the --mode
+flag. If this is the case the STAR index and annotation file must be given.
 
 **rnaseq_pipeline.py** processes the RNA-seq data and generates a list of unified
 annotated variants (unfiltered) and also a list of FPKM values. The variant
