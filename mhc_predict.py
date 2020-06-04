@@ -71,7 +71,8 @@ def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file):
                 header = lines.pop(0).strip().split('\t')
                 for line in lines:
                     columns = line.strip().split('\t')
-                    if int(columns[header.index('Number of Exomes samples (passing)')]) > 0:
+                    if int(columns[header.index('Number of Exomes samples (passing)')]) > 0\
+                        or int(columns[header.index('Number of RNA-seq samples (passing)')]) > 0:
                         protein_name = '{}_{}_{}_{}'.format('_'.join(columns[header.index('Variant key')].split()),
                                                             columns[header.index('transcript ID')],
                                                             columns[header.index('cDNA change')],
