@@ -148,7 +148,8 @@ def exome_pipeline(R1_NORMAL,
                    PON,
                    ANNOVAR_DB,
                    ANNOVAR_VERSION,
-                   steps):
+                   steps,
+                   mode):
     print("Exome pipeline")
 
     # Sample 1 cancer, sample 2 normal
@@ -156,7 +157,7 @@ def exome_pipeline(R1_NORMAL,
     sample2_ID = sampleID + "_Normal"
 
     # Create sub-folder to store all results
-    folder = 'exome' if mode == 'DNA' else 'rna'
+    folder = 'exome' if mode == 'DNA' else 'rna_somatic'
     os.makedirs(folder, exist_ok=True)
     os.chdir(folder)
 
