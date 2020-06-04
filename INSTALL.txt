@@ -65,18 +65,14 @@ gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_asse
 gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz* .
 gsutil -m cp -r gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz* .
 gsutil -m cp -r gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz* .
-wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/GRCh38.primary_assembly.genome.fa.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.transcripts.fa.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.pc_translations.fa.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.primary_assembly.annotation.gtf.gz
 gunzip gencode*
-gunzip GRCh38.primary_assembly.genome.fa.gz
-gatk CreateSequenceDictionary -R GRCh38.primary_assembly.genome.fa
-samtools faidx GRCh38.primary_assembly.genome.fa
 mkdir -p STARIndex
 STAR --runMode genomeGenerate --runThreadN 20 --genomeDir STARIndex \
-  --genomeFastaFiles GRCh38.primary_assembly.genome.fa \
-  --sjdbGTFfile gencode.v34.primary_assembly.annotation.gtf --sjdbOverhang 99
+  --genomeFastaFiles Homo_sapiens_assembly38.fasta \
+  --sjdbGTFfile gencode.v34.primary_assembly.annotation.gtf
 
 cd ~/shared
 mkdir -p hg19

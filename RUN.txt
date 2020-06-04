@@ -27,7 +27,7 @@ exome_pipeline.py \
   TumorR1.fastq.gz TumorR2.fastq.gz
 
 rnaseq_pipeline.py \
-  --genome ~/shared/GRCh38/GRCh38.primary_assembly.genome.fa \
+  --genome ~/shared/GRCh38/Homo_sapiens_assembly38.fasta \
   --genome-star ~/shared/GRCh38/STARIndex \
   --genome-ref ~/shared/GRCh38/gencode.v34.primary_assembly.annotation.gtf \
   --sample G001 \

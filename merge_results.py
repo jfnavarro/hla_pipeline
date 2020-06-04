@@ -133,6 +133,9 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
                 variant_dict[variant_key]['RNA'] = {}
             if sample not in variant_dict[variant_key]['RNA']:
                 variant_dict[variant_key]['RNA'][sample] = {}
+            ref_gene_mut = columns[header_rna.index('ExonicFunc.refGene')]
+            UCSC_gene_mut = columns[header_rna.index('ExonicFunc.knownGene')]
+            ENS_gene_mut = columns[header_rna.index('ExonicFunc.ensGene')]
             # Compute coverage and pass/fail
             r1 = float(columns[header_rna.index('TUMOR_READ1')])
             r2 = float(columns[header_rna.index('TUMOR_READ2')])
@@ -140,8 +143,10 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
             rcov = r1 + r2
             cov = '{};{},{},{},{}'.format(sample, r1, r2, rfreq, rcov)
             # Storage coverage, data and status
+            status = (re.search(r'frame', ref_gene_mut) or re.search(r'frame', UCSC_gene_mut)\
+                      or re.search(r'frame', ENS_gene_mut)) and (rfreq >= 5 and rcov >= 5)
             variant_dict[variant_key]['RNA'][sample]['data'] = columns[0:]
-            variant_dict[variant_key]['RNA'][sample]['status'] = rfreq >= 5 and rcov >= 5
+            variant_dict[variant_key]['RNA'][sample]['status'] = status
             variant_dict[variant_key]['RNA'][sample]['coverage'] = cov
         RNA_nonsyn.close()
 
