@@ -733,7 +733,7 @@ DNA_STEPS = args.steps
 ANNOVAR_DB = args.annovar_db
 ANNOVAR_VERSION = args.annovar_version
 MODE = args.mode
-if mode == "RNA" and (not GENOME_REF_STAR or not  GENOME_ANNOTATION):
+if MODE == "RNA" and (not GENOME_REF_STAR or not  GENOME_ANNOTATION):
     sys.stderr.write("Error, RNA mode but STAR reference or annotation files are missing\n")
     sys.exit(1)
     

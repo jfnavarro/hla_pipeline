@@ -61,7 +61,8 @@ Main output files:
 - overlap_final_discarded.txt (all the discarded AND and RNA variants/epitotes collapsed with useful information)
 
 **mhc_predict.py** 
-- predictions.csv (all the prediction MHCs)
+- predictions_mut.csv (all the Mut prediction MHCs)
+- predictions_wt.csv (all the Wt prediction MHCs)
 
 Contact: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 
