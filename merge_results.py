@@ -331,8 +331,6 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
                         final_file.write(to_write + '\n')
                     else:
                         final_file_discarded.write(to_write + '\n')
-        else:
-            print("Variant {} is not present in the epitopes file!".format(key))
 
     final_file.close()
     final_file_discarded.close()
