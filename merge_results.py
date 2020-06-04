@@ -182,8 +182,12 @@ def overlap_analysis(exome_variants, epitopes, rna_variants, rna_fpkm):
                 transcript_dict[transcript]['position'].append(int(cDNAposition))
                 transcript_dict[transcript]['mutation'].append(function)
                 transcript_dict[transcript]['variant_key'].append(key)
-                status_exome = variant_dict[key]['Exome'][sample]['status'] if 'Exome' in variant_dict[key] else False
-                status_rna = variant_dict[key]['RNA'][sample]['status'] if 'RNA' in variant_dict[key] else False
+                status_exome = False
+                if 'Exome' in variant_dict[key] and sample in variant_dict[key]['Exome']:
+                    status_exome = variant_dict[key]['Exome'][sample]['status']
+                status_rna = False
+                if 'RNA' in variant_dict[key] and sample in variant_dict[key]['RNA']:
+                    status_rna = variant_dict[key]['RNA'][sample]['status']
                 transcript_dict[transcript]['status'].append(status_exome or status_rna)
         epitopes.close()
 

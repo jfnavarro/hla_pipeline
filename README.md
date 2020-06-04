@@ -57,7 +57,6 @@ Main output files:
 **merge_resuls.py** 
 - overlap_final.txt (all the AND and RNA variants/epitotes collapsed and filtered with useful information)
 - overlap_final_discarded.txt (all the discarded AND and RNA variants/epitotes collapsed with useful information)
-- overlap_unique_rna.txt (all the RNA variants not found in the exome variants)
 
 **mhc_predict.py** 
 - predictions.csv (all the prediction MHCs)
