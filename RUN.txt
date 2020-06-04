@@ -45,7 +45,7 @@ rnaseq_pipeline.py \
   
 merge_results.py \
   --exome out/exome/nonsyn_SQL_insert.txt \
-  --epitote out/exome/SQL_epitotes.txt \
+  --epitote out/exome/SQL_epitotes.txt out/rna/SQL_epitotes.txt \
   --rna out/rna/nonsyn_SQL_insert.txt \
   --fpkm out/rna/FPKM_SQL_insert.txt
 

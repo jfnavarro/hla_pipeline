@@ -230,9 +230,9 @@ def RNAseq_pipeline(sample1,
         nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
         all_file = open('all_other_mutations.txt', 'w')
         header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tavsnp150\tTUMOR_READ1\tTUMOR_READ2' \
-                 '\tTUMOR_VAR_FREQ\tAPR_ALL\tFunc.refGene\tGene.refGene\tExonicFunc.refGene\tAAChange.refGene\tFunc.knownGene' \
+                 '\tTUMOR_VAR_FREQ\tALL.sites.2015_08\tFunc.refGene\tGene.refGene\tExonicFunc.refGene\tAAChange.refGene\tFunc.knownGene' \
                  '\tGene.knownGene\tExonicFunc.knownGene\tAAChange.knownGene\tFunc.ensGene\tGene.ensGene\tExonicFunc.ensGene\tAAChange.ensGene' \
-                 '\tAPR_EUR\tAPR_AMR2\tAPR_ASN3\tAPR_AFR4\tREAD1_PLUS\tREAD1_MINUS\tREAD2_PLUS\tREAD2_MINUS' \
+                 '\tEUR.sites.2015_08\tAMR.sites.2015_08\tEAS.sites.2015_08\tAFR.sites.2015_08\tREAD1_PLUS\tREAD1_MINUS\tREAD2_PLUS\tREAD2_MINUS' \
                  '\ttumour_type\tsource_of_RNA_used_for_sequencing\tVARIANT-KEY\n'
         nonsyn_file.write(header)
         all_file.write(header)
