@@ -71,8 +71,8 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode):
                 header = lines.pop(0).strip().split('\t')
                 for line in lines:
                     columns = line.strip().split('\t')
-                    pass_dna = int(columns[header.index('Number of Exomes samples (passing)')]) > 0
-                    pass_rna = int(columns[header.index('Number of RNA-seq samples (passing)')]) > 0
+                    pass_dna = int(columns[header.index('Number of DNA samples (passing)')]) > 0
+                    pass_rna = int(columns[header.index('Number of RNA samples (passing)')]) > 0
                     if (mode == "both" and pass_dna and pass_rna) or (mode == "dna" and pass_dna)\
                         or (mode == "rna" and pass_dna) or (mode == "either" and (pass_dna or pass_rna)):
                         protein_name = '{}_{}_{}_{}'.format('_'.join(columns[header.index('Variant key')].split()),
