@@ -666,7 +666,7 @@ parser.add_argument('--threads',
 parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                     help='Steps to perform in the pipeline', 
                     choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
-parser.add_argument('--mode', default=['DNA'],
+parser.add_argument('--mode', default='DNA',
                     help='Mode to use (dna if tumor samples are from WES/WGS and rna if tumor samples are from RNA', 
                     choices=['DNA', 'RNA'])
 
