@@ -44,13 +44,13 @@ rnaseq_pipeline.py \
   RNAR1.fastq.gz RNAR2.fastq.gz
   
 merge_results.py \
-  --exome out/exome/nonsyn_SQL_insert.txt \
-  --epitote out/exome/SQL_epitotes.txt out/rna/SQL_epitotes.txt \
+  --dna out/exome/nonsyn_SQL_insert.txt \
+  --epitope out/exome/SQL_epitotes.txt out/rna/SQL_epitotes.txt \
   --rna out/rna/nonsyn_SQL_insert.txt \
   --fpkm out/rna/FPKM_SQL_insert.txt
 
 mhc_predict.py \
-  --hla-exome out/exome/PRG-HLA-LA_Normal_output.txt out/exome/PRG-HLA-LA_Tumor_output.txt \
+  --hla-dna out/exome/PRG-HLA-LA_Normal_output.txt out/exome/PRG-HLA-LA_Tumor_output.txt \
   --hla-rna out/rna/hla/sample_header.genotype.json \
   --variants out/overlap_final.txt \
   --alleles ~/shared/alleles.txt

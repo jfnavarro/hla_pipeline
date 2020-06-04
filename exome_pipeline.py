@@ -12,49 +12,10 @@ import re
 import argparse
 import multiprocessing
 import os
+import sys
 import pandas as pd
 from Bio import SeqIO
 
-def HLA_predictionDNA(bamfile, sampleID, outfile, threads):
-    OUT_DIR = os.path.abspath(os.path.join('out_hla_', os.path.splitext(outfile)[0]))
-    os.makedirs(OUT_DIR, exist_ok=True)
-    cmd = '{} --BAM {} --workingDir {} --graph {} --sampleID {}'\
-          ' --maxTHREADS {}'.format(HLALA, bamfile, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
-    exec_command(cmd)
-
-    # create a dictionary to store the output for each allele
-    hla = pd.read_table(os.path.join(OUT_DIR, sampleID, 'hla', 'R1_bestguess_G.txt'), sep='\t')
-    allele_dict = {}
-    hla = hla.groupby('Locus')
-    for k, g in hla:
-        allele = [re.sub('G$', '', a).replace('N', '') for a in g['Allele'].tolist()]
-        allele_dict['HLA_' + k] = allele
-
-    # Create formatted output file
-    a = open(outfile, 'w')
-    for key, value in allele_dict.items():
-        a.write('{}\t{}\t{}\n'.format(sampleID, key, '\t'.join(value)))
-    a.close()
-  
-def HLA_predictionRNA(sample, threads):
-    cmd = '{} extract --threads {} --paired {}'.format(ARCASHLA, threads, sample)
-    exec_command(cmd)
-
-    clean_name = os.path.splitext(sample)[0]
-
-    cmd = '{} genotype --threads {} {}.extracted.1.fq.gz {}.extracted.2.fq.gz'.format(ARCASHLA,
-                                                                                      threads,
-                                                                                      clean_name,
-                                                                                      clean_name)
-    exec_command(cmd)
-
-    cmd = '{} partial --threads {} -G {}.genotype.json {}.extracted.1.fq.gz {}.extracted.2.fq.gz'.format(ARCASHLA,
-                                                                                                         threads,
-                                                                                                         clean_name,
-                                                                                                         clean_name,
-                                                                                                         clean_name)
-    exec_command(cmd)
-    
 def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_type, header=True):
     nonsyn_snv = open(input)
     nonsyn_snv_lines = nonsyn_snv.readlines()[1:]
@@ -658,8 +619,8 @@ def exome_pipeline(R1_NORMAL,
 
     print("COMPLETED!")
 
-parser = argparse.ArgumentParser(description='Exome variant calling and HLA prediction pipeline '
-                                 '(created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
+parser = argparse.ArgumentParser(description='Exome somatic variant calling and HLA prediction pipeline\n'
+                                 'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='exome_pipeline.py',
                                  usage='exome_pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer)')
 parser.add_argument('R1_NORMAL', help='FASTQ file R1 (Normal)')

@@ -2,32 +2,13 @@
 """
 @author: jfnavarro
 """
-from hlapipeline.common import exec_command
+from hlapipeline.common import *
 from hlapipeline.tools import *
 from hlapipeline.epitopes import *
 import re
 import os
 import argparse
 import multiprocessing
-
-def HLA_predictionRNA(sample, threads):
-    cmd = '{} extract --threads {} --paired {}'.format(ARCASHLA, threads, sample)
-    exec_command(cmd)
-
-    clean_name = os.path.splitext(sample)[0]
-
-    cmd = '{} genotype --threads {} {}.extracted.1.fq.gz {}.extracted.2.fq.gz'.format(ARCASHLA,
-                                                                                      threads,
-                                                                                      clean_name,
-                                                                                      clean_name)
-    exec_command(cmd)
-
-    cmd = '{} partial --threads {} -G {}.genotype.json {}.extracted.1.fq.gz {}.extracted.2.fq.gz'.format(ARCASHLA,
-                                                                                                         threads,
-                                                                                                         clean_name,
-                                                                                                         clean_name,
-                                                                                                         clean_name)
-    exec_command(cmd)
 
 def RNAseq_pipeline(sample1,
                     sample2,
@@ -97,6 +78,8 @@ def RNAseq_pipeline(sample1,
         exec_command(cmd)
 
     if 'variant' in steps:
+        # TODO add HaplotypeCaller and remove varscan in pileup mode (merge variants)
+        
         # Variant calling (Samtools pile-ups)
         print('Computing pile-ups')
         cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, genome)
@@ -314,8 +297,8 @@ def RNAseq_pipeline(sample1,
 
     print("COMPLETED!")
 
-parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA prediction pipeline'
-                                 '(created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
+parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA prediction pipeline\n'
+                                 'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='rnaseq_pipeline.py',
                                  usage='rnaseq_pipeline.py [options] R1(RNA) R2(RNA)')
 parser.add_argument('R1_RNA', help='FASTQ file R1 (RNA)')

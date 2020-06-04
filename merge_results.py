@@ -71,39 +71,39 @@ def add_flags(transcript, variant_key, transcript_info, mer_len=25):
         prev_status = status
     return flags if flags != '' else '-'
 
-def overlap_analysis(exome_variants, epitopes, rna_variants, rna_fpkm):
+def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
 
-    if len(exome_variants) == 0 and len(rna_variants) == 0:
-        sys.stderr.write("Error, no variants given as input (Exome or DNA).\n")
+    if len(dna_variants) == 0 and len(rna_variants) == 0:
+        sys.stderr.write("Error, no variants given as input (DNA or RNA).\n")
         sys.exit(1)
         
     variant_dict = {}
 
-    print('Loading exome variants..')
-    for file in exome_variants if exome_variants else []:
-        exome_nonsyn = open(file)
-        exome_nonsyn_lines = exome_nonsyn.readlines()
-        header_exome = exome_nonsyn_lines.pop(0).strip().split('\t')
-        for line in exome_nonsyn_lines:
+    print('Loading DNA variants..')
+    for file in dna_variants if dna_variants else []:
+        DNA_nonsyn = open(file)
+        DNA_nonsyn_lines = DNA_nonsyn.readlines()
+        header_DNA = DNA_nonsyn_lines.pop(0).strip().split('\t')
+        for line in DNA_nonsyn_lines:
             columns = line.strip().split('\t')
-            variant_key = columns[header_exome.index('VARIANT-KEY')]
-            sample = columns[header_exome.index('SAMPLE_ID')]
+            variant_key = columns[header_DNA.index('VARIANT-KEY')]
+            sample = columns[header_DNA.index('SAMPLE_ID')]
             if variant_key not in variant_dict:
                 variant_dict[variant_key] = {}
-                variant_dict[variant_key]['Exome'] = {}
-            if sample not in variant_dict[variant_key]['Exome']:
-                variant_dict[variant_key]['Exome'][sample] = {}
+                variant_dict[variant_key]['DNA'] = {}
+            if sample not in variant_dict[variant_key]['DNA']:
+                variant_dict[variant_key]['DNA'][sample] = {}
             # Compute coverage and pass/fail
-            N_cov = int(columns[header_exome.index('NCOV')])
-            T_cov = float(columns[header_exome.index('TCOV')])
-            T_freq = float(columns[header_exome.index('TVAF')].replace('%', ''))
-            N_freq = float(columns[header_exome.index('NVAF')].replace('%', ''))
-            T_reads = float(columns[header_exome.index('TUMOR_READ2')])
-            P_val = columns[header_exome.index('PVAL')]
-            callers = columns[header_exome.index('CALLERS')]
-            ref_gene_mut = columns[header_exome.index('ExonicFunc.refGene')]
-            UCSC_gene_mut = columns[header_exome.index('ExonicFunc.knownGene')]
-            ENS_gene_mut = columns[header_exome.index('ExonicFunc.ensGene')]
+            N_cov = int(columns[header_DNA.index('NCOV')])
+            T_cov = float(columns[header_DNA.index('TCOV')])
+            T_freq = float(columns[header_DNA.index('TVAF')].replace('%', ''))
+            N_freq = float(columns[header_DNA.index('NVAF')].replace('%', ''))
+            T_reads = float(columns[header_DNA.index('TUMOR_READ2')])
+            P_val = columns[header_DNA.index('PVAL')]
+            callers = columns[header_DNA.index('CALLERS')]
+            ref_gene_mut = columns[header_DNA.index('ExonicFunc.refGene')]
+            UCSC_gene_mut = columns[header_DNA.index('ExonicFunc.knownGene')]
+            ENS_gene_mut = columns[header_DNA.index('ExonicFunc.ensGene')]
             try:
                 no_callers = int(callers.strip().split(':')[0])
             except ValueError:
@@ -113,10 +113,10 @@ def overlap_analysis(exome_variants, epitopes, rna_variants, rna_fpkm):
                         or re.search(r'frame', ENS_gene_mut)) and no_callers >= 1) or no_callers >= 2)\
                      and (N_cov > 10 and T_freq >= 7 and T_reads >= 4)
             # Store data, coverage and status
-            variant_dict[variant_key]['Exome'][sample]['data'] = columns
-            variant_dict[variant_key]['Exome'][sample]['status'] = status
-            variant_dict[variant_key]['Exome'][sample]['coverage'] = cov
-        exome_nonsyn.close()
+            variant_dict[variant_key]['DNA'][sample]['data'] = columns
+            variant_dict[variant_key]['DNA'][sample]['status'] = status
+            variant_dict[variant_key]['DNA'][sample]['coverage'] = cov
+        DNA_nonsyn.close()
         
     print('Loading RNA variants..')
     for file in rna_variants if rna_variants else []:
@@ -145,7 +145,7 @@ def overlap_analysis(exome_variants, epitopes, rna_variants, rna_fpkm):
             variant_dict[variant_key]['RNA'][sample]['coverage'] = cov
         RNA_nonsyn.close()
 
-    print('Loading epitopes..')
+    print('Loading Epitopes..')
     transcript_dict = {}
     # We assume that the same variant in exactly the same position has the same annotation 
     for file in epitopes:
@@ -183,13 +183,13 @@ def overlap_analysis(exome_variants, epitopes, rna_variants, rna_fpkm):
                 transcript_dict[transcript]['position'].append(int(cDNAposition))
                 transcript_dict[transcript]['mutation'].append(function)
                 transcript_dict[transcript]['variant_key'].append(key)
-                status_exome = False
-                if 'Exome' in variant_dict[key] and sample in variant_dict[key]['Exome']:
-                    status_exome = variant_dict[key]['Exome'][sample]['status']
+                status_DNA = False
+                if 'DNA' in variant_dict[key] and sample in variant_dict[key]['DNA']:
+                    status_DNA = variant_dict[key]['DNA'][sample]['status']
                 status_rna = False
                 if 'RNA' in variant_dict[key] and sample in variant_dict[key]['RNA']:
                     status_rna = variant_dict[key]['RNA'][sample]['status']
-                transcript_dict[transcript]['status'].append(status_exome or status_rna)
+                transcript_dict[transcript]['status'].append(status_DNA or status_rna)
         epitopes.close()
 
     print('Loading FPKM data..')
@@ -227,15 +227,15 @@ def overlap_analysis(exome_variants, epitopes, rna_variants, rna_fpkm):
                                 for sample, x in samples.items()]
 
     print('Creating final files..')
-    header_final = 'Variant key\tExomes samples (passing)\tNumber of Exomes samples (passing)\t' \
-                   'RNA-seq samples (passing)\tNumber of RNA-seq samples (passing)\t'\
-                   'Exomes samples (failing)\tNumber of Exomes samples (failing)\t'\
-                   'RNA-seq samples (failing)\tNumber of RNA-seq samples (failing)\t'\
+    header_final = 'Variant key\tDNAs samples (passing)\tNumber of DNA samples (passing)\t' \
+                   'RNA samples (passing)\tNumber of RNA samples (passing)\t'\
+                   'DNA samples (failing)\tNumber of DNA samples (failing)\t'\
+                   'RNA samples (failing)\tNumber of RNA samples (failing)\t'\
                    'RefGene name\tRefGene mutation\tRefGene AA change\tUCSC gene name\tUCSC mutation\t'\
                    'UCSC AA change\tEnsembl Gene name\tEnsembl mutation\tEnsembl AA change\t'\
                    '1000genome all freq\tdbSNP_ID\tCosmic Info\tGene Name\ttranscript ID\tMutation type\t'\
                    'Exon\tcDNA change\tAA change\tAA position\tEpitope creation flags\tWt Epitope\t'\
-                   'Mut Epitope\tExome Coverage info (Sample,Tumor coverage,Normal Coverage,Tumor var freq,'\
+                   'Mut Epitope\tDNA Coverage info (Sample,Tumor coverage,Normal Coverage,Tumor var freq,'\
                    'Normal var freq,Tumor variant reads,p_value (varscan),callers)\tError flags\t'\
                    'RNA Coverage info (Sample,read1,read2,variant frequency,coverage)\t' \
                    'FPKM info per sample (locus,exp)\tFPKM mean(all samples)\tFPKM percentile (all samples)\n'
@@ -256,17 +256,17 @@ def overlap_analysis(exome_variants, epitopes, rna_variants, rna_fpkm):
             rna_samples_fail = [key for key, value in value['RNA'].items() if not value['status']]
             has_rna = True
             
-        exome_cov = ["-;-,-,-,-"]
-        exome_samples_pass = []
-        exome_samples_fail = []
-        has_exome = False
-        if 'Exome' in value:
-            exome_samples_pass = [key for key, value in value['Exome'].items() if value['status']]
-            exome_samples_fail = [key for key, value in value['Exome'].items() if not value['status']]
-            exome_cov = '|'.join(x['coverage'] for x in value['Exome'].values())
-            has_exome = True
+        DNA_cov = ["-;-,-,-,-"]
+        DNA_samples_pass = []
+        DNA_samples_fail = []
+        has_DNA = False
+        if 'DNA' in value:
+            DNA_samples_pass = [key for key, value in value['DNA'].items() if value['status']]
+            DNA_samples_fail = [key for key, value in value['DNA'].items() if not value['status']]
+            DNA_cov = '|'.join(x['coverage'] for x in value['DNA'].values())
+            has_DNA = True
             
-        if not has_exome and not has_rna:
+        if not has_DNA and not has_rna:
             print("Variant {} is only present in the epitopes file!".format(key))
             continue
             
@@ -276,9 +276,9 @@ def overlap_analysis(exome_variants, epitopes, rna_variants, rna_fpkm):
                 for transcript in sorted(mer.values(), reverse=True):
                     sampleID = transcript[header_epitopes.index('SAMPLE_ID')]
                     # We assume that the same variant in exactly the same position has the same annotation
-                    if has_exome and sampleID in value['Exome']:
-                        data = value['Exome'][sampleID]['data']
-                        header = header_exome
+                    if has_DNA and sampleID in value['DNA']:
+                        data = value['DNA'][sampleID]['data']
+                        header = header_DNA
                     elif has_rna and sampleID in value['RNA']:
                         data = value['RNA'][sampleID]['data']
                         header = header_rna
@@ -317,17 +317,17 @@ def overlap_analysis(exome_variants, epitopes, rna_variants, rna_fpkm):
                         fpkm_mean = 'NA'
                         percentile = 'NA'
                     flags = add_flags(transcript_name, key, transcript_dict, mer_len=25)
-                    to_write = '\t'.join(str(x) for x in [key, ','.join(exome_samples_pass), len(exome_samples_pass),
+                    to_write = '\t'.join(str(x) for x in [key, ','.join(DNA_samples_pass), len(DNA_samples_pass),
                                                           ','.join(rna_samples_pass), len(rna_samples_pass),
-                                                          ','.join(exome_samples_fail), len(exome_samples_fail),
+                                                          ','.join(DNA_samples_fail), len(DNA_samples_fail),
                                                           ','.join(rna_samples_fail), len(rna_samples_fail),
                                                           ref_gene_name, ref_gene_mut, ref_gene_change,
                                                           UCSC_gene_name, UCSC_gene_mut, UCSC_gene_change,
                                                           ENS_gene_name, ENS_gene_mut, ENS_gene_change, genome_all,
                                                           dbSNP_ID, cosmic, gene_name, transcript_name, mutation_type,
                                                           exon, cdna_change, aa_change, aa_position, error_flags, wt_mer,
-                                                          mu_mer, exome_cov, flags, rna_cov, fpkm_info, fpkm_mean, percentile])
-                    if len(exome_samples_pass) >= 1 or len(rna_samples_pass) >= 1:
+                                                          mu_mer, DNA_cov, flags, rna_cov, fpkm_info, fpkm_mean, percentile])
+                    if len(DNA_samples_pass) >= 1 or len(rna_samples_pass) >= 1:
                         final_file.write(to_write + '\n')
                     else:
                         final_file_discarded.write(to_write + '\n')
@@ -337,23 +337,24 @@ def overlap_analysis(exome_variants, epitopes, rna_variants, rna_fpkm):
     final_file.close()
     final_file_discarded.close()
 
-parser = argparse.ArgumentParser(description='Script to aggregate results and create a final report from the exome and rna-seq pipelines '
-                                             '(created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
+parser = argparse.ArgumentParser(description='Script that merges variants and creates a final report using the\n'\
+                                             'resuls of the DNA and RNA pipelines\n'
+                                             'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                  prog='merge_results.py',
-                                 usage='merge_results.py [options] '
-                                       '--exome [exome results files] '
-                                       '--epitope [epitope results files] '
-                                       '--rna [rna results files] '
+                                 usage='merge_results.py [options]\n'
+                                       '--dna [dna variants results files]\n'
+                                       '--epitope [epitope results files]\n'
+                                       '--rna [rna variants results files]\n'
                                        '--fpkm [rna fpkm results]')
 
-parser.add_argument('--exome', nargs='+', default=None, required=False,
-                    help='List of files with the results of the exome variants')
+parser.add_argument('--dna', nargs='+', default=None, required=False,
+                    help='List of files with the results of the DNA pipeline')
 parser.add_argument('--epitope', nargs='+', default=None, required=True,
-                    help='List of files with the results of the epitotes')
+                    help='List of files with the the epitotes (DNA and RNA)')
 parser.add_argument('--rna', nargs='+', default=None, required=False,
-                    help='List of files with the results of the RNA variants')
+                    help='List of files with the results of the RNA pipeline')
 parser.add_argument('--fpkm', nargs='+', default=None, required=True,
-                    help='List of files with the results of the RNA FPKM')
+                    help='List of files with the FPKM results of the RNA pipeline')
 
 args = parser.parse_args()
-overlap_analysis(args.exome, args.epitope, args.rna, args.fpkm)
+overlap_analysis(args.dna, args.epitope, args.rna, args.fpkm)

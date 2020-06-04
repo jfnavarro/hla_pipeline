@@ -9,18 +9,18 @@ import json
 import argparse
 import sys
 
-def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file):
+def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode):
 
-    if not hla_exome and not hla_rna:
+    if not hla_dna and not hla_rna:
         sys.stderr.write("Error, need HLAs as input.\n")
         sys.exit(1)
 
     HLA_dict = defaultdict(list)
 
     # First parse hla_exome_cancer and normal (HLA-LA format)
-    if hla_exome:
-        print('Loading Exome HLAs..')
-        for file in hla_exome:
+    if hla_dna:
+        print('Loading DNA HLAs..')
+        for file in hla_dna:
             with open(file) as f:
                 for line in f.readlines():
                     columns = line.strip().split('\t')
@@ -71,8 +71,10 @@ def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file):
                 header = lines.pop(0).strip().split('\t')
                 for line in lines:
                     columns = line.strip().split('\t')
-                    if int(columns[header.index('Number of Exomes samples (passing)')]) > 0\
-                        or int(columns[header.index('Number of RNA-seq samples (passing)')]) > 0:
+                    pass_dna = int(columns[header.index('Number of Exomes samples (passing)')]) > 0
+                    pass_rna = int(columns[header.index('Number of RNA-seq samples (passing)')]) > 0
+                    if (mode == "both" and pass_dna and pass_rna) or (mode == "dna" and pass_dna)\
+                        or (mode == "rna" and pass_dna) or (mode == "either" and (pass_dna or pass_rna)):
                         protein_name = '{}_{}_{}_{}'.format('_'.join(columns[header.index('Variant key')].split()),
                                                             columns[header.index('transcript ID')],
                                                             columns[header.index('cDNA change')],
@@ -99,22 +101,25 @@ def compute_MHC(hla_exome, hla_rna, overlap_final, alleles_file):
 
     print('Completed')
 
-parser = argparse.ArgumentParser(description='Script to predict MHCs using the data from the exome and rnaseq variant calling pipelines '
-                                             '(created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
+parser = argparse.ArgumentParser(description='Script to predict MHCs (MHCflurry) using data from DNA and RNA variant calling pipelines\n'
+                                             'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                  prog='mhc_predict.py',
                                  usage='mhc_predict.py [options] '
-                                       '--hla-dna-normal [file/s with HLA predictions from DNA (Normal)] '
-                                       '--hla-dna-tumor [file/s with HLA predictions from DNA (Tumor)] '
-                                       '--hla-rna [file/s with HLA predictions from RNA]'
+                                       '--hla-dna [file/s with HLA predictions from DNA (Normal)]\n'
+                                       '--hla-rna [file/s with HLA predictions from RNA]\n'
+                                       '--alleles [file with supported alleles in MHCflurry]\n'
                                        '--variants [file with the final variants generated with merge_results.py]')
 
-parser.add_argument('--hla-exome', nargs='+', default=None, required=False,
-                    help='A file or files containing predicted HLAs from normal DNA (table format)')
+parser.add_argument('--hla-dna', nargs='+', default=None, required=False,
+                    help='A file or files containing predicted HLAs from normal DNA (HLA-LA table format)')
 parser.add_argument('--hla-rna', nargs='+', default=None, required=False,
-                    help='A file or files containing predicted HLAs from RNA (JSON format)')
+                    help='A file or files containing predicted HLAs from RNA (arcasHLA JSON format)')
 parser.add_argument('--variants', default=None, required=True,
                     help='A file with the final variants generated with merge_results.py (table format)')
 parser.add_argument('--alleles', default=None, required=True,
                     help='A file containing the allowed alleles in MHCflurry')
+parser.add_argument('--mode', default=['either'],
+                    help='Mode to use to extract sequences from the variants (both (DNA and RNA), DNA, RNA or either)', 
+                    choices=['both', 'dna', 'rna', 'either'])
 args = parser.parse_args()
-compute_MHC(args.hla_exome, args.hla_rna, args.variants, args.alleles)
+compute_MHC(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode)
