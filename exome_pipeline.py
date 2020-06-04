@@ -35,6 +35,25 @@ def HLA_predictionDNA(bamfile, sampleID, outfile, threads):
     for key, value in allele_dict.items():
         a.write('{}\t{}\t{}\n'.format(sampleID, key, '\t'.join(value)))
     a.close()
+  
+def HLA_predictionRNA(sample, threads):
+    cmd = '{} extract --threads {} --paired {}'.format(ARCASHLA, threads, sample)
+    exec_command(cmd)
+
+    clean_name = os.path.splitext(sample)[0]
+
+    cmd = '{} genotype --threads {} {}.extracted.1.fq.gz {}.extracted.2.fq.gz'.format(ARCASHLA,
+                                                                                      threads,
+                                                                                      clean_name,
+                                                                                      clean_name)
+    exec_command(cmd)
+
+    cmd = '{} partial --threads {} -G {}.genotype.json {}.extracted.1.fq.gz {}.extracted.2.fq.gz'.format(ARCASHLA,
+                                                                                                         threads,
+                                                                                                         clean_name,
+                                                                                                         clean_name,
+                                                                                                         clean_name)
+    exec_command(cmd)
     
 def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_type, header=True):
     nonsyn_snv = open(input)
@@ -116,6 +135,8 @@ def exome_pipeline(R1_NORMAL,
                    IILLUMINA_ADAPTERS,
                    tumor_type,
                    genome,
+                   GENOME_REF_STAR,
+                   GENOME_ANNOTATION,
                    sampleID,
                    THREADS,
                    FASTA_AA_DICT,
@@ -135,8 +156,9 @@ def exome_pipeline(R1_NORMAL,
     sample2_ID = sampleID + "_Normal"
 
     # Create sub-folder to store all results
-    os.makedirs('exome', exist_ok=True)
-    os.chdir('exome')
+    folder = 'exome' if mode == 'DNA' else 'rna'
+    os.makedirs(folder, exist_ok=True)
+    os.chdir(folder)
 
     if 'mapping' in steps:
         # TRIMMING
@@ -150,65 +172,78 @@ def exome_pipeline(R1_NORMAL,
                                                                                                IILLUMINA_ADAPTERS)
         exec_command(cmd)
 
-        cmd = '{} PE -threads {} -phred33 {} {} R1_cancer.fastq.gz R1_cancer_unpaired.fastq.gz ' \
-              'R2_cancer.fastq.gz R2_cancer_unpaired.fastq.gz ' \
-              'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
-                                                                                               THREADS,
-                                                                                               R1_CANCER,
-                                                                                               R2_CANCER,
-                                                                                               IILLUMINA_ADAPTERS)
+        if mode == "DNA":
+            cmd = '{} PE -threads {} -phred33 {} {} R1_cancer.fastq.gz R1_cancer_unpaired.fastq.gz ' \
+                  'R2_cancer.fastq.gz R2_cancer_unpaired.fastq.gz ' \
+                  'ILLUMINACLIP:{}:2:40:15 HEADCROP:9 CROP:140 SLIDINGWINDOW:4:25 MINLEN:5'.format(TRIPTOMATIC,
+                                                                                                   THREADS,
+                                                                                                   R1_CANCER,
+                                                                                                   R2_CANCER,
+                                                                                                   IILLUMINA_ADAPTERS)
+        else:
+            cmd = '{} --paired --basename sample {} {}'.format(TRIMGALORE, R1_CANCER, R2_CANCER)
         exec_command(cmd)
 
         # ALIGNMENT
         print('Starting alignment')
+        
         # Normal (paired)
         cmd = '{} -t {} {} R1_normal.fastq.gz R2_normal.fastq.gz | ' \
               '{} sort --threads {} > normal_paired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
         exec_command(cmd)
-
-        # Cancer (paired)
-        cmd = '{} -t {} {} R1_cancer.fastq.gz R2_cancer.fastq.gz | ' \
-              '{} sort --threads {} > cancer_paired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
+        
+        # Normal (unpaired R2)
+        cmd = '{} -t {} {} R2_normal_unpaired.fastq.gz | ' \
+              '{} sort --threads {} > R2_normal_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
         exec_command(cmd)
 
         # Normal (unpaired R1)
         cmd = '{} -t {} {} R1_normal_unpaired.fastq.gz | ' \
               '{} sort --threads {} > R1_normal_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
         exec_command(cmd)
-
-        # Cancer (unpaired R1)
-        cmd = '{} -t {} {} R1_cancer_unpaired.fastq.gz | ' \
-              '{} sort --threads {} > R1_cancer_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
-        exec_command(cmd)
-
-        # Normal (unpaired R2)
-        cmd = '{} -t {} {} R2_normal_unpaired.fastq.gz | ' \
-              '{} sort --threads {} > R2_normal_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
-        exec_command(cmd)
-
-        # Cancer (unpaired R2)
-        cmd = '{} -t {} {} R2_cancer_unpaired.fastq.gz | ' \
-              '{} sort --threads {} > R2_cancer_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
-        exec_command(cmd)
-
-        # Merge aligned files
-        print('Merging aligned files')
+        
+        # Merge
         cmd = '{} merge -f aligned_normal_merged.bam normal_paired_aligned_sorted.bam ' \
               'R1_normal_unpaired_aligned_sorted.bam R2_normal_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
         exec_command(cmd)
-
-        cmd = '{} merge -f aligned_cancer_merged.bam cancer_paired_aligned_sorted.bam ' \
-              'R1_cancer_unpaired_aligned_sorted.bam R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
-        exec_command(cmd)
+        
+        if mode == "DNA":
+            # Cancer (paired)
+            cmd = '{} -t {} {} R1_cancer.fastq.gz R2_cancer.fastq.gz | ' \
+                  '{} sort --threads {} > cancer_paired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
+            exec_command(cmd)
+    
+            # Cancer (unpaired R1)
+            cmd = '{} -t {} {} R1_cancer_unpaired.fastq.gz | ' \
+                  '{} sort --threads {} > R1_cancer_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
+            exec_command(cmd)
+    
+            # Cancer (unpaired R2)
+            cmd = '{} -t {} {} R2_cancer_unpaired.fastq.gz | ' \
+                  '{} sort --threads {} > R2_cancer_unpaired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
+            exec_command(cmd)
+    
+            # Merge
+            cmd = '{} merge -f aligned_cancer_merged.bam cancer_paired_aligned_sorted.bam ' \
+                  'R1_cancer_unpaired_aligned_sorted.bam R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
+            exec_command(cmd)
+        else:
+            cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired'\
+                  ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs'\
+                  ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c'\
+                  ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, THREADS)
+            exec_command(cmd)
 
     if 'gatk' in steps:
         # Add headers
         print("Adding headers")
-        cmd = '{} AddOrReplaceReadGroups I=aligned_cancer_merged.bam O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}' \
-              ' RGCN={} RGDS={}'.format(PICARD, sample1_ID, 'DNA', sample1_ID, sample1_ID, 'VHIO', tumor_type)
+        cmd = '{} AddOrReplaceReadGroups I={} O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}' \
+              ' RGCN={} RGDS={}'.format(PICARD, 
+                                        'aligned_cancer_merged.bam' if mode == 'DNA' else 'Aligned.sortedByCoord.out.bam', 
+                                        sample1_ID, mode, sample1_ID, sample1_ID, 'VHIO', tumor_type)
         exec_command(cmd)
         cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}' \
-              ' RGCN={} RGDS={}'.format(PICARD, sample2_ID, 'DNA', sample2_ID, sample2_ID, 'VHIO', tumor_type)
+              ' RGCN={} RGDS={}'.format(PICARD, sample2_ID, mode, sample2_ID, sample2_ID, 'VHIO', tumor_type)
         exec_command(cmd)
 
         # Mark duplicates
@@ -238,9 +273,13 @@ def exome_pipeline(R1_NORMAL,
     if 'hla' in steps:
         # HLA-LA predictions
         print('Performing HLA-LA predictions')
-        HLA_predictionDNA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
-        HLA_predictionDNA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
-
+        if mode == 'DNA':
+            HLA_predictionDNA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+            HLA_predictionDNA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
+        else:
+            HLA_predictionRNA('sample1_final.bam', THREADS)
+            HLA_predictionDNA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
+            
     if 'variant' in steps:
         # Variant calling (Samtools pile-ups)
         print('Computing pile-ups')
@@ -630,6 +669,10 @@ parser.add_argument('--adapter',
                     help='Path to the Illumina adapters FASTA file.', required=True)
 parser.add_argument('--genome',
                     help='Path to the reference Genome FASTA file (must contain BWA index)', required=True)
+parser.add_argument('--genome-star',
+                    help='Path to the reference Genome STAR index folder (RNA mode)', required=False)
+parser.add_argument('--genome-ref',
+                    help='Path to the reference Genome GTF file (RNA mode)', required=False)
 parser.add_argument('--sample',
                     help='Name of the sample/experiment. Default is sample', default='sample')
 parser.add_argument('--tumor',
@@ -659,7 +702,11 @@ parser.add_argument('--annovar-version',
 parser.add_argument('--threads',
                     help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
 parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
-                    help='Steps to perform in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
+                    help='Steps to perform in the pipeline', 
+                    choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
+parser.add_argument('--mode', default=['DNA'],
+                    help='Mode to use (dna if tumor samples are from WES/WGS and rna if tumor samples are from RNA', 
+                    choices=['DNA', 'RNA'])
 
 # Parse arguments
 args = parser.parse_args()
@@ -672,6 +719,8 @@ sampleID = args.sample
 tumor_type = args.tumor
 IILLUMINA_ADAPTERS = os.path.abspath(args.adapter)
 GENOME_REF = os.path.abspath(args.genome)
+GENOME_REF_STAR = os.path.abspath(args.genome_star) if args.genome_star else None
+GENOME_ANNOTATION = os.path.abspath(args.genome_ref) if args.genome_ref else None
 THREADS = int(args.threads)
 FASTA_AA_DICT = os.path.abspath(args.fastaAA)
 FASTA_cDNA_DICT = os.path.abspath(args.fastacDNA)
@@ -683,7 +732,11 @@ PON = os.path.abspath(args.pon)
 DNA_STEPS = args.steps
 ANNOVAR_DB = args.annovar_db
 ANNOVAR_VERSION = args.annovar_version
-
+MODE = args.mode
+if mode == "RNA" and (not GENOME_REF_STAR or not  GENOME_ANNOTATION):
+    sys.stderr.write("Error, RNA mode but STAR reference or annotation files are missing\n")
+    sys.exit(1)
+    
 # Move to output dir
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
@@ -695,6 +748,8 @@ exome_pipeline(R1_NORMAL,
                IILLUMINA_ADAPTERS,
                tumor_type,
                GENOME_REF,
+               GENOME_REF_STAR,
+               GENOME_ANNOTATION,
                sampleID,
                THREADS,
                FASTA_AA_DICT,
@@ -706,4 +761,5 @@ exome_pipeline(R1_NORMAL,
                PON,
                ANNOVAR_DB,
                ANNOVAR_VERSION,
-               DNA_STEPS)
+               DNA_STEPS,
+               MODE)

@@ -65,7 +65,7 @@ def RNAseq_pipeline(sample1,
 
         # Add headers
         print("Adding headers")
-        cmd = '{} AddOrReplaceReadGroups I=Aligned.sortedByCoord.out.bam O=sample_header.bam SO=coordinate RGID=SB_RNA-seq RGLB={}'\
+        cmd = '{} AddOrReplaceReadGroups I=Aligned.sortedByCoord.out.bam O=sample_header.bam SO=coordinate RGID=RNA RGLB={}'\
               ' RGPL=Illumina RGPU=PU{} RGSM=rna-seq_{} Create_Index=true Validation_Stringency=SILENT'.format(PICARD,
                                                                                                                'VHIO',
                                                                                                                'VHIO',
@@ -164,6 +164,7 @@ def RNAseq_pipeline(sample1,
             apr_amr = columns[header.index('AMR.sites.2015_08')]
             apr_asn = columns[header.index('EAS.sites.2015_08')]
             apr_afr = columns[header.index('AFR.sites.2015_08')]
+            cosmic = columns[header.index('cosmic70')]
             gDNA = 'chr' + Chr + ':' + start
             variant_key = Chr + ':' + start + '-' + end + ' ' + ref + '>' + alt
             if ref_gene_detail != 'NA':
@@ -176,7 +177,7 @@ def RNAseq_pipeline(sample1,
                                                    func_ref_gene, gene_ref_gene, exonic_func_ref, AA_change_refGene,
                                                    func_known_gene, gene_known_gene, exonic_known_ref, AA_change_knownGene,
                                                    func_ens_gene, gene_ens_gene, exonic_ens_ref, AA_change_ensGene,
-                                                   apr_all, apr_eur, apr_amr, apr_asn, apr_afr, variant_key]])
+                                                   apr_all, apr_eur, apr_amr, apr_asn, apr_afr, variant_key, cosmic]])
             insert_file.write(to_write + "\n")
         insert_file.close()
         snv.close()
@@ -233,13 +234,13 @@ def RNAseq_pipeline(sample1,
                  '\tTUMOR_VAR_FREQ\tALL.sites.2015_08\tFunc.refGene\tGene.refGene\tExonicFunc.refGene\tAAChange.refGene\tFunc.knownGene' \
                  '\tGene.knownGene\tExonicFunc.knownGene\tAAChange.knownGene\tFunc.ensGene\tGene.ensGene\tExonicFunc.ensGene\tAAChange.ensGene' \
                  '\tEUR.sites.2015_08\tAMR.sites.2015_08\tEAS.sites.2015_08\tAFR.sites.2015_08\tREAD1_PLUS\tREAD1_MINUS\tREAD2_PLUS\tREAD2_MINUS' \
-                 '\ttumour_type\tsource_of_RNA_used_for_sequencing\tVARIANT-KEY\n'
+                 '\ttumour_type\tsource_of_RNA_used_for_sequencing\tVARIANT-KEY\tCOSMIC70\n'
         nonsyn_file.write(header)
         all_file.write(header)
         for line in joined_variants:
             columns = line.rstrip('\n').split('\t')
             # Very ugly way to check that the variant was called by the two methods (TODO improve)
-            if len(columns) < 41:
+            if len(columns) < 42:
                 continue
             # TODO use header names instead
             Chr = columns[2]
@@ -266,21 +267,22 @@ def RNAseq_pipeline(sample1,
             apr_asn = columns[23]
             apr_afr = columns[24]
             variant_key = columns[25]
-            source_of_RNA_used_for_sequencing = columns[32]
-            tumor_reads1 = columns[33]
-            tumor_reads2 = columns[34]
-            tumor_var_freq = columns[35].replace('%', '')
-            read1_plus = columns[37]
-            read1_minus = columns[38]
-            read2_plus = columns[39]
-            read2_minus = columns[40]
+            cosmic = columns[26]
+            source_of_RNA_used_for_sequencing = columns[33]
+            tumor_reads1 = columns[34]
+            tumor_reads2 = columns[35]
+            tumor_var_freq = columns[36].replace('%', '')
+            read1_plus = columns[38]
+            read1_minus = columns[39]
+            read2_plus = columns[40]
+            read2_minus = columns[41]
             to_write = '\t'.join([str(x) for x in [sampleID, Chr, Start, End, Ref, Alt, tavsnp150, tumor_reads1,
                                                    tumor_reads2, tumor_var_freq, apr_all, Func_refGene, Gene_refGene,
                                                    ExonicFunc_refGene, AAChange_refGene, Func_knownGene, Gene_knownGene,
                                                    ExonicFunc_knownGene, AAChange_knownGene, Func_ensGene, Gene_ensGene,
                                                    ExonicFunc_ensGene, AAChange_ensGene, apr_eur, apr_amr, apr_asn,
                                                    apr_afr, read1_plus, read1_minus, read2_plus, read2_minus, tumor_type,
-                                                   source_of_RNA_used_for_sequencing, variant_key]])
+                                                   source_of_RNA_used_for_sequencing, variant_key, cosmic]])
             if (re.search(r'nonsynonymous', ExonicFunc_refGene) or re.search(r'frame', ExonicFunc_refGene) or re.search(r'stop', ExonicFunc_refGene)\
                     or re.search(r'nonsynonymous', ExonicFunc_knownGene) or re.search(r'frame', ExonicFunc_knownGene) or re.search(r'stop', ExonicFunc_knownGene)\
                     or re.search(r'nonsynonymous', ExonicFunc_ensGene) or re.search(r'frame', ExonicFunc_ensGene) or re.search(r'stop', ExonicFunc_ensGene)):
