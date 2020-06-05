@@ -2,19 +2,14 @@
 """
 @author: jfnavarro
 """
-from re import sub
 from hlapipeline.common import *
 from hlapipeline.tools import *
 from hlapipeline.filters import *
 from hlapipeline.epitopes import *
 import shutil
-import re
 import argparse
-import multiprocessing
 import os
 import sys
-import pandas as pd
-from Bio import SeqIO
 
 def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_type, header=True):
     nonsyn_snv = open(input)
@@ -45,6 +40,9 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
         known_gene_detail = columns[12]
         ens_gene_detail = columns[17]
         COSMIC = columns[26]
+        ExonicFunc_refGene = columns[8]
+        ExonicFunc_knownGene = columns[13]
+        ExonicFunc_ensGene = columns[18]
         variant_key = str(Chr) + ':' + str(start) + '-' + str(end) + ' ' + str(ref) + '>' + str(alt)
         if ref_gene_detail != 'NA':
             columns[9] = ref_gene_detail
@@ -77,9 +75,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
                                                    '\t'.join(columns[18:20]), '\t'.join(columns[21:26]), normal_read1, normal_read2,
                                                    trfor, trrev, tvfor, tvrev, nrfor, nrrev, nvfor, nfreq, nvrev, tfreq, p_val,
                                                    callers, tumor_type, tcov, ncov, variant_key, COSMIC]])
-            if (re.search(r'nonsynonymous', columns[8]) or re.search(r'frame', columns[8]) or re.search(r'stop', columns[8]) \
-                    or re.search(r'nonsynonymous', columns[13]) or re.search(r'frame', columns[13]) or re.search(r'stop', columns[13]) \
-                    or re.search(r'nonsynonymous', columns[18]) or re.search(r'frame', columns[18]) or re.search(r'stop', columns[18])):
+            if any(x in [ExonicFunc_refGene, ExonicFunc_knownGene, ExonicFunc_ensGene] for x in ['nonsynonymous', 'frame', 'stop']):
                 nonsyn_file.write(to_write + '\n')
             else:
                 all_file.write(to_write + '\n')
@@ -368,15 +364,15 @@ def exome_pipeline(R1_NORMAL,
                 normal_read2 = '.'
                 callers = info.strip().split(';')[-1].replace('set=', '')
                 caller_count = '.'
-                if re.search('Intersection', callers) or re.search('varscan', callers):
+                if 'Intersection' in callers or 'varscan' in callers:
                     if callers == 'Intersection':
                         caller_count = 4
                         callers = 'varscan-strelka-mutect-somaticsniper'
                     else:
                         caller_count = callers.count('-') + 1
-                    if re.search('SPV=', info):
+                    if 'SPV=' in info:
                         for x in info.split(';'):
-                            if re.search('SPV=', x):
+                            if 'SPV=' in x:
                                 p_val = x.replace('SPV=', '')
                     form = columns[8].split(':')
                     DP4 = form.index('DP4')
@@ -399,7 +395,7 @@ def exome_pipeline(R1_NORMAL,
                     normal_read2 = nvfor + nvrev
                     ncov = nrfor + nrrev + nvfor + nvrev
                     nfreq = columns[varscanN].split(':')[Freq]
-                elif re.search('somaticsniper', callers):
+                elif 'somaticsniper' in callers:
                     caller_count = callers.count('-') + 1
                     form = columns[8].split(':')
                     DP4 = form.index('DP4')
@@ -421,7 +417,7 @@ def exome_pipeline(R1_NORMAL,
                     ncov = nrfor + nrrev + nvfor + nvrev
                     tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
                     nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-                elif re.search('strelka', callers):
+                elif 'strelka' in callers:
                     caller_count = callers.count('-') + 1
                     form = columns[8].split(':')
                     AU = form.index('AU')
@@ -459,14 +455,13 @@ def exome_pipeline(R1_NORMAL,
                         ncov = normal_read1 + normal_read2
                         tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
                         nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-                elif re.search('mutect', callers):
+                elif 'mutect' in callers:
                     caller_count = callers.count('-') + 1
                     form = columns[8].split(':')
-                    if not re.search(',', alt):
-                        AD = form.index('AD')
                     t_split = columns[mutectT].split(':')
                     n_split = columns[mutectN].split(':')
-                    if not re.search(',', alt):
+                    if ',' not in alt:
+                        AD = form.index('AD')
                         tumor_read1 = int(t_split[AD].split(',')[0])
                         tumor_read2 = int(t_split[AD].split(',')[1])
                         normal_read1 = int(n_split[AD].split(',')[0])
@@ -538,15 +533,15 @@ def exome_pipeline(R1_NORMAL,
                 ncov = '.'
                 caller_count = '.'
                 callers = info.strip().split(';')[-1].replace('set=', '')
-                if re.search('Intersection', callers) or re.search('varscan', callers):
+                if 'Intersection' in callers or 'varscan' in callers:
                     if callers == 'Intersection':
                         caller_count = 2
                         callers = 'varscan-strelka'
                     else:
                         caller_count = callers.count('-') + 1
-                    if re.search('SPV=', info):
+                    if 'SPV=' in info:
                         for x in info.split(';'):
-                            if re.search('SPV=', x):
+                            if 'SPV=' in x:
                                 p_val = x.replace('SPV=', '')
                     form = columns[8].split(':')
                     DP4 = form.index('DP4')
@@ -569,7 +564,7 @@ def exome_pipeline(R1_NORMAL,
                     normal_read2 = nvfor + nvrev
                     ncov = nrfor + nrrev + nvfor + nvrev
                     nfreq = n_split[Freq]
-                elif re.search('strelka', callers):
+                elif 'strelka' in callers:
                     caller_count = callers.count('-') + 1
                     form = columns[8].split(':')
                     DP = form.index('DP')

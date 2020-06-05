@@ -19,6 +19,7 @@ TRIPTOMATIC = 'trimmomatic'
 BWA = 'bwa mem'
 ARCASHLA = os.path.join(os.environ['ARCASHLA_PATH'], 'arcasHLA')
 VCFTOOLS = 'vcftools'
+BEDTOOLS = 'bedtools'
 
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']

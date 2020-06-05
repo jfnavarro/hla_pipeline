@@ -5,7 +5,6 @@
 import statistics
 from re import sub
 import argparse
-import re
 import numpy as np
 import math
 from scipy import stats
@@ -38,9 +37,9 @@ def add_flags(transcript, variant_key, transcript_info, mer_len=25):
                     ss_seen = '{} filters upstream stopgain ({})'.format(status_str, aa)
                 elif mut == 'stopgain' and ss_seen is not None:
                     ss_seen += ', {} filters upstream stopgain ({})'.format(status_str, aa)
-                if re.search('frame', mut) and ss_seen is None:
+                if 'frame' in mut and ss_seen is None:
                     ss_seen = '{} filters upstream fs ({})'.format(status_str, aa)
-                elif re.search('frame', mut) and ss_seen is not None:
+                elif 'frame' in mut and ss_seen is not None:
                     ss_seen += ', {} filters upstream fs ({})'.format(status_str, aa)
                 # Create flag if this variant is within distance of note to ours
                 if target_pos - pos == 1:
@@ -109,9 +108,8 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
             except ValueError:
                 no_callers = 0
             cov = '{};{},{},{},{},{},{},{}'.format(sample, T_cov, N_cov, T_freq, N_freq, T_reads, P_val, callers)
-            status = (((re.search(r'frame', ref_gene_mut) or re.search(r'frame', UCSC_gene_mut)
-                        or re.search(r'frame', ENS_gene_mut)) and no_callers >= 1) or no_callers >= 2)\
-                     and (N_cov > 10 and T_freq >= 7 and T_reads >= 4)
+            status = (('frame' in [ref_gene_mut, UCSC_gene_mut, ENS_gene_mut] and no_callers >= 1) or no_callers >= 2) \
+                     and N_cov > 10 and T_freq >= 7 and T_reads >= 4
             # Store data, coverage and status
             variant_dict[variant_key]['DNA'][sample]['data'] = columns
             variant_dict[variant_key]['DNA'][sample]['status'] = status
@@ -143,8 +141,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
             rcov = r1 + r2
             cov = '{};{},{},{},{}'.format(sample, r1, r2, rfreq, rcov)
             # Storage coverage, data and status
-            status = (re.search(r'frame', ref_gene_mut) or re.search(r'frame', UCSC_gene_mut)\
-                      or re.search(r'frame', ENS_gene_mut)) and (rfreq >= 5 and rcov >= 5)
+            status = 'frame' in [ref_gene_mut, UCSC_gene_mut, ENS_gene_mut] and rfreq >= 5 and rcov >= 5
             variant_dict[variant_key]['RNA'][sample]['data'] = columns[0:]
             variant_dict[variant_key]['RNA'][sample]['status'] = status
             variant_dict[variant_key]['RNA'][sample]['coverage'] = cov

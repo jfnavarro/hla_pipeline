@@ -5,10 +5,8 @@
 from hlapipeline.common import *
 from hlapipeline.tools import *
 from hlapipeline.epitopes import *
-import re
 import os
 import argparse
-import multiprocessing
 
 def RNAseq_pipeline(sample1,
                     sample2,
@@ -38,15 +36,15 @@ def RNAseq_pipeline(sample1,
         exec_command(cmd)
 
         print('Aligining with STAR')
-        cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired'\
-              ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs'\
-              ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c'\
+        cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired' \
+              ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs' \
+              ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
               ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, THREADS)
         exec_command(cmd)
 
         # Add headers
         print("Adding headers")
-        cmd = '{} AddOrReplaceReadGroups I=Aligned.sortedByCoord.out.bam O=sample_header.bam SO=coordinate RGID=RNA RGLB={}'\
+        cmd = '{} AddOrReplaceReadGroups I=Aligned.sortedByCoord.out.bam O=sample_header.bam SO=coordinate RGID=RNA RGLB={}' \
               ' RGPL=Illumina RGPU=PU{} RGSM=rna-seq_{} Create_Index=true Validation_Stringency=SILENT'.format(PICARD,
                                                                                                                'VHIO',
                                                                                                                'VHIO',
@@ -71,15 +69,16 @@ def RNAseq_pipeline(sample1,
         # GATK base re-calibration
         print('Starting re-calibration')
         # NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
-        cmd = '{} BaseRecalibrator -I sample_dedup.bam -R {} --known-sites {} --known-sites {}'\
+        cmd = '{} BaseRecalibrator -I sample_dedup.bam -R {} --known-sites {} --known-sites {}' \
               ' --known-sites {} -O sample_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR -R {} -I sample_dedup.bam --bqsr-recal-file sample_recal_data.txt -O sample_final.bam'.format(GATK, genome)
+        cmd = '{} ApplyBQSR -R {} -I sample_dedup.bam --bqsr-recal-file sample_recal_data.txt -O sample_final.bam'.format(
+            GATK, genome)
         exec_command(cmd)
 
     if 'variant' in steps:
         # TODO add HaplotypeCaller and remove varscan in pileup mode (merge variants)
-        
+
         # Variant calling (Samtools pile-ups)
         print('Computing pile-ups')
         cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, genome)
@@ -87,16 +86,18 @@ def RNAseq_pipeline(sample1,
 
         # Variant calling VarScan
         print('Variant calling with varscan')
-        cmd = VARSCAN + ' mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1'\
-              + ' --min-var-freq .01 --p-value 0.99 > varscan.vcf'
+        cmd = '{} mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
+              '--min-var-freq .01 --p-value 0.99 > varscan.vcf'.format(VARSCAN)
         exec_command(cmd)
-        cmd = VARSCAN + ' mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1'\
-              + ' --min-var-freq .01 --p-value 0.99 > varscan.pileup'
+        cmd = '{} mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 ' \
+              '--min-var-freq .01 --p-value 0.99 > varscan.pileup'.format(VARSCAN)
         exec_command(cmd)
 
         # Running Cufflinks (output is genes.fpkm_tracking)
         print('Running Cufflinks')
-        cmd = '{} -p {} -G {} --library-type fr-firststrand sample_dedup.bam'.format(CUFFLINKS, THREADS, annotation)
+        cmd = '{} intersect -a sample_dedup.bam -b {} -wa > intersected.bam'.format(BEDTOOLS, annotation)
+        exec_command(cmd)
+        cmd = '{} -p {} -G {} --library-type fr-firststrand intersected.bam'.format(CUFFLINKS, THREADS, annotation)
         exec_command(cmd)
 
     if 'filter' in steps:
@@ -158,7 +159,8 @@ def RNAseq_pipeline(sample1,
                 AA_change_ensGene = ens_gene_detail
             to_write = '\t'.join([str(x) for x in [gDNA, sampleID, Chr, start, end, ref, alt, avsnp150,
                                                    func_ref_gene, gene_ref_gene, exonic_func_ref, AA_change_refGene,
-                                                   func_known_gene, gene_known_gene, exonic_known_ref, AA_change_knownGene,
+                                                   func_known_gene, gene_known_gene, exonic_known_ref,
+                                                   AA_change_knownGene,
                                                    func_ens_gene, gene_ens_gene, exonic_ens_ref, AA_change_ensGene,
                                                    apr_all, apr_eur, apr_amr, apr_asn, apr_afr, variant_key, cosmic]])
             insert_file.write(to_write + "\n")
@@ -192,7 +194,7 @@ def RNAseq_pipeline(sample1,
             p_val2 = columns3[5]
             gDNA = 'chr' + Chr + ':' + start
             join_key = gDNA
-            if re.search(r'-', alt):
+            if '-' in alt:
                 join_key = 'chr' + Chr + ':' + str(int(start) + 1)
             to_write = '\t'.join([str(x) for x in [join_key, sampleID, Chr, start, ref, alt, cons, cov, read1, read2,
                                                    freq, p_val, r1_plus, r1_minus, r2_plus, r2_minus, p_val2]])
@@ -264,11 +266,10 @@ def RNAseq_pipeline(sample1,
                                                    ExonicFunc_refGene, AAChange_refGene, Func_knownGene, Gene_knownGene,
                                                    ExonicFunc_knownGene, AAChange_knownGene, Func_ensGene, Gene_ensGene,
                                                    ExonicFunc_ensGene, AAChange_ensGene, apr_eur, apr_amr, apr_asn,
-                                                   apr_afr, read1_plus, read1_minus, read2_plus, read2_minus, tumor_type,
+                                                   apr_afr, read1_plus, read1_minus, read2_plus, read2_minus,
+                                                   tumor_type,
                                                    source_of_RNA_used_for_sequencing, variant_key, cosmic]])
-            if (re.search(r'nonsynonymous', ExonicFunc_refGene) or re.search(r'frame', ExonicFunc_refGene) or re.search(r'stop', ExonicFunc_refGene)\
-                    or re.search(r'nonsynonymous', ExonicFunc_knownGene) or re.search(r'frame', ExonicFunc_knownGene) or re.search(r'stop', ExonicFunc_knownGene)\
-                    or re.search(r'nonsynonymous', ExonicFunc_ensGene) or re.search(r'frame', ExonicFunc_ensGene) or re.search(r'stop', ExonicFunc_ensGene)):
+            if any(x in [ExonicFunc_refGene, ExonicFunc_knownGene, ExonicFunc_ensGene] for x in ['nonsynonymous', 'frame', 'stop']):
                 nonsyn_file.write(to_write + '\n')
             else:
                 all_file.write(to_write + '\n')
@@ -281,7 +282,7 @@ def RNAseq_pipeline(sample1,
 
         # Create epitopes
         create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
-                        
+
         # Reformat FPKM file
         print('Creating FPKM info file')
         fpkm = open('genes.fpkm_tracking')
@@ -297,8 +298,9 @@ def RNAseq_pipeline(sample1,
 
     print("COMPLETED!")
 
+
 parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA prediction pipeline\n'
-                                 'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
+                                             'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='rnaseq_pipeline.py',
                                  usage='rnaseq_pipeline.py [options] R1(RNA) R2(RNA)')
 parser.add_argument('R1_RNA', help='FASTQ file R1 (RNA)')
@@ -334,7 +336,8 @@ parser.add_argument('--annovar-version',
 parser.add_argument('--threads',
                     help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
 parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
-                    help='Steps to perform in the pipeline', choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
+                    help='Steps to perform in the pipeline',
+                    choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 
 # Parse arguments
 args = parser.parse_args()
