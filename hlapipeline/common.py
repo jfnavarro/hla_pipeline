@@ -5,6 +5,9 @@ import subprocess
 import sys
 from Bio.Seq import translate
 from hlapipeline.tools import *
+import pandas as pd
+import re
+import os
 
 def index_column_substring(your_list, substring):
     for i, s in enumerate(your_list):
