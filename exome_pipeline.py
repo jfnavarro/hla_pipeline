@@ -75,7 +75,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
                                                    '\t'.join(columns[18:20]), '\t'.join(columns[21:26]), normal_read1, normal_read2,
                                                    trfor, trrev, tvfor, tvrev, nrfor, nrrev, nvfor, nfreq, nvrev, tfreq, p_val,
                                                    callers, tumor_type, tcov, ncov, variant_key, COSMIC]])
-            if any(x in [ExonicFunc_refGene, ExonicFunc_knownGene, ExonicFunc_ensGene] for x in ['nonsynonymous', 'frame', 'stop']):
+            if any(x in ' '.join([ExonicFunc_refGene, ExonicFunc_knownGene, ExonicFunc_ensGene]) for x in ['nonsynonymous', 'frame', 'stop']):
                 nonsyn_file.write(to_write + '\n')
             else:
                 all_file.write(to_write + '\n')
