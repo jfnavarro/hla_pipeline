@@ -93,11 +93,9 @@ def RNAseq_pipeline(sample1,
               '--min-var-freq .01 --p-value 0.99 > varscan.pileup'.format(VARSCAN)
         exec_command(cmd)
 
-        # Running Cufflinks (output is genes.fpkm_tracking)
-        print('Running Cufflinks')
-        cmd = '{} intersect -a sample_dedup.bam -b {} -wa > intersected.bam'.format(BEDTOOLS, annotation)
-        exec_command(cmd)
-        cmd = '{} -p {} -G {} --library-type fr-firststrand intersected.bam'.format(CUFFLINKS, THREADS, annotation)
+        # Computing gene counts
+        print('Running featureCounts')
+        cmd = '{} --primary -C -t exon -g gene_id -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, annotation)
         exec_command(cmd)
 
     if 'filter' in steps:
@@ -283,18 +281,20 @@ def RNAseq_pipeline(sample1,
         # Create epitopes
         create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
 
-        # Reformat FPKM file
-        print('Creating FPKM info file')
-        fpkm = open('genes.fpkm_tracking')
-        fpkm_lines = fpkm.readlines()
-        firstline = fpkm_lines.pop(0)
-        FPKM_ins = open('FPKM_SQL_insert.txt', 'w')
-        header = 'SAMPLE_ID\tTUMOUR\t' + firstline
-        FPKM_ins.write(header)
-        for line in fpkm_lines:
-            FPKM_ins.write('{}\t{}\t{}'.format(sampleID, tumor_type, line))
-        FPKM_ins.close()
-        fpkm.close()
+        # Reformat Gene counts file
+        print('Creating Gene counts info file')
+        counts_file = open('gene.counts')
+        lines = counts_file.readlines()
+        if lines[0].startswith("#"):
+            lines.pop(0)
+        secondline = lines.pop(0)
+        counts_out = open('GeneCounts_SQL_insert.txt', 'w')
+        header = 'SAMPLE_ID\tTUMOUR\t' + secondline
+        counts_out.write(header)
+        for line in lines:
+            counts_out.write('{}\t{}\t{}'.format(sampleID, tumor_type, line))
+        counts_out.close()
+        counts_file.close()
 
     print("COMPLETED!")
 

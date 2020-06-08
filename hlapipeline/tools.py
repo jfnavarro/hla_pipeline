@@ -12,7 +12,6 @@ SAMTOOLS = 'samtools'
 SSNIPER = 'bam-somaticsniper'
 HLALA = 'HLA-LA.pl'
 SAMTOOLS = 'samtools'
-CUFFLINKS = 'cufflinks'
 STAR = 'STAR'
 TRIMGALORE = 'trim_galore'
 TRIPTOMATIC = 'trimmomatic'
@@ -20,6 +19,7 @@ BWA = 'bwa mem'
 ARCASHLA = os.path.join(os.environ['ARCASHLA_PATH'], 'arcasHLA')
 VCFTOOLS = 'vcftools'
 BEDTOOLS = 'bedtools'
+FEATURECOUNTS = 'featureCounts'
 
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']

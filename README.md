@@ -25,7 +25,7 @@ flag. If this is the case the STAR index and annotation file must be given.
 annotated germline variants (unfiltered), epitopes and also a list of FPKM values. 
 The variant callers used are Varscan and mpileup. Annmotation is done with Annovar.
 The pipeline uses trim-galore to trim, STAR to align and GATK4 best practices. 
-The FPKM values are computed with cufflinks.
+The gene counts values are computed with featureCounts.
 The pipeline will also perform HLA predictions with arcasHLA.
 
 **merge_resuls.py** combines results from 1 or several runs of the exome and rna-seq
@@ -53,7 +53,7 @@ Main output files:
 **rnaseq_pipeline.py** 
 - nonsyn_SQL_insert.txt (nonsynonymous variants filtered and annotated)
 - all_other_mutations.txt (synonymous variants filtered and annotated)
-- FPKM_SQL_insert.txt (all the FPKM values of the genes found)
+- GeneCounts_SQL_insert.txt (all the counts of the genes found)
 - SQL_Epitopes.txt (all the epitotes for the differents exons in each variant including the reference and mutated sequences)
 
 **merge_resuls.py** 

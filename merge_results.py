@@ -70,7 +70,7 @@ def add_flags(transcript, variant_key, transcript_info, mer_len=25):
         prev_status = status
     return flags if flags != '' else '-'
 
-def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
+def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
 
     if len(dna_variants) == 0 and len(rna_variants) == 0:
         sys.stderr.write("Error, no variants given as input (DNA or RNA).\n")
@@ -194,39 +194,41 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
                 transcript_dict[transcript]['status'].append(status_DNA or status_rna)
         epitopes.close()
 
-    print('Loading FPKM data..')
-    FPKM_dict = {}
-    FPKM_dict_sample = defaultdict(list)
-    for file in rna_fpkm:
-        FPKM_file = open(file)
-        FPKM_file_lines = FPKM_file.readlines()
-        header_fpkm = FPKM_file_lines.pop(0).strip().split('\t')
-        for line in FPKM_file_lines:
+    print('Loading Gene counts data..')
+    counts_dict = {}
+    counts_dict_sample = defaultdict(list)
+    for file in rna_counts:
+        counts_file = open(file)
+        counts_file_lines = counts_file.readlines()
+        header_counts = counts_file_lines.pop(0).strip().split('\t')
+        for line in counts_file_lines:
             columns = line.strip().split('\t')
-            gene_id = columns[header_fpkm.index('gene_id')]
-            locus = columns[header_fpkm.index('locus')]
-            fpkm_value = float(columns[header_fpkm.index('FPKM')])
-            sample = columns[header_fpkm.index('SAMPLE_ID')]
+            gene_id = columns[header_counts.index('Geneid')]
+            locus = '{}:{}-{}'.format(columns[header_counts.index('Chr')],
+                                      columns[header_counts.index('Start')],
+                                      columns[header_counts.index('End')])
+            value = float(columns[-1])
+            sample = columns[header_counts.index('SAMPLE_ID')]
             # NOTE check for precision errors here
-            if fpkm_value != 0:
-                if gene_id not in FPKM_dict:
-                    FPKM_dict[gene_id] = {}
-                if sample not in FPKM_dict[gene_id]:
-                    FPKM_dict[gene_id][sample] = {}
-                FPKM_dict[gene_id][sample]['locus'] = locus
-                FPKM_dict[gene_id][sample]['expression'] = fpkm_value
-                FPKM_dict_sample[sample].append(fpkm_value)
-        FPKM_file.close()
+            if value != 0:
+                if gene_id not in counts_dict:
+                    counts_dict[gene_id] = {}
+                if sample not in counts_dict[gene_id]:
+                    counts_dict[gene_id][sample] = {}
+                counts_dict[gene_id][sample]['locus'] = locus
+                counts_dict[gene_id][sample]['expression'] = value
+                counts_dict_sample[sample].append(value)
+        counts_file.close()
     # Compute mean expression and percentiles
-    FPKM_mean_dict = {}
-    FPKM_quan_dict = {}
+    counts_mean_dict = {}
+    counts_quan_dict = {}
     # TODO this is slow and ugly, improve!
-    for gene, samples in FPKM_dict.items():
-        FPKM_mean_dict[gene] = statistics.mean([x['expression'] for x in samples.values()])
-        FPKM_quan_dict[gene] = ['{}:{}'.format(sample,
-                                               np.around(
-                                                   stats.percentileofscore(FPKM_dict_sample[sample], x['expression']), 3))
-                                for sample, x in samples.items()]
+    for gene, samples in counts_dict.items():
+        counts_mean_dict[gene] = statistics.mean([x['expression'] for x in samples.values()])
+        counts_quan_dict[gene] = ['{}:{}'.format(sample,
+                                                 np.around(
+                                                     stats.percentileofscore(counts_dict_sample[sample], x['expression']), 3))
+                                  for sample, x in samples.items()]
 
     print('Creating final files..')
     header_final = 'Variant key\tDNAs samples (passing)\tNumber of DNA samples (passing)\t' \
@@ -240,7 +242,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
                    'Mut Epitope\tDNA Coverage info (Sample,Tumor coverage,Normal Coverage,Tumor var freq,'\
                    'Normal var freq,Tumor variant reads,p_value (varscan),callers)\tError flags\t'\
                    'RNA Coverage info (Sample,read1,read2,variant frequency,coverage)\t' \
-                   'FPKM info per sample (locus,exp)\tFPKM mean(all samples)\tFPKM percentile (all samples)\n'
+                   'GeneCounts info per sample (locus,exp)\tGeneCounts mean(all samples)\tGeneCounts percentile (all samples)\n'
     final_file = open('overlap_final.txt', 'w')
     final_file.write(header_final)
     final_file_discarded = open('overlap_final_discarded.txt', 'w')
@@ -309,14 +311,14 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
                     error_flags = transcript[header_epitopes.index('ERRORS')]
                     wt_mer = transcript[header_epitopes.index('WT25MER')]
                     mu_mer = transcript[header_epitopes.index('MUT25MER')]
-                    if ENS_gene_name in FPKM_dict:
-                        fpkm_info = '|'.join(
-                            ['{},{}'.format(x['locus'], x['expression']) for x in FPKM_dict[ENS_gene_name].values()])
-                        fpkm_mean = FPKM_mean_dict[ENS_gene_name]
-                        percentile = ','.join(FPKM_quan_dict[ENS_gene_name])
+                    if ENS_gene_name in counts_dict:
+                        counts_info = '|'.join(
+                            ['{},{}'.format(x['locus'], x['expression']) for x in counts_dict[ENS_gene_name].values()])
+                        counts_mean = counts_mean_dict[ENS_gene_name]
+                        percentile = ','.join(counts_quan_dict[ENS_gene_name])
                     else:
-                        fpkm_info = 'NA'
-                        fpkm_mean = 'NA'
+                        counts_info = 'NA'
+                        counts_mean = 'NA'
                         percentile = 'NA'
                     flags = add_flags(transcript_name, key, transcript_dict, mer_len=25)
                     to_write = '\t'.join(str(x) for x in [key, ','.join(DNA_samples_pass), len(DNA_samples_pass),
@@ -328,7 +330,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_fpkm):
                                                           ENS_gene_name, ENS_gene_mut, ENS_gene_change, genome_all,
                                                           dbSNP_ID, cosmic, gene_name, transcript_name, mutation_type,
                                                           exon, cdna_change, aa_change, aa_position, error_flags, wt_mer,
-                                                          mu_mer, DNA_cov, flags, rna_cov, fpkm_info, fpkm_mean, percentile])
+                                                          mu_mer, DNA_cov, flags, rna_cov, counts_info, counts_mean, percentile])
                     if len(DNA_samples_pass) >= 1 or len(rna_samples_pass) >= 1:
                         final_file.write(to_write + '\n')
                     else:
@@ -345,7 +347,7 @@ parser = argparse.ArgumentParser(description='Script that merges variants and cr
                                        '--dna [dna variants results files]\n'
                                        '--epitope [epitope results files]\n'
                                        '--rna [rna variants results files]\n'
-                                       '--fpkm [rna fpkm results]')
+                                       '--counts [rna gene counts results]')
 
 parser.add_argument('--dna', nargs='+', default=None, required=False,
                     help='List of files with the results of the DNA pipeline')
@@ -353,8 +355,8 @@ parser.add_argument('--epitope', nargs='+', default=None, required=True,
                     help='List of files with the the epitotes (DNA and RNA)')
 parser.add_argument('--rna', nargs='+', default=None, required=False,
                     help='List of files with the results of the RNA pipeline')
-parser.add_argument('--fpkm', nargs='+', default=None, required=True,
-                    help='List of files with the FPKM results of the RNA pipeline')
+parser.add_argument('--counts', nargs='+', default=None, required=True,
+                    help='List of files with the gene counts results of the RNA pipeline')
 
 args = parser.parse_args()
-overlap_analysis(args.dna, args.epitope, args.rna, args.fpkm)
+overlap_analysis(args.dna, args.epitope, args.rna, args.counts)

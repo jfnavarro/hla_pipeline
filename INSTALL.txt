@@ -4,7 +4,7 @@ conda activate hla
 mkdir -p ~/shared
 cd ~/shared
 
-conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan cufflinks picard trim-galore star somatic-sniper bedtools biopython mhcflurry awscli
+conda install pandas hla-la gatk4 bwa samtools picard trimmomatic varscan subread picard trim-galore star somatic-sniper bedtools biopython mhcflurry
 pip install gsutil
 
 mhcflurry-downloads fetch models_class1_presentation
