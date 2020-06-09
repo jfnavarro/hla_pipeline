@@ -266,8 +266,7 @@ def RNAseq_pipeline(sample1,
                                                    ExonicFunc_knownGene, AAChange_knownGene, Func_ensGene, Gene_ensGene,
                                                    ExonicFunc_ensGene, AAChange_ensGene, apr_eur, apr_amr, apr_asn,
                                                    apr_afr, read1_plus, read1_minus, read2_plus, read2_minus,
-                                                   tumor_type,
-                                                   source_of_RNA_used_for_sequencing, variant_key, cosmic]])
+                                                   tumor_type, source_of_RNA_used_for_sequencing, variant_key, cosmic]])
             if any(x in ' '.join([ExonicFunc_refGene, ExonicFunc_knownGene, ExonicFunc_ensGene]) for x in ['nonsynonymous', 'frame', 'stop']):
                 nonsyn_file.write(to_write + '\n')
             else:
