@@ -345,25 +345,25 @@ def exome_pipeline(R1_NORMAL,
                 alt = columns[4]
                 info = columns[7]
                 DictID = chrm + ':' + pos
-                trfor = '.'
-                trrev = '.'
-                tvfor = '.'
-                tvrev = '.'
-                nrfor = '.'
-                nrrev = '.'
-                nvfor = '.'
-                nvrev = '.'
-                p_val = '.'
-                tcov = '.'
-                ncov = '.'
-                tfreq = '.'
-                nfreq = '.'
-                tumor_read1 = '.'
-                normal_read1 = '.'
-                tumor_read2 = '.'
-                normal_read2 = '.'
+                trfor = 0
+                trrev = 0
+                tvfor = 0
+                tvrev = 0
+                nrfor = 0
+                nrrev = 0
+                nvfor = 0
+                nvrev = 0
+                p_val = 0
+                tcov = 0
+                ncov = 0
+                tfreq = 0
+                nfreq = 0
+                tumor_read1 = 0
+                normal_read1 = 0
+                tumor_read2 = 0
+                normal_read2 = 0
                 callers = info.strip().split(';')[-1].replace('set=', '')
-                caller_count = '.'
+                caller_count = 0
                 if 'Intersection' in callers or 'varscan' in callers:
                     if callers == 'Intersection':
                         caller_count = 4
