@@ -95,7 +95,8 @@ def RNAseq_pipeline(sample1,
 
         # Computing gene counts
         print('Running featureCounts')
-        cmd = '{} --primary -C -t exon -g gene_id -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, annotation)
+        cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
+              '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, annotation)
         exec_command(cmd)
 
     if 'filter' in steps:
