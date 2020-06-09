@@ -108,8 +108,8 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             except ValueError:
                 no_callers = 0
             cov = '{};{},{},{},{},{},{},{}'.format(sample, T_cov, N_cov, T_freq, N_freq, T_reads, P_val, callers)
-            status = (('frame' in [ref_gene_mut, UCSC_gene_mut, ENS_gene_mut] and no_callers >= 1) or no_callers >= 2) \
-                     and N_cov > 10 and T_freq >= 7 and T_reads >= 4
+            status = (('frame' in ''.join([ref_gene_mut, UCSC_gene_mut, ENS_gene_mut]) and no_callers >= 1)
+                      or no_callers >= 2) and N_cov > 10 and T_freq >= 7 and T_reads >= 4
             # Store data, coverage and status
             variant_dict[variant_key]['DNA'][sample]['data'] = columns
             variant_dict[variant_key]['DNA'][sample]['status'] = status
@@ -141,7 +141,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             rcov = r1 + r2
             cov = '{};{},{},{},{}'.format(sample, r1, r2, rfreq, rcov)
             # Storage coverage, data and status
-            status = 'frame' in [ref_gene_mut, UCSC_gene_mut, ENS_gene_mut] and rfreq >= 5 and rcov >= 5
+            status = 'frame' in ''.join([ref_gene_mut, UCSC_gene_mut, ENS_gene_mut]) and rfreq >= 5 and rcov >= 5
             variant_dict[variant_key]['RNA'][sample]['data'] = columns[0:]
             variant_dict[variant_key]['RNA'][sample]['status'] = status
             variant_dict[variant_key]['RNA'][sample]['coverage'] = cov
