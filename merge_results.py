@@ -141,7 +141,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             rcov = r1 + r2
             cov = '{};{},{},{},{}'.format(sample, r1, r2, rfreq, rcov)
             # Storage coverage, data and status
-            status = 'frame' in ''.join([ref_gene_mut, UCSC_gene_mut, ENS_gene_mut]) and rfreq >= 5 and rcov >= 5
+            status = 'frame' in ''.join([ref_gene_mut, UCSC_gene_mut, ENS_gene_mut]) and rfreq >= 2.5 and rcov >= 5
             variant_dict[variant_key]['RNA'][sample]['data'] = columns[0:]
             variant_dict[variant_key]['RNA'][sample]['status'] = status
             variant_dict[variant_key]['RNA'][sample]['coverage'] = cov
