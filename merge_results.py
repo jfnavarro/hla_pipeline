@@ -283,7 +283,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                     if has_DNA and sampleID in value['DNA'] and len(value['DNA'][sampleID]['data']) == 45:
                         data = value['DNA'][sampleID]['data']
                         header = header_DNA
-                    elif has_rna and sampleID in value['RNA'] and len(value['DNA'][sampleID]['data']) == 35:
+                    elif has_rna and sampleID in value['RNA'] and len(value['RNA'][sampleID]['data']) == 35:
                         data = value['RNA'][sampleID]['data']
                         header = header_rna
                     else:
