@@ -108,8 +108,11 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             except ValueError:
                 no_callers = 0
             cov = '{};{},{},{},{},{},{},{}'.format(sample, T_cov, N_cov, T_freq, N_freq, T_reads, P_val, callers)
-            status = (('frame' in ''.join([ref_gene_mut, UCSC_gene_mut, ENS_gene_mut]) and no_callers >= 1)
-                      or no_callers >= 2) and N_cov > 10 and T_freq >= 7 and T_reads >= 4
+            has_frame = 'frame' in ''.join([ref_gene_mut, UCSC_gene_mut, ENS_gene_mut])
+            has_cov1 = T_cov >= 10 and N_freq < 1.0 and T_freq >= 7 and T_reads >= 4
+            has_cov2 = T_cov >= 10 and N_freq >= 1.0 and T_freq >= 7 and T_reads >= 4 and T_freq / N_freq >= 5
+            status = (has_frame and (no_callers >= 1 and (has_cov1 or has_cov2))) \
+                     or (no_callers >= 2 and (has_cov1 or has_cov2))
             # Store data, coverage and status
             variant_dict[variant_key]['DNA'][sample]['data'] = columns
             variant_dict[variant_key]['DNA'][sample]['status'] = status
@@ -131,9 +134,6 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                 variant_dict[variant_key]['RNA'] = {}
             if sample not in variant_dict[variant_key]['RNA']:
                 variant_dict[variant_key]['RNA'][sample] = {}
-            ref_gene_mut = columns[header_rna.index('ExonicFunc.refGene')]
-            UCSC_gene_mut = columns[header_rna.index('ExonicFunc.knownGene')]
-            ENS_gene_mut = columns[header_rna.index('ExonicFunc.ensGene')]
             # Compute coverage and pass/fail
             r1 = float(columns[header_rna.index('TUMOR_READ1')])
             r2 = float(columns[header_rna.index('TUMOR_READ2')])
@@ -141,7 +141,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             rcov = r1 + r2
             cov = '{};{},{},{},{}'.format(sample, r1, r2, rfreq, rcov)
             # Storage coverage, data and status
-            status = 'frame' in ''.join([ref_gene_mut, UCSC_gene_mut, ENS_gene_mut]) and rfreq >= 2.5 and rcov >= 5
+            status = rfreq >= 5 and rcov >= 5
             variant_dict[variant_key]['RNA'][sample]['data'] = columns[0:]
             variant_dict[variant_key]['RNA'][sample]['status'] = status
             variant_dict[variant_key]['RNA'][sample]['coverage'] = cov
