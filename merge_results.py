@@ -70,6 +70,8 @@ def add_flags(transcript, variant_key, transcript_info, mer_len=25):
         prev_status = status
     return flags if flags != '' else '-'
 
+# TODO the whole approach would be easier by creating a Variant class
+# with 2 lists of epitopes (DNA and RNA) and a dict of Gene counts
 def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
 
     if len(dna_variants) == 0 and len(rna_variants) == 0:
