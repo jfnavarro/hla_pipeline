@@ -95,11 +95,11 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             if sample not in variant_dict[variant_key]['DNA']:
                 variant_dict[variant_key]['DNA'][sample] = {}
             # Compute coverage and pass/fail
-            N_cov = columns[header_DNA.index('NCOV')]
-            T_cov = columns[header_DNA.index('TCOV')]
-            T_freq = columns[header_DNA.index('TVAF')].replace('%', '')
-            N_freq = columns[header_DNA.index('NVAF')].replace('%', '')
-            T_reads = columns[header_DNA.index('TUMOR_READ2')]
+            N_cov = int(columns[header_DNA.index('NCOV')])
+            T_cov = int(columns[header_DNA.index('TCOV')])
+            T_freq = float(columns[header_DNA.index('TVAF')].replace('%', ''))
+            N_freq = float(columns[header_DNA.index('NVAF')].replace('%', ''))
+            T_reads = int(columns[header_DNA.index('TUMOR_READ2')])
             P_val = columns[header_DNA.index('PVAL')]
             callers = columns[header_DNA.index('CALLERS')]
             ref_gene_mut = columns[header_DNA.index('ExonicFunc.refGene')]
@@ -267,9 +267,9 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
         DNA_samples_fail = []
         has_DNA = False
         if 'DNA' in value:
+            DNA_cov = '|'.join(x['coverage'] for x in value['DNA'].values())
             DNA_samples_pass = [key for key, value in value['DNA'].items() if value['status']]
             DNA_samples_fail = [key for key, value in value['DNA'].items() if not value['status']]
-            DNA_cov = '|'.join(x['coverage'] for x in value['DNA'].values())
             has_DNA = True
             
         if not has_DNA and not has_rna:
