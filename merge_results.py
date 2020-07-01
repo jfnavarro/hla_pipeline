@@ -86,7 +86,8 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
         DNA_nonsyn_lines = DNA_nonsyn.readlines()
         header_DNA = DNA_nonsyn_lines.pop(0).strip().split('\t')
         for line in DNA_nonsyn_lines:
-            columns = [x.replace('.', '0') for x in line.strip().split('\t') if x == "."]
+
+            columns = [x.replace('.', '0') if x is "." else x for x in line.strip().split('\t')]
             variant_key = columns[header_DNA.index('VARIANT-KEY')]
             sample = columns[header_DNA.index('SAMPLE_ID')]
             if variant_key not in variant_dict:
