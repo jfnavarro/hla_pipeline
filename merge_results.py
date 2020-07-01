@@ -312,7 +312,15 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                     aa_position = transcript[header_epitopes.index('POSITION')]
                     error_flags = transcript[header_epitopes.index('ERRORS')]
                     wt_mer = transcript[header_epitopes.index('WT25MER')]
+                    #TODO this is no longer needed as we do not create peptides after stop codon
+                    stop_codon = wt_mer.find("*")
+                    if stop_codon != -1:
+                        wt_mer = wt_mer[0:stop_codon]
                     mu_mer = transcript[header_epitopes.index('MUT25MER')]
+                    # TODO this is no longer needed as we do not create peptides after stop codon
+                    stop_codon = mu_mer.find("*")
+                    if stop_codon != -1:
+                        mu_mer = mu_mer[0:stop_codon]
                     if ENS_gene_name in counts_dict:
                         counts_info = '|'.join(
                             ['{},{}'.format(x['locus'], x['expression']) for x in counts_dict[ENS_gene_name].values()])
