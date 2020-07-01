@@ -138,9 +138,9 @@ def create_epitopes(input, output, FASTA_AA_DICT, FASTA_cDNA_DICT):
                         mut_cDNA_right = ref_cDNA_seq[cDNA_pos + len_del - 1:]
                         mut_cDNA_seq = mut_cDNA_left + mut_cDNA_right
                     elif exonic_func in ['frameshift insertion', 'nonframeshift insertion']:
-                        if re.search(r'dup', cDNA_strip):
+                        if 'dup' in cDNA_strip:
                             ins = cDNA_strip[int(cDNA_strip.find('dup')) + 3:]
-                        elif re.search(r'ins', cDNA_strip):
+                        elif 'ins' in cDNA_strip:
                             ins = cDNA_strip[int(cDNA_strip.find('ins')) + 3:]
                         else:
                             errors += ' could not find mutation in cDNA'
@@ -149,7 +149,7 @@ def create_epitopes(input, output, FASTA_AA_DICT, FASTA_cDNA_DICT):
                         mut_cDNA_right = ref_cDNA_seq[cDNA_pos:]
                         mut_cDNA_seq = mut_cDNA_left + ins + mut_cDNA_right
                     elif exonic_func in ['frameshift substitution', 'nonframeshift substitution']:
-                        if re.search(r'delins', cDNA_strip):
+                        if 'delins' in cDNA_strip:
                             subs = cDNA_strip[int(cDNA_strip.find('delins')) + 6:]
                         else:
                             errors += ' could not find mutation in cDNA'
@@ -167,18 +167,11 @@ def create_epitopes(input, output, FASTA_AA_DICT, FASTA_cDNA_DICT):
                         errors += ' mutation occurs in stop codon'
                     ref_FASTA = str(translate_dna(ref_cDNA_seq.replace(' ', '')))
                     mut_FASTA = str(translate_dna(mut_cDNA_seq.replace(' ', '')))
-                    mut_stop = int(mut_FASTA.find('X'))
                     if position >= 13 and mut_stop > 0:
-                        WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
-                        Mut_25mer = mut_FASTA[position - 13:mut_stop]
-                    elif position < 13 and position > 0 and mut_stop > 0:
-                        WT_25mer = ref_FASTA[0:position + 12].replace('X', '')
-                        Mut_25mer = mut_FASTA[0:mut_stop]
-                    elif position >= 13 and mut_stop < 0:
-                        WT_25mer = ref_FASTA[position - 13:position + 12].replace('X', '')
+                        WT_25mer = ref_FASTA[position - 13:position + 12]
                         Mut_25mer = mut_FASTA[position - 13:]
-                    elif position < 13 and position > 0 and mut_stop < 0:
-                        WT_25mer = ref_FASTA[0:position + 12].replace('X', '')
+                    elif position < 13 and position > 0:
+                        WT_25mer = ref_FASTA[0:position + 12]
                         Mut_25mer = mut_FASTA[0:]
                     elif position == 0:
                         errors += ' can not code for this mutated AA_position'

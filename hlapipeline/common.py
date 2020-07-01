@@ -16,7 +16,7 @@ def index_column_substring(your_list, substring):
     return -1
 
 def translate_dna(seq):
-    return translate(seq)
+    return translate(seq, to_stop=True)
 
 def exec_command(cmd):
     print(cmd)

@@ -79,8 +79,8 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode):
                                                             columns[header.index('transcript ID')],
                                                             columns[header.index('cDNA change')],
                                                             columns[header.index('AA change')])
-                        protein_seq_mu = columns[header.index('Mut Epitope')].strip().replace('*', '')
-                        protein_seq_wt = columns[header.index('Wt Epitope')].strip().replace('*', '')
+                        protein_seq_mu = columns[header.index('Mut Epitope')].strip()
+                        protein_seq_wt = columns[header.index('Wt Epitope')].strip()
                         # Should probably make sure that all the letters in the protein seq are alpha (isalpha())
                         if protein_seq_mu != '-' and '.' not in protein_seq_mu and protein_seq_mu not in added_proteins_mu:
                             fwrite_mu.write('>{}\n{}\n'.format(protein_name, protein_seq_mu))
