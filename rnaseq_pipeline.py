@@ -64,8 +64,7 @@ def RNAseq_pipeline(sample1,
     if 'gatk' in steps:
         # Mark duplicates
         print('Marking duplicates')
-        cmd = GATK + ' MarkDuplicatesSpark -I=sample_header.bam ' \
-                     '-O=sample_dedup.bam -M=dedup_sample.txt'
+        cmd = '{} MarkDuplicatesSpark -I=sample_header.bam -O=sample_dedup.bam -M=dedup_sample.txt'.format(GATK)
         exec_command(cmd)
 
         # Split N and cigars
@@ -94,7 +93,7 @@ def RNAseq_pipeline(sample1,
         cmd = '{} mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
               '--min-var-freq .01 --p-value 0.99 > varscan.vcf'.format(VARSCAN)
         exec_command(cmd)
-        cmd = '{} IndexFeatureFile -F varscan.vcf'.format(GATK)
+        cmd = '{} IndexFeatureFile --input varscan.vcf'.format(GATK)
         exec_command(cmd)
 
         # Variant calling (HaplotypeCaller)
