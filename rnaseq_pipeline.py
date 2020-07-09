@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """
-@author: jfnavarro
+@author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import *
 from hlapipeline.tools import *
@@ -31,15 +31,21 @@ def RNAseq_pipeline(sample1,
     os.chdir('rna')
 
     if 'mapping' in steps:
-        print('Trimmimg reads')
+        print('Trimming reads')
         cmd = '{} --paired --basename sample {} {}'.format(TRIMGALORE, sample1, sample2)
         exec_command(cmd)
 
-        print('Aligining with STAR')
-        cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired' \
-              ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs' \
-              ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
-              ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, THREADS)
+        print('Aligning with STAR')
+        #cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired' \
+        #      ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs' \
+        #      ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
+        #      ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, THREADS)
+
+        cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
+              ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs' \
+              ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
+              ' --runThreadN {}'.format(STAR, genome_star, annotation, THREADS)
+
         exec_command(cmd)
 
         # Add headers
@@ -52,13 +58,14 @@ def RNAseq_pipeline(sample1,
         exec_command(cmd)
 
     if 'hla' in steps:
-        print('Predicting HLA')
+        print('Predicting HLAs')
         HLA_predictionRNA('sample_header.bam', THREADS)
 
     if 'gatk' in steps:
         # Mark duplicates
         print('Marking duplicates')
-        cmd = GATK + ' MarkDuplicatesSpark -I=sample_header.bam -O=sample_dedup.bam -M=dedup_sample.txt'
+        cmd = GATK + ' MarkDuplicatesSpark --VALIDATION_STRINGENCY SILENT -I=sample_header.bam ' \
+                     '-O=sample_dedup.bam -M=dedup_sample.txt'
         exec_command(cmd)
 
         # Split N and cigars
@@ -69,16 +76,14 @@ def RNAseq_pipeline(sample1,
         # GATK base re-calibration
         print('Starting re-calibration')
         # NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
-        cmd = '{} BaseRecalibrator -I sample_dedup.bam -R {} --known-sites {} --known-sites {}' \
+        cmd = '{} BaseRecalibrator --use-original-qualities -I sample_dedup.bam -R {} --known-sites {} --known-sites {}' \
               ' --known-sites {} -O sample_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR -R {} -I sample_dedup.bam --bqsr-recal-file sample_recal_data.txt -O sample_final.bam'.format(
-            GATK, genome)
+        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record -R {} -I sample_dedup.bam ' \
+              '--bqsr-recal-file sample_recal_data.txt -O sample_final.bam'.format(GATK, genome)
         exec_command(cmd)
 
     if 'variant' in steps:
-        # TODO add HaplotypeCaller and remove varscan in pileup mode (merge variants)
-
         # Variant calling (Samtools pile-ups)
         print('Computing pile-ups')
         cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, genome)
@@ -89,197 +94,58 @@ def RNAseq_pipeline(sample1,
         cmd = '{} mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
               '--min-var-freq .01 --p-value 0.99 > varscan.vcf'.format(VARSCAN)
         exec_command(cmd)
-        cmd = '{} mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 ' \
-              '--min-var-freq .01 --p-value 0.99 > varscan.pileup'.format(VARSCAN)
+
+        # Variant calling (HaplotypeCaller)
+        print('Variant calling with HaplotypeCaller')
+        cmd = '{} HaplotypeCaller -R {} -I sample_final.bam -O haplotype_caller.vcf ' \
+              '-dont-use-soft-clipped-bases --standard-min-confidence-threshold-for-calling 20 ' \
+              '--dbsnp {}'.format(GATK, genome, SNPSITES)
         exec_command(cmd)
 
         # Computing gene counts
-        print('Running featureCounts')
+        print('Computing gene counts with featureCounts')
         cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
               '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, annotation)
         exec_command(cmd)
 
     if 'filter' in steps:
-        # TODO apply a filter here with vcftools on varscan.vcf
+        # Filtering variants (HaplotypeCaller)
+        print("Filtering HaplotypeCaller variants")
+        cmd = '{} VariantFiltration --R {} --V haplotype_caller.vcf --window 35 --cluster 3 --filter-name "FS" ' \
+              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" -O haplotype_caller_filtered.vcf'.format(GATK, genome)
+        exec_command(cmd)
 
-        # Run annovar to annotate variants
-        print('Running annovar')
+        # Filtering variants (VarScan)
+        print("Filtering VarScan variants")
+        cmd = '{} VariantFiltration --R {} --V varscan.vcf --window 35 --cluster 3 --filter-name "FS" ' \
+              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" -O varscan_filtered.vcf'.format(GATK, genome)
+        exec_command(cmd)
+
+        # Combine with GATK
+        print('Combining variants')
+        # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
+        cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf ' \
+              '-V:HaplotypeCaller haplotype_caller_filtered.vcf -o combined_calls.vcf '\
+              '-genotypeMergeOptions UNIQUIFY'.format(GATK3, genome)
+        exec_command(cmd)
+
+        # Annotate with Annovar
         annovardb = '{} -buildver {}'.format(os.path.join(ANNOVAR_PATH, ANNOVAR_DB), ANNOVAR_VERSION)
-        cmd = '{} -format vcf4 varscan.vcf --comment --includeinfo -outfile snp.av'.format(
+        print('Running annovar (SNV)')
+        cmd = '{} -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'.format(
             os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
         exec_command(cmd)
         cmd = '{} snp.av {} -thread {} -out snp.sum -remove -protocol {}'.format(
-            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, THREADS, annovar_anno)
+            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, THREADS,  annovar_anno)
         exec_command(cmd)
 
-        print('Formatting Varscan variants')
-        snv = open('snp.sum.{}_multianno.txt'.format(ANNOVAR_VERSION))
-        snv_lines = snv.readlines()
-        header = snv_lines.pop(0).strip().split('\t')
-        insert_file = open('SQL_variant_input.txt', 'w')
-        for line in snv_lines:
-            if line.startswith('#'):
-                continue
-            columns = line.rstrip('\n').split('\t')
-            Chr = columns[header.index('Chr')]
-            start = columns[header.index('Start')]
-            end = columns[header.index('End')]
-            ref = columns[header.index('Ref')]
-            alt = columns[header.index('Alt')]
-            func_ref_gene = columns[header.index('Func.refGene')]
-            gene_ref_gene = columns[header.index('Gene.refGene')]
-            ref_gene_detail = columns[header.index('GeneDetail.refGene')]
-            exonic_func_ref = columns[header.index('ExonicFunc.refGene')]
-            AA_change_refGene = columns[header.index('AAChange.refGene')]
-            func_known_gene = columns[header.index('Func.knownGene')]
-            gene_known_gene = columns[header.index('Gene.knownGene')]
-            known_gene_detail = columns[header.index('GeneDetail.knownGene')]
-            exonic_known_ref = columns[header.index('ExonicFunc.knownGene')]
-            AA_change_knownGene = columns[header.index('AAChange.knownGene')]
-            func_ens_gene = columns[header.index('Func.ensGene')]
-            gene_ens_gene = columns[header.index('Gene.ensGene')]
-            ens_gene_detail = columns[header.index('GeneDetail.ensGene')]
-            exonic_ens_ref = columns[header.index('ExonicFunc.ensGene')]
-            AA_change_ensGene = columns[header.index('AAChange.ensGene')]
-            avsnp150 = columns[header.index('avsnp150')]
-            apr_all = columns[header.index('ALL.sites.2015_08')]
-            apr_eur = columns[header.index('EUR.sites.2015_08')]
-            apr_amr = columns[header.index('AMR.sites.2015_08')]
-            apr_asn = columns[header.index('EAS.sites.2015_08')]
-            apr_afr = columns[header.index('AFR.sites.2015_08')]
-            cosmic = columns[header.index('cosmic70')]
-            gDNA = 'chr' + Chr + ':' + start
-            variant_key = Chr + ':' + start + '-' + end + ' ' + ref + '>' + alt
-            if ref_gene_detail != 'NA':
-                AA_change_refGene = ref_gene_detail
-            if known_gene_detail != 'NA':
-                AA_change_knownGene = known_gene_detail
-            if ens_gene_detail != 'NA':
-                AA_change_ensGene = ens_gene_detail
-            to_write = '\t'.join([str(x) for x in [gDNA, sampleID, Chr, start, end, ref, alt, avsnp150,
-                                                   func_ref_gene, gene_ref_gene, exonic_func_ref, AA_change_refGene,
-                                                   func_known_gene, gene_known_gene, exonic_known_ref,
-                                                   AA_change_knownGene,
-                                                   func_ens_gene, gene_ens_gene, exonic_ens_ref, AA_change_ensGene,
-                                                   apr_all, apr_eur, apr_amr, apr_asn, apr_afr, variant_key, cosmic]])
-            insert_file.write(to_write + "\n")
-        insert_file.close()
-        snv.close()
-
-        # This will format the  coverage information into a format that will be joined with the variant information
-        print('Formatting varscan pile-ups')
-        pileup = open('varscan.pileup')
-        pileup_lines = pileup.readlines()
-        header = pileup_lines.pop(0).strip().split('\t')
-        insert_file = open('SQL_coverage_input.txt', 'w')
-        for line in pileup_lines:
-            columns = line.rstrip('\n').split('\t')
-            Chr = columns[header.index('Chrom')]
-            start = columns[header.index('Position')]
-            ref = columns[header.index('Ref')]
-            alt = columns[header.index('Var')]
-            columns2 = columns[header.index('Cons:Cov:Reads1:Reads2:Freq:P-value')].split(':')
-            cons = columns2[0]
-            cov = columns2[1]
-            read1 = columns2[2]
-            read2 = columns2[3]
-            freq = columns2[4]
-            p_val = columns2[5]
-            columns3 = columns[header.index('StrandFilter:R1+:R1-:R2+:R2-:pval')].split(':')
-            r1_plus = columns3[1]
-            r1_minus = columns3[2]
-            r2_plus = columns3[3]
-            r2_minus = columns3[4]
-            p_val2 = columns3[5]
-            gDNA = 'chr' + Chr + ':' + start
-            join_key = gDNA
-            if '-' in alt:
-                join_key = 'chr' + Chr + ':' + str(int(start) + 1)
-            to_write = '\t'.join([str(x) for x in [join_key, sampleID, Chr, start, ref, alt, cons, cov, read1, read2,
-                                                   freq, p_val, r1_plus, r1_minus, r2_plus, r2_minus, p_val2]])
-            insert_file.write(to_write + "\n")
-        pileup.close()
-        insert_file.close()
-
-        print('Sorting and joining files')
-        cmd = 'sort -k1b,1 SQL_coverage_input.txt > join_coverage_sort.txt'
-        exec_command(cmd)
-        cmd = 'sort -k1b,1 SQL_variant_input.txt > join_variants_sort.txt'
-        exec_command(cmd)
-        cmd = 'join -t$\'\\t\' -a1 -e"-" join_variants_sort.txt join_coverage_sort.txt > joined_coverage_variants.txt'
-        exec_command(cmd)
-
-        # This will extract just the nonsynonymous mutations:
-        print('Creating final variants')
-        joined_variants = open('joined_coverage_variants.txt')
-        nonsyn_file = open('nonsyn_SQL_insert.txt', 'w')
-        all_file = open('all_other_mutations.txt', 'w')
-        header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tavsnp150\tTUMOR_READ1\tTUMOR_READ2' \
-                 '\tTVAF\tALL.sites.2015_08\tFunc.refGene\tGene.refGene\tExonicFunc.refGene\tAAChange.refGene\tFunc.knownGene' \
-                 '\tGene.knownGene\tExonicFunc.knownGene\tAAChange.knownGene\tFunc.ensGene\tGene.ensGene\tExonicFunc.ensGene\tAAChange.ensGene' \
-                 '\tEUR.sites.2015_08\tAMR.sites.2015_08\tEAS.sites.2015_08\tAFR.sites.2015_08\tREAD1_PLUS\tREAD1_MINUS\tREAD2_PLUS\tREAD2_MINUS' \
-                 '\ttumour_type\tsource_of_RNA_used_for_sequencing\tVARIANT-KEY\tCOSMIC70\n'
-        nonsyn_file.write(header)
-        all_file.write(header)
-        for line in joined_variants:
-            columns = line.rstrip('\n').split('\t')
-            # Very ugly way to check that the variant was called by the two methods (TODO improve)
-            if len(columns) < 42:
-                continue
-            # TODO use header names instead
-            Chr = columns[2]
-            Start = columns[3]
-            End = columns[4]
-            Ref = columns[5]
-            Alt = columns[6]
-            tavsnp150 = columns[7]
-            Func_refGene = columns[8]
-            Gene_refGene = columns[9]
-            ExonicFunc_refGene = columns[10]
-            AAChange_refGene = columns[11]
-            Func_knownGene = columns[12]
-            Gene_knownGene = columns[13]
-            ExonicFunc_knownGene = columns[14]
-            AAChange_knownGene = columns[15]
-            Func_ensGene = columns[16]
-            Gene_ensGene = columns[17]
-            ExonicFunc_ensGene = columns[18]
-            AAChange_ensGene = columns[19]
-            apr_all = columns[20]
-            apr_eur = columns[21]
-            apr_amr = columns[22]
-            apr_asn = columns[23]
-            apr_afr = columns[24]
-            variant_key = columns[25]
-            cosmic = columns[26]
-            source_of_RNA_used_for_sequencing = columns[33]
-            tumor_reads1 = columns[34]
-            tumor_reads2 = columns[35]
-            tumor_var_freq = columns[36].replace('%', '')
-            read1_plus = columns[38]
-            read1_minus = columns[39]
-            read2_plus = columns[40]
-            read2_minus = columns[41]
-            to_write = '\t'.join([str(x) for x in [sampleID, Chr, Start, End, Ref, Alt, tavsnp150, tumor_reads1,
-                                                   tumor_reads2, tumor_var_freq, apr_all, Func_refGene, Gene_refGene,
-                                                   ExonicFunc_refGene, AAChange_refGene, Func_knownGene, Gene_knownGene,
-                                                   ExonicFunc_knownGene, AAChange_knownGene, Func_ensGene, Gene_ensGene,
-                                                   ExonicFunc_ensGene, AAChange_ensGene, apr_eur, apr_amr, apr_asn,
-                                                   apr_afr, read1_plus, read1_minus, read2_plus, read2_minus,
-                                                   tumor_type, source_of_RNA_used_for_sequencing, variant_key, cosmic]])
-            if any(x in ' '.join([ExonicFunc_refGene, ExonicFunc_knownGene, ExonicFunc_ensGene]) for x in ['nonsynonymous', 'frame', 'stop']):
-                nonsyn_file.write(to_write + '\n')
-            else:
-                all_file.write(to_write + '\n')
-        joined_variants.close()
-        nonsyn_file.close()
-        all_file.close()
+        # TODO extract peptides and epitopes
 
         # Extract peptides
-        extract_peptides('nonsyn_SQL_insert.txt', 'Formatted_epitope_variant.txt', sampleID)
+        #extract_peptides('nonsyn_SQL_insert.txt', 'Formatted_epitope_variant.txt', sampleID)
 
         # Create epitopes
-        create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
+        #create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
 
         # Reformat Gene counts file
         print('Creating Gene counts info file')

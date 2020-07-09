@@ -1,9 +1,8 @@
 #! /usr/bin/env python
 """
-@author: jfnavarro
+@author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 import statistics
-from re import sub
 import argparse
 import numpy as np
 import math
@@ -86,8 +85,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
         DNA_nonsyn_lines = DNA_nonsyn.readlines()
         header_DNA = DNA_nonsyn_lines.pop(0).strip().split('\t')
         for line in DNA_nonsyn_lines:
-
-            columns = [x.replace('.', '0') if x is "." else x for x in line.strip().split('\t')]
+            columns = [x.replace('.', '0') if x is '.' else x for x in line.strip().split('\t')]
             variant_key = columns[header_DNA.index('VARIANT-KEY')]
             sample = columns[header_DNA.index('SAMPLE_ID')]
             if variant_key not in variant_dict:
@@ -252,7 +250,6 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
     final_file_discarded.write(header_final)
 
     for key, value in variant_dict.items():
-
         rna_cov = ["-;-,-,-,-"]
         rna_samples_pass = []
         rna_samples_fail = []
@@ -313,15 +310,6 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                     aa_position = transcript[header_epitopes.index('POSITION')]
                     error_flags = transcript[header_epitopes.index('ERRORS')]
                     wt_mer = transcript[header_epitopes.index('WT25MER')]
-                    #TODO this is no longer needed as we do not create peptides after stop codon
-                    stop_codon = wt_mer.find("*")
-                    if stop_codon != -1:
-                        wt_mer = wt_mer[0:stop_codon]
-                    mu_mer = transcript[header_epitopes.index('MUT25MER')]
-                    # TODO this is no longer needed as we do not create peptides after stop codon
-                    stop_codon = mu_mer.find("*")
-                    if stop_codon != -1:
-                        mu_mer = mu_mer[0:stop_codon]
                     if ENS_gene_name in counts_dict:
                         counts_info = '|'.join(
                             ['{},{}'.format(x['locus'], x['expression']) for x in counts_dict[ENS_gene_name].values()])
@@ -350,22 +338,21 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
     final_file.close()
     final_file_discarded.close()
 
-parser = argparse.ArgumentParser(description='Script that merges variants and creates a final report using the\n'\
-                                             'resuls of the DNA and RNA pipelines\n'
+parser = argparse.ArgumentParser(description='Script that merges variants and epitopes to create a final report using the\n'\
+                                             'results of the DNA and RNA pipelines\n'
                                              'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                  prog='merge_results.py',
                                  usage='merge_results.py [options]\n'
                                        '--dna [dna variants results files]\n'
-                                       '--epitope [epitope results files]\n'
+                                       '--epitope [epitopes results files]\n'
                                        '--rna [rna variants results files]\n'
                                        '--counts [rna gene counts results]')
-
 parser.add_argument('--dna', nargs='+', default=None, required=False,
-                    help='List of files with the results of the DNA pipeline')
+                    help='List of files with the variants of the DNA pipeline')
 parser.add_argument('--epitope', nargs='+', default=None, required=True,
                     help='List of files with the the epitotes (DNA and RNA)')
 parser.add_argument('--rna', nargs='+', default=None, required=False,
-                    help='List of files with the results of the RNA pipeline')
+                    help='List of files with the variants of the RNA pipeline')
 parser.add_argument('--counts', nargs='+', default=None, required=True,
                     help='List of files with the gene counts results of the RNA pipeline')
 

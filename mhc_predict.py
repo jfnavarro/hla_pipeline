@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """
-@author: jfnavarro
+@author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import exec_command
 from collections import Counter
@@ -103,7 +103,8 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode):
 
     print('Completed')
 
-parser = argparse.ArgumentParser(description='Script to predict MHCs (MHCflurry) using data from DNA and RNA variant calling pipelines\n'
+parser = argparse.ArgumentParser(description='Script that predicts MHCs (MHCflurry) affinity binding scores\n'
+                                             'using data from DNA and RNA variant calling pipelines.\n'
                                              'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                  prog='mhc_predict.py',
                                  usage='mhc_predict.py [options] '
@@ -111,7 +112,6 @@ parser = argparse.ArgumentParser(description='Script to predict MHCs (MHCflurry)
                                        '--hla-rna [file/s with HLA predictions from RNA]\n'
                                        '--alleles [file with supported alleles in MHCflurry]\n'
                                        '--variants [file with the final variants generated with merge_results.py]')
-
 parser.add_argument('--hla-dna', nargs='+', default=None, required=False,
                     help='A file or files containing predicted HLAs from normal DNA (HLA-LA table format)')
 parser.add_argument('--hla-rna', nargs='+', default=None, required=False,
@@ -121,7 +121,8 @@ parser.add_argument('--variants', default=None, required=True,
 parser.add_argument('--alleles', default=None, required=True,
                     help='A file containing the allowed alleles in MHCflurry')
 parser.add_argument('--mode', default='either',
-                    help='Mode to use to extract sequences from the variants (both (DNA and RNA), only DNA, only RNA or either (default))', 
+                    help='Mode to use to extract sequences from the variants (both (DNA and RNA), '
+                         'only DNA, only RNA or either (default))',
                     choices=['both', 'dna', 'rna', 'either'])
 args = parser.parse_args()
 compute_MHC(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode)
