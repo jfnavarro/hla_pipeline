@@ -64,7 +64,7 @@ def RNAseq_pipeline(sample1,
     if 'gatk' in steps:
         # Mark duplicates
         print('Marking duplicates')
-        cmd = GATK + ' MarkDuplicatesSpark --VALIDATION_STRINGENCY SILENT -I=sample_header.bam ' \
+        cmd = GATK + ' MarkDuplicatesSpark -I=sample_header.bam ' \
                      '-O=sample_dedup.bam -M=dedup_sample.txt'
         exec_command(cmd)
 
