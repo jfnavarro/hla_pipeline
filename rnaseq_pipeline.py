@@ -42,7 +42,7 @@ def RNAseq_pipeline(sample1,
         #      ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, THREADS)
 
         cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
-              ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs' \
+              ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
               ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
               ' --runThreadN {}'.format(STAR, genome_star, annotation, THREADS)
 
