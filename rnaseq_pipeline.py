@@ -76,10 +76,10 @@ def RNAseq_pipeline(sample1,
         # GATK base re-calibration
         print('Starting re-calibration')
         # NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
-        cmd = '{} BaseRecalibrator --use-original-qualities -I sample_dedup.bam -R {} --known-sites {} --known-sites {}' \
+        cmd = '{} BaseRecalibrator --use-original-qualities -I sample_split.bam -R {} --known-sites {} --known-sites {}' \
               ' --known-sites {} -O sample_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record -R {} -I sample_dedup.bam ' \
+        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record -R {} -I sample_split.bam ' \
               '--bqsr-recal-file sample_recal_data.txt -O sample_final.bam'.format(GATK, genome)
         exec_command(cmd)
 
@@ -93,6 +93,8 @@ def RNAseq_pipeline(sample1,
         print('Variant calling with varscan')
         cmd = '{} mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
               '--min-var-freq .01 --p-value 0.99 > varscan.vcf'.format(VARSCAN)
+        exec_command(cmd)
+        cmd = '{} IndexFeatureFile -F varscan.vcf'.format(GATK)
         exec_command(cmd)
 
         # Variant calling (HaplotypeCaller)
