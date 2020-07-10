@@ -2,7 +2,7 @@
 This a private repository that contains a simplified, more generic, up-to-date
 and optimized version of a pipeline provided by Jared Gartner <jared.gartner@nhi.gov>
 The pipeline can process WES (tumor and normal) and RNA-seq data (tumor)
-and generate a list of variants, HLAs and MHCs. 
+and generate a list of variants, HLAs and neo-antigens with affinity scores. 
 
 The DNA and RNA pipelines use the GATK4 best-practices.
 All the tools and pipelines are fully parametrised and optimized for speed. 
@@ -22,14 +22,14 @@ The exome pipeline can be used with RNA-seq data as tumor input using the --mode
 flag. If this is the case the STAR index and annotation file must be given.
 
 **rnaseq_pipeline.py** processes the RNA-seq data and generates a list of unified
-annotated germline variants (unfiltered), epitopes and also a list of FPKM values. 
-The variant callers used are Varscan and mpileup. Annmotation is done with Annovar.
+annotated germline variants (unfiltered), epitopes and also a list of gene counts values. 
+The variant callers used are Varscan and HaplotypeCaller. Annmotation is done with Annovar.
 The pipeline uses trim-galore to trim, STAR to align and GATK4 best practices. 
 The gene counts values are computed with featureCounts.
 The pipeline will also perform HLA predictions with arcasHLA.
 
-**merge_resuls.py** combines results from 1 or several runs of the exome and rna-seq
-pipelines in order to generate an unified Excel sheet with useful information where
+**merge_resuls.py** combines results from 1 or several runs of the exome and/or rna-seq
+pipelines in order to generate an unified sheet with useful information where
 variants are filtered by certain criterias. 
 
 **mhc_predict.py** can take the file generated with merge_results.py and the HLA files

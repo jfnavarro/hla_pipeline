@@ -25,7 +25,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
                  '\tTVAF\tPVAL\tCALLERS\tTUMOUR\tTCOV\tNCOV\tVARIANT-KEY\tCOSMIC70\n'
         nonsyn_file.write(header)
         all_file.write(header)
-    # TODO use header names instead to access the fields by index
+    # TODO use header names instead of accessing the fields by index
     for line in nonsyn_snv_lines:
         if line.startswith('#'):
             continue
@@ -50,7 +50,6 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
             columns[14] = known_gene_detail
         if ens_gene_detail != 'NA':
             columns[19] = ens_gene_detail
-        # Can be missing keys if the annotation and the combined variants do not have the same chromosomes
         try:
             p_val = vcf_cov_dict[ID]['pval']
             callers = vcf_cov_dict[ID]['Note']
@@ -562,7 +561,8 @@ def exome_pipeline(R1_NORMAL,
                     tumor_read2 = int(t_split[TIR].split(',')[1])
                     ncov = int(n_split[DP])
                     tcov = int(t_split[DP])
-                    tfreq = float((tumor_read2 / tcov) * 100)
+                    if tumor_read2 != 0:
+                        tfreq = float((tumor_read2 / tcov) * 100)
                     if normal_read2 != 0:
                         nfreq = float(normal_read2 / ncov)
                     tumor_read1 = tcov - tumor_read2

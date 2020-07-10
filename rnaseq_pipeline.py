@@ -8,20 +8,19 @@ from hlapipeline.epitopes import *
 import os
 import argparse
 
-def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_type, header=True):
+def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_type):
     snv = open(input)
     snv_lines = snv.readlines()
     header = snv_lines.pop(0).strip().split('\t')
-    nonsyn_file = open(output, 'w' if header else 'a')
-    all_file = open(output_other, 'w' if header else 'a')
-    if header:
-        header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tavsnp150\tTUMOR_READ1\tTUMOR_READ2' \
+    nonsyn_file = open(output, 'w')
+    all_file = open(output_other, 'w')
+    header_str = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tavsnp150\tTUMOR_READ1\tTUMOR_READ2' \
                  '\tFunc.refGene\tGene.refGene\tExonicFunc.refGene\tAAChange.refGene\tFunc.knownGene' \
                  '\tGene.knownGene\tExonicFunc.knownGene\tAAChange.knownGene\tFunc.ensGene\tGene.ensGene' \
                  '\tExonicFunc.ensGene\tAAChange.ensGene\tALL.sites.2015_08\tEUR.sites.2015_08\tAMR.sites.2015_08' \
                  '\tEAS.sites.2015_08\tAFR.sites.2015_08\tTVAF\tTCOV\tPVAL\tCALLERS\tTUMOUR\tVARIANT-KEY\tCOSMIC70\n'
-        nonsyn_file.write(header)
-        all_file.write(header)
+    nonsyn_file.write(header_str)
+    all_file.write(header_str)
     for line in snv_lines:
         if line.startswith('#'):
             continue
@@ -222,6 +221,7 @@ def RNAseq_pipeline(sample1,
                 columns = line.split('\t')
                 chrm = columns[headers.index('#CHROM')]
                 pos = columns[headers.index('POS')]
+                alt = columns[headers.index('ALT')]
                 info = columns[headers.index('INFO')]
                 form = columns[headers.index('FORMAT')].split(':')
                 ID = chrm + ':' + pos
@@ -243,12 +243,13 @@ def RNAseq_pipeline(sample1,
                     vcf_cov_dict[ID]['cov'] = cov
                 elif 'HaplotypeCaller' in callers:
                     t_split = columns[HaplotypeCallerT].split(':')
-                    AD = form.index('AD')
-                    tumor_read1 = int(t_split[AD].split(',')[0])
-                    tumor_read2 = int(t_split[AD].split(',')[1])
-                    tcov = tumor_read1 + tumor_read2
-                    if tumor_read2 != 0:
-                        freq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                    if ',' not in alt:
+                        AD = form.index('AD')
+                        tumor_read1 = int(t_split[AD].split(',')[0])
+                        tumor_read2 = int(t_split[AD].split(',')[1])
+                        tcov = tumor_read1 + tumor_read2
+                        if tumor_read2 != 0:
+                            freq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
                 vcf_cov_dict[ID]['pval'] = pval
                 vcf_cov_dict[ID]['freq'] = freq
                 vcf_cov_dict[ID]['read1'] = read1
@@ -259,7 +260,7 @@ def RNAseq_pipeline(sample1,
         print('Adding annotated variants to final report')
         final_variants('snp.sum.{}_multianno.txt'.format(ANNOVAR_VERSION),
                        'nonsyn_SQL_insert.txt', 'all_other_mutations.txt',
-                       vcf_cov_dict, sampleID, tumor_type, header=True)
+                       vcf_cov_dict, sampleID, tumor_type)
 
         # Extract peptides
         extract_peptides('nonsyn_SQL_insert.txt', 'Formatted_epitope_variant.txt', sampleID)
