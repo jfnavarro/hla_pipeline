@@ -141,7 +141,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             r1 = int(columns[header_rna.index('TUMOR_READ1')])
             r2 = int(columns[header_rna.index('TUMOR_READ2')])
             rfreq = float(columns[header_rna.index('TVAF')].replace('%', ''))
-            rcov = int(columns[header_rna.index('tTCOV')])
+            rcov = int(columns[header_rna.index('TCOV')])
             cov = '{};{},{},{},{},{},{}'.format(sample, r1, r2, rfreq, rcov, P_val, callers)
             # Storage coverage, data and status
             status = rfreq >= 5 and rcov >= 5
