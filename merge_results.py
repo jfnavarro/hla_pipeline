@@ -73,7 +73,7 @@ def add_flags(transcript, variant_key, transcript_info, mer_len=25):
 # with 2 lists of epitopes (DNA and RNA) and a dict of Gene counts
 def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
 
-    if len(dna_variants) == 0 and len(rna_variants) == 0:
+    if not dna_variants and not rna_variants:
         sys.stderr.write("Error, no variants given as input (DNA or RNA).\n")
         sys.exit(1)
         

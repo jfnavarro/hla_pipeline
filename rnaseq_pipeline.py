@@ -65,14 +65,14 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
             tumor_reads2 = vcf_cov_dict[ID]['read2']
             tumor_var_freq = vcf_cov_dict[ID]['freq']
             cov = vcf_cov_dict[ID]['cov']
-            p_val = vcf_cov_dict[ID]['pval']
+            pval = vcf_cov_dict[ID]['pval']
             callers = vcf_cov_dict[ID]['Note']
             to_write = '\t'.join([str(x) for x in [sampleID, Chr, start, end, ref, alt, avsnp150, tumor_reads1,
                                                    tumor_reads2, func_ref_gene, gene_ref_gene, exonic_func_ref,
                                                    AA_change_refGene, func_known_gene, gene_known_gene, exonic_known_ref,
                                                    AA_change_knownGene, func_ens_gene, gene_ens_gene, exonic_ens_ref,
                                                    AA_change_ensGene, apr_all, apr_eur, apr_amr, apr_asn, apr_afr,
-                                                   tumor_var_freq, cov, p_val, callers, tumor_type, variant_key, cosmic]])
+                                                   tumor_var_freq, cov, pval, callers, tumor_type, variant_key, cosmic]])
             if any(x in ' '.join([exonic_func_ref, exonic_known_ref, exonic_ens_ref]) for x in
                    ['nonsynonymous', 'frame', 'stop']):
                 nonsyn_file.write(to_write + '\n')
