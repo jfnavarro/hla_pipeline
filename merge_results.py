@@ -313,6 +313,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                     aa_position = transcript[header_epitopes.index('POSITION')]
                     error_flags = transcript[header_epitopes.index('ERRORS')]
                     wt_mer = transcript[header_epitopes.index('WT25MER')]
+                    mu_mer = transcript[header_epitopes.index('MUT25MER')]
                     if ENS_gene_name in counts_dict:
                         counts_info = '|'.join(
                             ['{},{}'.format(x['locus'], x['expression']) for x in counts_dict[ENS_gene_name].values()])
