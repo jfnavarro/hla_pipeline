@@ -64,7 +64,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
             tumor_reads1 = vcf_cov_dict[ID]['read1']
             tumor_reads2 = vcf_cov_dict[ID]['read2']
             tumor_var_freq = vcf_cov_dict[ID]['freq']
-            tcov = vcf_cov_dict[ID]['tcov']
+            cov = vcf_cov_dict[ID]['cov']
             p_val = vcf_cov_dict[ID]['pval']
             callers = vcf_cov_dict[ID]['Note']
             to_write = '\t'.join([str(x) for x in [sampleID, Chr, start, end, ref, alt, avsnp150, tumor_reads1,
@@ -72,7 +72,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
                                                    AA_change_refGene, func_known_gene, gene_known_gene, exonic_known_ref,
                                                    AA_change_knownGene, func_ens_gene, gene_ens_gene, exonic_ens_ref,
                                                    AA_change_ensGene, apr_all, apr_eur, apr_amr, apr_asn, apr_afr,
-                                                   tumor_var_freq, tcov, p_val, callers, tumor_type, variant_key, cosmic]])
+                                                   tumor_var_freq, cov, p_val, callers, tumor_type, variant_key, cosmic]])
             if any(x in ' '.join([exonic_func_ref, exonic_known_ref, exonic_ens_ref]) for x in
                    ['nonsynonymous', 'frame', 'stop']):
                 nonsyn_file.write(to_write + '\n')
@@ -239,17 +239,17 @@ def RNAseq_pipeline(sample1,
                     pval = t_split[form.index('PVAL')]
                     freq = t_split[form.index('FREQ')]
                     read1 = t_split[form.index('RDF')]
-                    vcf_cov_dict[ID]['read2'] = read2
-                    vcf_cov_dict[ID]['cov'] = cov
+                    read2 = t_split[form.index('RDR')]
+                    cov = t_split[form.index('RD')]
                 elif 'HaplotypeCaller' in callers:
                     t_split = columns[HaplotypeCallerT].split(':')
                     if ',' not in alt:
                         AD = form.index('AD')
                         tumor_read1 = int(t_split[AD].split(',')[0])
                         tumor_read2 = int(t_split[AD].split(',')[1])
-                        tcov = tumor_read1 + tumor_read2
+                        cov = tumor_read1 + tumor_read2
                         if tumor_read2 != 0:
-                            freq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                            freq = str(round((tumor_read2 / cov) * 100, 2)) + '%'
                 vcf_cov_dict[ID]['pval'] = pval
                 vcf_cov_dict[ID]['freq'] = freq
                 vcf_cov_dict[ID]['read1'] = read1
