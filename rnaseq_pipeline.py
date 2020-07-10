@@ -8,6 +8,83 @@ from hlapipeline.epitopes import *
 import os
 import argparse
 
+def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_type, header=True):
+    snv = open(input)
+    snv_lines = snv.readlines()
+    header = snv_lines.pop(0).strip().split('\t')
+    nonsyn_file = open(output, 'w' if header else 'a')
+    all_file = open(output_other, 'w' if header else 'a')
+    if header:
+        header = 'SAMPLE_ID\tCHR\tSTART\tEND\tREF\tALT\tavsnp150\tTUMOR_READ1\tTUMOR_READ2' \
+                 '\tFunc.refGene\tGene.refGene\tExonicFunc.refGene\tAAChange.refGene\tFunc.knownGene' \
+                 '\tGene.knownGene\tExonicFunc.knownGene\tAAChange.knownGene\tFunc.ensGene\tGene.ensGene' \
+                 '\tExonicFunc.ensGene\tAAChange.ensGene\tALL.sites.2015_08\tEUR.sites.2015_08\tAMR.sites.2015_08' \
+                 '\tEAS.sites.2015_08\tAFR.sites.2015_08\tTVAF\tTCOV\tPVAL\tCALLERS\tTUMOUR\tVARIANT-KEY\tCOSMIC70\n'
+        nonsyn_file.write(header)
+        all_file.write(header)
+    for line in snv_lines:
+        if line.startswith('#'):
+            continue
+        columns = line.rstrip('\n').split('\t')
+        Chr = columns[header.index('Chr')]
+        start = columns[header.index('Start')]
+        end = columns[header.index('End')]
+        ref = columns[header.index('Ref')]
+        alt = columns[header.index('Alt')]
+        func_ref_gene = columns[header.index('Func.refGene')]
+        gene_ref_gene = columns[header.index('Gene.refGene')]
+        ref_gene_detail = columns[header.index('GeneDetail.refGene')]
+        exonic_func_ref = columns[header.index('ExonicFunc.refGene')]
+        AA_change_refGene = columns[header.index('AAChange.refGene')]
+        func_known_gene = columns[header.index('Func.knownGene')]
+        gene_known_gene = columns[header.index('Gene.knownGene')]
+        known_gene_detail = columns[header.index('GeneDetail.knownGene')]
+        exonic_known_ref = columns[header.index('ExonicFunc.knownGene')]
+        AA_change_knownGene = columns[header.index('AAChange.knownGene')]
+        func_ens_gene = columns[header.index('Func.ensGene')]
+        gene_ens_gene = columns[header.index('Gene.ensGene')]
+        ens_gene_detail = columns[header.index('GeneDetail.ensGene')]
+        exonic_ens_ref = columns[header.index('ExonicFunc.ensGene')]
+        AA_change_ensGene = columns[header.index('AAChange.ensGene')]
+        avsnp150 = columns[header.index('avsnp150')]
+        apr_all = columns[header.index('ALL.sites.2015_08')]
+        apr_eur = columns[header.index('EUR.sites.2015_08')]
+        apr_amr = columns[header.index('AMR.sites.2015_08')]
+        apr_asn = columns[header.index('EAS.sites.2015_08')]
+        apr_afr = columns[header.index('AFR.sites.2015_08')]
+        cosmic = columns[header.index('cosmic70')]
+        ID = Chr + ':' + start
+        variant_key = Chr + ':' + start + '-' + end + ' ' + ref + '>' + alt
+        if ref_gene_detail != 'NA':
+            AA_change_refGene = ref_gene_detail
+        if known_gene_detail != 'NA':
+            AA_change_knownGene = known_gene_detail
+        if ens_gene_detail != 'NA':
+            AA_change_ensGene = ens_gene_detail
+        try:
+            tumor_reads1 = vcf_cov_dict[ID]['read1']
+            tumor_reads2 = vcf_cov_dict[ID]['read2']
+            tumor_var_freq = vcf_cov_dict[ID]['freq']
+            tcov = vcf_cov_dict[ID]['tcov']
+            p_val = vcf_cov_dict[ID]['pval']
+            callers = vcf_cov_dict[ID]['Note']
+            to_write = '\t'.join([str(x) for x in [sampleID, Chr, start, end, ref, alt, avsnp150, tumor_reads1,
+                                                   tumor_reads2, func_ref_gene, gene_ref_gene, exonic_func_ref,
+                                                   AA_change_refGene, func_known_gene, gene_known_gene, exonic_known_ref,
+                                                   AA_change_knownGene, func_ens_gene, gene_ens_gene, exonic_ens_ref,
+                                                   AA_change_ensGene, apr_all, apr_eur, apr_amr, apr_asn, apr_afr,
+                                                   tumor_var_freq, tcov, p_val, callers, tumor_type, variant_key, cosmic]])
+            if any(x in ' '.join([exonic_func_ref, exonic_known_ref, exonic_ens_ref]) for x in
+                   ['nonsynonymous', 'frame', 'stop']):
+                nonsyn_file.write(to_write + '\n')
+            else:
+                all_file.write(to_write + '\n')
+        except KeyError:
+            print("Missing variant for {}".format(ID))
+    nonsyn_file.close()
+    all_file.close()
+    snv.close()
+
 def RNAseq_pipeline(sample1,
                     sample2,
                     sampleID,
@@ -36,11 +113,6 @@ def RNAseq_pipeline(sample1,
         exec_command(cmd)
 
         print('Aligning with STAR')
-        #cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired' \
-        #      ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs' \
-        #      ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
-        #      ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, THREADS)
-
         cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
               ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
               ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
@@ -50,11 +122,8 @@ def RNAseq_pipeline(sample1,
 
         # Add headers
         print("Adding headers")
-        cmd = '{} AddOrReplaceReadGroups I=Aligned.sortedByCoord.out.bam O=sample_header.bam SO=coordinate RGID=RNA RGLB={}' \
-              ' RGPL=Illumina RGPU=PU{} RGSM=rna-seq_{} Create_Index=true Validation_Stringency=SILENT'.format(PICARD,
-                                                                                                               'VHIO',
-                                                                                                               'VHIO',
-                                                                                                               sampleID)
+        cmd = '{} AddOrReplaceReadGroups I=Aligned.sortedByCoord.out.bam O=sample_header.bam SO=coordinate RGID=RNA RGLB=VHIO' \
+              ' RGPL=Illumina RGPU=VHIO RGSM={} Create_Index=true Validation_Stringency=SILENT'.format(PICARD, sampleID)
         exec_command(cmd)
 
     if 'hla' in steps:
@@ -140,13 +209,47 @@ def RNAseq_pipeline(sample1,
             os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, THREADS,  annovar_anno)
         exec_command(cmd)
 
-        # TODO extract peptides and epitopes
+        # Extract coverage info from vcf file
+        print("Extracting coverage from combined variants")
+        vcf = open('combined_calls.vcf')
+        vcf_cov_dict = {}
+        for line in vcf:
+            if line.startswith('#CHROM'):
+                headers = line.strip().split('\t')
+                varscanT = headers.index('Sample1.varscan')
+                HaplotypeCallerT = headers.index('{}.HaplotypeCaller'.format(sampleID))
+            if not line.startswith('#'):
+                columns = line.split('\t')
+                chrm = columns[headers.index('#CHROM')]
+                pos = columns[headers.index('POS')]
+                info = columns[headers.index('INFO')]
+                form = columns[headers.index('FORMAT')].split(':')
+                ID = chrm + ':' + pos
+                callers = info.strip().split(';')[-1].replace('set=', '')
+                caller_count = callers.count('-') + 1
+                if 'Intersection' in callers or 'varscan' in callers:
+                    t_split = columns[varscanT].split(':')
+                elif 'HaplotypeCaller' in callers:
+                    t_split = columns[HaplotypeCallerT].split(':')
+                vcf_cov_dict[ID] = {}
+                vcf_cov_dict[ID]['pval'] = t_split[form.index('PVAL')]
+                vcf_cov_dict[ID]['Note'] = str(caller_count) + ':' + callers
+                vcf_cov_dict[ID]['freq'] = t_split[form.index('FREQ')]
+                vcf_cov_dict[ID]['read1'] = t_split[form.index('RDF')]
+                vcf_cov_dict[ID]['read2'] = t_split[form.index('RDR')]
+                vcf_cov_dict[ID]['cov'] = t_split[form.index('RD')]
+        vcf.close()
+
+        print('Adding annotated variants to final report')
+        final_variants('snp.sum.{}_multianno.txt'.format(ANNOVAR_VERSION),
+                       'nonsyn_SQL_insert.txt', 'all_other_mutations.txt',
+                       vcf_cov_dict, sampleID, tumor_type, header=True)
 
         # Extract peptides
-        #extract_peptides('nonsyn_SQL_insert.txt', 'Formatted_epitope_variant.txt', sampleID)
+        extract_peptides('nonsyn_SQL_insert.txt', 'Formatted_epitope_variant.txt', sampleID)
 
         # Create epitopes
-        #create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
+        create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
 
         # Reformat Gene counts file
         print('Creating Gene counts info file')

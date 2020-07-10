@@ -135,12 +135,14 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                 variant_dict[variant_key]['RNA'] = {}
             if sample not in variant_dict[variant_key]['RNA']:
                 variant_dict[variant_key]['RNA'][sample] = {}
+            P_val = columns[header_rna.index('PVAL')]
+            callers = columns[header_rna.index('CALLERS')]
             # Compute coverage and pass/fail
-            r1 = float(columns[header_rna.index('TUMOR_READ1')])
-            r2 = float(columns[header_rna.index('TUMOR_READ2')])
+            r1 = int(columns[header_rna.index('TUMOR_READ1')])
+            r2 = int(columns[header_rna.index('TUMOR_READ2')])
             rfreq = float(columns[header_rna.index('TVAF')].replace('%', ''))
-            rcov = r1 + r2
-            cov = '{};{},{},{},{}'.format(sample, r1, r2, rfreq, rcov)
+            rcov = int(columns[header_rna.index('tTCOV')])
+            cov = '{};{},{},{},{},{},{}'.format(sample, r1, r2, rfreq, rcov, P_val, callers)
             # Storage coverage, data and status
             status = rfreq >= 5 and rcov >= 5
             variant_dict[variant_key]['RNA'][sample]['data'] = columns[0:]
@@ -241,8 +243,8 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                    '1000genome all freq\tdbSNP_ID\tCosmic Info\tGene Name\ttranscript ID\tMutation type\t'\
                    'Exon\tcDNA change\tAA change\tAA position\tEpitope creation flags\tWt Epitope\t'\
                    'Mut Epitope\tDNA Coverage info (Sample,Tumor coverage,Normal Coverage,Tumor var freq,'\
-                   'Normal var freq,Tumor variant reads,p_value (varscan),callers)\tError flags\t'\
-                   'RNA Coverage info (Sample,read1,read2,variant frequency,coverage)\t' \
+                   'Normal var freq,Tumor variant reads,p_value,callers)\tError flags\t'\
+                   'RNA Coverage info (Sample,read1,read2,variant frequency,coverage,p_value,callers)\t' \
                    'GeneCounts info per sample (locus,exp)\tGeneCounts mean(all samples)\tGeneCounts percentile (all samples)\n'
     final_file = open('overlap_final.txt', 'w')
     final_file.write(header_final)

@@ -25,7 +25,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
                  '\tTVAF\tPVAL\tCALLERS\tTUMOUR\tTCOV\tNCOV\tVARIANT-KEY\tCOSMIC70\n'
         nonsyn_file.write(header)
         all_file.write(header)
-    # TODO use header names instead to access the fields
+    # TODO use header names instead to access the fields by index
     for line in nonsyn_snv_lines:
         if line.startswith('#'):
             continue
@@ -43,7 +43,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
         ExonicFunc_refGene = columns[8]
         ExonicFunc_knownGene = columns[13]
         ExonicFunc_ensGene = columns[18]
-        variant_key = str(Chr) + ':' + str(start) + '-' + str(end) + ' ' + str(ref) + '>' + str(alt)
+        variant_key = Chr + ':' + start + '-' + end + ' ' + ref + '>' + alt
         if ref_gene_detail != 'NA':
             columns[9] = ref_gene_detail
         if known_gene_detail != 'NA':
@@ -339,11 +339,12 @@ def exome_pipeline(R1_NORMAL,
                 sniperN = headers.index('NORMAL.somaticsniper')
             if not line.startswith('#'):
                 columns = line.split('\t')
-                chrm = columns[0]
-                pos = columns[1]
-                ref = columns[3]
-                alt = columns[4]
-                info = columns[7]
+                chrm = columns[headers.index('#CHROM')]
+                pos = columns[headers.index('POS')]
+                ref = columns[headers.index('REF')]
+                alt = columns[headers.index('ALT')]
+                info = columns[headers.index('INFO')]
+                form = columns[headers.index('FORMAT')].split(':')
                 DictID = chrm + ':' + pos
                 trfor = 0
                 trrev = 0
@@ -363,18 +364,12 @@ def exome_pipeline(R1_NORMAL,
                 tumor_read2 = 0
                 normal_read2 = 0
                 callers = info.strip().split(';')[-1].replace('set=', '')
-                caller_count = 0
+                caller_count = callers.count('-') + 1
                 if 'Intersection' in callers or 'varscan' in callers:
-                    if callers == 'Intersection':
-                        caller_count = 4
-                        callers = 'varscan-strelka-mutect-somaticsniper'
-                    else:
-                        caller_count = callers.count('-') + 1
                     if 'SPV=' in info:
                         for x in info.split(';'):
                             if 'SPV=' in x:
                                 p_val = x.replace('SPV=', '')
-                    form = columns[8].split(':')
                     DP4 = form.index('DP4')
                     Freq = form.index('FREQ')
                     t_split = columns[varscanT].split(':')
@@ -396,8 +391,6 @@ def exome_pipeline(R1_NORMAL,
                     ncov = nrfor + nrrev + nvfor + nvrev
                     nfreq = columns[varscanN].split(':')[Freq]
                 elif 'somaticsniper' in callers:
-                    caller_count = callers.count('-') + 1
-                    form = columns[8].split(':')
                     DP4 = form.index('DP4')
                     t_split = columns[sniperT].split(':')
                     n_split = columns[sniperN].split(':')
@@ -415,11 +408,11 @@ def exome_pipeline(R1_NORMAL,
                     normal_read1 = nrfor + nrrev
                     normal_read2 = nvfor + nvrev
                     ncov = nrfor + nrrev + nvfor + nvrev
-                    tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
-                    nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
+                    if tumor_read2 != 0:
+                        tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                    if normal_read2 != 0:
+                        nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
                 elif 'strelka' in callers:
-                    caller_count = callers.count('-') + 1
-                    form = columns[8].split(':')
                     AU = form.index('AU')
                     CU = form.index('CU')
                     GU = form.index('GU')
@@ -450,14 +443,13 @@ def exome_pipeline(R1_NORMAL,
                     elif alt == 'T':
                         tumor_read2 = int(t_split[TU].split(',')[0])
                         normal_read2 = int(n_split[TU].split(',')[0])
-                    if tumor_read2 != '.':
-                        tcov = tumor_read1 + tumor_read2
-                        ncov = normal_read1 + normal_read2
+                    tcov = tumor_read1 + tumor_read2
+                    ncov = normal_read1 + normal_read2
+                    if tumor_read2 != 0:
                         tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                    if normal_read2 != 0:
                         nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
                 elif 'mutect' in callers:
-                    caller_count = callers.count('-') + 1
-                    form = columns[8].split(':')
                     t_split = columns[mutectT].split(':')
                     n_split = columns[mutectN].split(':')
                     if ',' not in alt:
@@ -468,12 +460,13 @@ def exome_pipeline(R1_NORMAL,
                         normal_read2 = int(n_split[AD].split(',')[1])
                         tcov = tumor_read1 + tumor_read2
                         ncov = normal_read1 + normal_read2
-                        tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
-                        nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-                # populate
+                        if tumor_read2 != 0:
+                            tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                        if normal_read2 != 0:
+                            nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
                 vcf_cov_dict[DictID] = {}
                 vcf_cov_dict[DictID]['pval'] = p_val
-                vcf_cov_dict[DictID]['Note'] = str(caller_count) + ':' + callers
+                vcf_cov_dict[DictID]['Note'] = str(caller_count) + ":" + callers
                 vcf_cov_dict[DictID]['trfor'] = trfor
                 vcf_cov_dict[DictID]['trrev'] = trrev
                 vcf_cov_dict[DictID]['tvfor'] = tvfor
@@ -510,40 +503,35 @@ def exome_pipeline(R1_NORMAL,
                 strelkaN = headers.index('NORMAL.strelka')
             if not line.startswith('#'):
                 columns = line.split('\t')
-                chrm = columns[0]
-                pos = columns[1]
-                info = columns[7]
+                chrm = columns[headers.index('#CHROM')]
+                pos = columns[headers.index('POS')]
+                info = columns[headers.index('INFO')]
+                form = columns[headers.index('FORMAT')].split(':')
                 DictID = chrm + ':' + pos
-                trfor = '.'
-                trrev = '.'
-                tvfor = '.'
-                tvrev = '.'
-                nrfor = '.'
-                nrrev = '.'
-                nvfor = '.'
-                nvrev = '.'
-                p_val = '.'
-                tumor_read1 = '.'
-                tumor_read2 = '.'
-                normal_read1 = '.'
-                normal_read2 = '.'
-                tcov = '.'
-                nfreq = '.'
-                tfreq = '.'
-                ncov = '.'
-                caller_count = '.'
+                trfor = 0
+                trrev = 0
+                tvfor = 0
+                tvrev = 0
+                nrfor = 0
+                nrrev = 0
+                nvfor = 0
+                nvrev = 0
+                p_val = 0
+                tumor_read1 = 0
+                tumor_read2 = 0
+                normal_read1 = 0
+                normal_read2 = 0
+                tcov = 0
+                nfreq = 0
+                tfreq = 0
+                ncov = 0
                 callers = info.strip().split(';')[-1].replace('set=', '')
+                caller_count = callers.count('-') + 1
                 if 'Intersection' in callers or 'varscan' in callers:
-                    if callers == 'Intersection':
-                        caller_count = 2
-                        callers = 'varscan-strelka'
-                    else:
-                        caller_count = callers.count('-') + 1
                     if 'SPV=' in info:
                         for x in info.split(';'):
                             if 'SPV=' in x:
                                 p_val = x.replace('SPV=', '')
-                    form = columns[8].split(':')
                     DP4 = form.index('DP4')
                     Freq = form.index('FREQ')
                     t_split = columns[varscanT].split(':')
@@ -566,7 +554,6 @@ def exome_pipeline(R1_NORMAL,
                     nfreq = n_split[Freq]
                 elif 'strelka' in callers:
                     caller_count = callers.count('-') + 1
-                    form = columns[8].split(':')
                     DP = form.index('DP')
                     TIR = form.index('TIR')
                     t_split = columns[strelkaT].split(':')
