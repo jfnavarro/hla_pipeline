@@ -252,7 +252,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
     final_file_discarded.write(header_final)
 
     for key, value in variant_dict.items():
-        rna_cov = ["-;-,-,-,-"]
+        rna_cov = ["-;-,-,-,-,-,-,-"]
         rna_samples_pass = []
         rna_samples_fail = []
         has_rna = False
@@ -262,7 +262,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             rna_samples_fail = [key for key, value in value['RNA'].items() if not value['status']]
             has_rna = True
             
-        DNA_cov = ["-;-,-,-,-"]
+        DNA_cov = ["-;-,-,-,-,-,-,-"]
         DNA_samples_pass = []
         DNA_samples_fail = []
         has_DNA = False
@@ -281,15 +281,16 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             for mer in value['Epitopes'].values():
                 for transcript in sorted(mer.values(), reverse=True):
                     sampleID = transcript[header_epitopes.index('SAMPLE_ID')]
-                    # TODO very ugly hack to distinguish RNA and DNA epitopes from the same variant (FIX THIS!)
+                    # TODO very ugly hack to distinguish RNA and DNA epitopes from the same variant (FIX THIS!!!)
                     if has_DNA and sampleID in value['DNA'] and len(value['DNA'][sampleID]['data']) == 45:
                         data = value['DNA'][sampleID]['data']
                         header = header_DNA
-                    elif has_rna and sampleID in value['RNA'] and len(value['RNA'][sampleID]['data']) == 35:
+                    elif has_rna and sampleID in value['RNA'] and len(value['RNA'][sampleID]['data']) == 33:
                         data = value['RNA'][sampleID]['data']
                         header = header_rna
                     else:
                         # this should never happen
+                        print("Epitope {} was not found in neither DNA or RNA variants".format(key))
                         continue
                     ref_gene_name = data[header.index('Gene.refGene')]
                     ref_gene_mut = data[header.index('ExonicFunc.refGene')]
