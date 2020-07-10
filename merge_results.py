@@ -243,8 +243,8 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                    '1000genome all freq\tdbSNP_ID\tCosmic Info\tGene Name\ttranscript ID\tMutation type\t'\
                    'Exon\tcDNA change\tAA change\tAA position\tEpitope creation flags\tWt Epitope\t'\
                    'Mut Epitope\tDNA Coverage info (Sample,Tumor coverage,Normal Coverage,Tumor var freq,'\
-                   'Normal var freq,Tumor variant reads,p_value,callers)\tError flags\t'\
-                   'RNA Coverage info (Sample,read1,read2,variant frequency,coverage,p_value,callers)\t' \
+                   'Normal var freq,Tumor variant reads,p_value(varscan),callers)\tError flags\t'\
+                   'RNA Coverage info (Sample,read1,read2,variant frequency,coverage,p_value(varscan),callers)\t' \
                    'GeneCounts info per sample (locus,exp)\tGeneCounts mean(all samples)\tGeneCounts percentile (all samples)\n'
     final_file = open('overlap_final.txt', 'w')
     final_file.write(header_final)

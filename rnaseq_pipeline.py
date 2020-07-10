@@ -225,19 +225,35 @@ def RNAseq_pipeline(sample1,
                 info = columns[headers.index('INFO')]
                 form = columns[headers.index('FORMAT')].split(':')
                 ID = chrm + ':' + pos
+                pval = 0
+                freq = 0
+                read1 = 0
+                read2 = 0
+                cov = 0
                 callers = info.strip().split(';')[-1].replace('set=', '')
                 caller_count = callers.count('-') + 1
+                vcf_cov_dict[ID] = {}
+                vcf_cov_dict[ID]['Note'] = str(caller_count) + ':' + callers
                 if 'Intersection' in callers or 'varscan' in callers:
                     t_split = columns[varscanT].split(':')
+                    pval = t_split[form.index('PVAL')]
+                    freq = t_split[form.index('FREQ')]
+                    read1 = t_split[form.index('RDF')]
+                    vcf_cov_dict[ID]['read2'] = read2
+                    vcf_cov_dict[ID]['cov'] = cov
                 elif 'HaplotypeCaller' in callers:
                     t_split = columns[HaplotypeCallerT].split(':')
-                vcf_cov_dict[ID] = {}
-                vcf_cov_dict[ID]['pval'] = t_split[form.index('PVAL')]
-                vcf_cov_dict[ID]['Note'] = str(caller_count) + ':' + callers
-                vcf_cov_dict[ID]['freq'] = t_split[form.index('FREQ')]
-                vcf_cov_dict[ID]['read1'] = t_split[form.index('RDF')]
-                vcf_cov_dict[ID]['read2'] = t_split[form.index('RDR')]
-                vcf_cov_dict[ID]['cov'] = t_split[form.index('RD')]
+                    AD = form.index('AD')
+                    tumor_read1 = int(t_split[AD].split(',')[0])
+                    tumor_read2 = int(t_split[AD].split(',')[1])
+                    tcov = tumor_read1 + tumor_read2
+                    if tumor_read2 != 0:
+                        freq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                vcf_cov_dict[ID]['pval'] = pval
+                vcf_cov_dict[ID]['freq'] = freq
+                vcf_cov_dict[ID]['read1'] = read1
+                vcf_cov_dict[ID]['read2'] = read2
+                vcf_cov_dict[ID]['cov'] = cov
         vcf.close()
 
         print('Adding annotated variants to final report')
