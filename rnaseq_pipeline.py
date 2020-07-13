@@ -225,13 +225,13 @@ def RNAseq_pipeline(sample1,
                 info = columns[headers.index('INFO')]
                 form = columns[headers.index('FORMAT')].split(':')
                 ID = chrm + ':' + pos
-                pval = 0
+                pval = -1
                 freq = 0
                 read1 = 0
                 read2 = 0
                 cov = 0
                 callers = info.strip().split(';')[-1].replace('set=', '')
-                caller_count = callers.count('-') + 1
+                caller_count = callers.count('-') + 1 if 'Intersection' not in callers else 2
                 vcf_cov_dict[ID] = {}
                 vcf_cov_dict[ID]['Note'] = str(caller_count) + ':' + callers
                 if 'Intersection' in callers or 'varscan' in callers:

@@ -353,7 +353,7 @@ def exome_pipeline(R1_NORMAL,
                 nrrev = 0
                 nvfor = 0
                 nvrev = 0
-                p_val = 0
+                p_val = -1
                 tcov = 0
                 ncov = 0
                 tfreq = 0
@@ -363,7 +363,7 @@ def exome_pipeline(R1_NORMAL,
                 tumor_read2 = 0
                 normal_read2 = 0
                 callers = info.strip().split(';')[-1].replace('set=', '')
-                caller_count = callers.count('-') + 1
+                caller_count = callers.count('-') + 1 if 'Intersection' not in callers else 4
                 if 'Intersection' in callers or 'varscan' in callers:
                     if 'SPV=' in info:
                         for x in info.split(';'):
@@ -515,7 +515,7 @@ def exome_pipeline(R1_NORMAL,
                 nrrev = 0
                 nvfor = 0
                 nvrev = 0
-                p_val = 0
+                p_val = -1
                 tumor_read1 = 0
                 tumor_read2 = 0
                 normal_read1 = 0
@@ -525,7 +525,7 @@ def exome_pipeline(R1_NORMAL,
                 tfreq = 0
                 ncov = 0
                 callers = info.strip().split(';')[-1].replace('set=', '')
-                caller_count = callers.count('-') + 1
+                caller_count = callers.count('-') + 1 if 'Intersection' not in callers else 2
                 if 'Intersection' in callers or 'varscan' in callers:
                     if 'SPV=' in info:
                         for x in info.split(';'):
