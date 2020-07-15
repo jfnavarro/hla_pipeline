@@ -50,7 +50,7 @@ merge_results.py \
   --counts out/rna/GeneCounts_SQL_insert.txt
 
 mhc_predict.py \
-  --hla-dna out/exome/PRG-HLA-LA_Normal_output.txt out/exome/PRG-HLA-LA_Tumor_output.txt \
+  --hla-dna out/exome/PRG-HLA-LA_Tumor_output.txt \
   --hla-rna out/rna/hla/sample_header.genotype.json \
   --variants out/overlap_final.txt \
   --alleles ~/shared/alleles.txt

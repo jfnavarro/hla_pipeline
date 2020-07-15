@@ -9,7 +9,7 @@ import json
 import argparse
 import sys
 
-def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode):
+def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results):
 
     if not hla_dna and not hla_rna:
         sys.stderr.write("Error, need HLAs as input.\n")
@@ -93,12 +93,14 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode):
     # Run predictions
     print('Predicting MHCs with MUT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_mu.fasta --alleles {} ' \
-          '--no-throw --results-all --out predictions_mut.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla))
+          '--no-throw --results-{} --out predictions_mut.csv --peptide-lengths 8 9 10 11 12'.format(results,
+                                                                                                    ' '.join(filtered_hla))
     exec_command(cmd)
 
     print('Predicting MHCs with WT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_wt.fasta --alleles {} ' \
-          '--no-throw --results-all --out predictions_wt.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla))
+          '--no-throw --results-{} --out predictions_wt.csv --peptide-lengths 8 9 10 11 12'.format(results,
+                                                                                                   ' '.join(filtered_hla))
     exec_command(cmd)
 
     print('Completed')
@@ -124,5 +126,8 @@ parser.add_argument('--mode', default='either',
                     help='Mode to use to extract sequences from the variants (both (DNA and RNA), '
                          'only DNA, only RNA or either (default))',
                     choices=['both', 'dna', 'rna', 'either'])
+parser.add_argument('--results', default='all',
+                    help='Whether to include all results for each peptide or only the best one (default=all)',
+                    choices=['all', 'best'])
 args = parser.parse_args()
-compute_MHC(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode)
+compute_MHC(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode, args.results)

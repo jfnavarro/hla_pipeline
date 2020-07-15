@@ -11,7 +11,7 @@ from _collections import defaultdict
 import sys
 
 def add_flags(transcript, variant_key, transcript_info, mer_len=25):
-    cDNA_flanks = (math.floor(mer_len / 2)) * 3
+    cDNA_flanks = math.floor(mer_len / 2) * 3
     tups = sorted(list(zip(transcript_info[transcript]['position'],
                            transcript_info[transcript]['mutation'],
                            transcript_info[transcript]['aa'],
@@ -85,7 +85,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
         DNA_nonsyn_lines = DNA_nonsyn.readlines()
         header_DNA = DNA_nonsyn_lines.pop(0).strip().split('\t')
         for line in DNA_nonsyn_lines:
-            columns = [x.replace('.', '0') if x is '.' else x for x in line.strip().split('\t')]
+            columns = line.strip().split('\t')
             variant_key = columns[header_DNA.index('VARIANT-KEY')]
             sample = columns[header_DNA.index('SAMPLE_ID')]
             if variant_key not in variant_dict:
@@ -126,7 +126,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
         RNA_nonsyn_lines = RNA_nonsyn.readlines()
         header_rna = RNA_nonsyn_lines.pop(0).strip().split('\t')
         for line in RNA_nonsyn_lines:
-            columns = [x.replace('.', '0') for x in line.strip().split('\t')]
+            columns = line.strip().split('\t')
             variant_key = columns[header_rna.index('VARIANT-KEY')]
             sample = columns[header_rna.index('SAMPLE_ID')]
             if variant_key not in variant_dict:
