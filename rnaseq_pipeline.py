@@ -132,22 +132,23 @@ def RNAseq_pipeline(sample1,
     if 'gatk' in steps:
         # Mark duplicates
         print('Marking duplicates')
-        cmd = '{} MarkDuplicatesSpark -I=sample_header.bam -O=sample_dedup.bam -M=dedup_sample.txt'.format(GATK)
+        cmd = '{} MarkDuplicatesSpark --input sample_header.bam --output sample_dedup.bam'.format(GATK)
         exec_command(cmd)
 
         # Split N and cigars
         print('Splitting NCigar Reads')
-        cmd = '{} SplitNCigarReads -R {} -I sample_dedup.bam -O sample_split.bam'.format(GATK, genome)
+        cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK, genome)
         exec_command(cmd)
 
         # GATK base re-calibration
         print('Starting re-calibration')
         # NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
-        cmd = '{} BaseRecalibrator --use-original-qualities -I sample_split.bam -R {} --known-sites {} --known-sites {}' \
-              ' --known-sites {} -O sample_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+        cmd = '{} BaseRecalibrator --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
+              '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK, genome, SNPSITES,
+                                                                                        KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record -R {} -I sample_split.bam ' \
-              '--bqsr-recal-file sample_recal_data.txt -O sample_final.bam'.format(GATK, genome)
+        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input sample_split.bam ' \
+              '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK, genome)
         exec_command(cmd)
 
     if 'variant' in steps:
@@ -166,8 +167,8 @@ def RNAseq_pipeline(sample1,
 
         # Variant calling (HaplotypeCaller)
         print('Variant calling with HaplotypeCaller')
-        cmd = '{} HaplotypeCaller -R {} -I sample_final.bam -O haplotype_caller.vcf ' \
-              '-dont-use-soft-clipped-bases --standard-min-confidence-threshold-for-calling 20 ' \
+        cmd = '{} HaplotypeCaller --reference {} --input sample_final.bam --output haplotype_caller.vcf ' \
+              '--dont-use-soft-clipped-bases --standard-min-confidence-threshold-for-calling 20 ' \
               '--dbsnp {}'.format(GATK, genome, SNPSITES)
         exec_command(cmd)
 
@@ -180,14 +181,15 @@ def RNAseq_pipeline(sample1,
     if 'filter' in steps:
         # Filtering variants (HaplotypeCaller)
         print("Filtering HaplotypeCaller variants")
-        cmd = '{} VariantFiltration --R {} --V haplotype_caller.vcf --window 35 --cluster 3 --filter-name "FS" ' \
-              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" -O haplotype_caller_filtered.vcf'.format(GATK, genome)
+        cmd = '{} VariantFiltration --reference {} --variant haplotype_caller.vcf --window 35 --cluster 3 --filter-name "FS" ' \
+              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK,
+                                                                                                                          genome)
         exec_command(cmd)
 
         # Filtering variants (VarScan)
         print("Filtering VarScan variants")
-        cmd = '{} VariantFiltration --R {} --V varscan.vcf --window 35 --cluster 3 --filter-name "FS" ' \
-              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" -O varscan_filtered.vcf'.format(GATK, genome)
+        cmd = '{} VariantFiltration --reference {} --variant varscan.vcf --window 35 --cluster 3 --filter-name "FS" ' \
+              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output varscan_filtered.vcf'.format(GATK, genome)
         exec_command(cmd)
 
         # Combine with GATK

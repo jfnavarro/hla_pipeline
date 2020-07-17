@@ -185,46 +185,46 @@ def exome_pipeline(R1_NORMAL,
                   'R1_cancer_unpaired_aligned_sorted.bam R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
             exec_command(cmd)
         else:
-            cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired'\
-                  ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs'\
-                  ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c'\
-                  ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, THREADS)
+            cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
+                  ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
+                  ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
+                  ' --runThreadN {}'.format(STAR, genome_star, annotation, THREADS)
             exec_command(cmd)
 
     if 'gatk' in steps:
         # Add headers
         print("Adding headers")
         cmd = '{} AddOrReplaceReadGroups I={} O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}' \
-              ' RGCN={} RGDS={}'.format(PICARD, 
+              ' RGCN=VHIO RGDS={}'.format(PICARD,
                                         'aligned_cancer_merged.bam' if mode == 'DNA' else 'Aligned.sortedByCoord.out.bam', 
-                                        sample1_ID, mode, sample1_ID, sample1_ID, 'VHIO', tumor_type)
+                                        sample1_ID, mode, sample1_ID, sample1_ID, tumor_type)
         exec_command(cmd)
-        cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}' \
-              ' RGCN={} RGDS={}'.format(PICARD, sample2_ID, mode, sample2_ID, sample2_ID, 'VHIO', tumor_type)
+        cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina ' \
+              'RGLB={} RGPU={} RGSM={} RGCN=VHIO RGDS={}'.format(PICARD, sample2_ID, mode, sample2_ID, sample2_ID, tumor_type)
         exec_command(cmd)
 
         # Mark duplicates
         print('Marking duplicates')
         # NOTE setting reducers to it works in system that do not allow many files open
-        cmd = GATK + ' MarkDuplicatesSpark -I=sample1_header.bam -O=sample1_dedup.bam -M=dedup_sample1.txt'
+        cmd = '{} MarkDuplicatesSpark --input sample1_header.bam --output sample1_dedup.bam'.format(GATK)
         exec_command(cmd)
-        cmd = GATK + ' MarkDuplicatesSpark -I=sample2_header.bam -O=sample2_dedup.bam -M=dedup_sample2.txt'
+        cmd = '{} MarkDuplicatesSpark --input sample2_header.bam --output sample2_dedup.bam'.format(GATK)
         exec_command(cmd)
 
         # GATK base re-calibration
         print('Starting re-calibration')
         # NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
-        cmd = '{} BaseRecalibrator -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}' \
-              ' --known-sites {} -O sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+        cmd = '{} BaseRecalibrator --input sample1_dedup.bam --reference {} --known-sites {} --known-sites {}' \
+              ' --known-sites {} --output sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} BaseRecalibrator -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}' \
-              ' --known-sites {} -O sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+        cmd = '{} BaseRecalibrator --input sample2_dedup.bam --reference {} --known-sites {} --known-sites {}' \
+              ' --known-sites {} --output sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR -R {} -I sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'.format(
-            GATK, genome)
+        cmd = '{} ApplyBQSR --reference {} --input sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt ' \
+              '--output sample1_final.bam'.format(GATK, genome)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR -R {} -I sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'.format(
-            GATK, genome)
+        cmd = '{} ApplyBQSR --reference {} --input sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt ' \
+              '--output sample2_final.bam'.format(GATK, genome)
         exec_command(cmd)
 
     if 'hla' in steps:
@@ -248,10 +248,12 @@ def exome_pipeline(R1_NORMAL,
 
         print('Performing variant calling Mutect2')
         # Variant calling Mutect2
-        cmd = '{} Mutect2 -R {} -I sample1_final.bam -I sample2_final.bam -normal {} -O Mutect_unfiltered.vcf' \
-              ' --germline-resource {} --panel-of-normals {}'.format(GATK, genome, sample2_ID, GERMLINE, PON)
+        cmd = '{} Mutect2 --reference {} --input sample1_final.bam --input sample2_final.bam --normal-sample {} ' \
+              '--output Mutect_unfiltered.vcf --germline-resource {} --panel-of-normals {}'.format(GATK, genome,
+                                                                                                   sample2_ID,
+                                                                                                   GERMLINE, PON)
         exec_command(cmd)
-        cmd = '{} FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf -R {}'.format(GATK, genome)
+        cmd = '{} FilterMutectCalls --variant Mutect_unfiltered.vcf --output Mutect.vcf --reference {}'.format(GATK, genome)
         exec_command(cmd)
 
         # Variant calling Strelka2
@@ -271,8 +273,8 @@ def exome_pipeline(R1_NORMAL,
 
         # Variant calling VarScan
         print('Performing variant calling with Varscan')
-        cmd = VARSCAN + ' somatic sample2.pileup sample1.pileup varscan --tumor-purity .5 --output-vcf 1' \
-                        ' --min-coverage 4 --min-var-freq .05 --strand-filter 0'
+        cmd = '{} somatic sample2.pileup sample1.pileup varscan --tumor-purity .5 --output-vcf 1  ' \
+              '--min-coverage 4 --min-var-freq .05 --strand-filter 0'.format(VARSCAN)
         exec_command(cmd)
 
     if 'filter' in steps:
