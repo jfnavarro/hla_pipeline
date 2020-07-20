@@ -142,8 +142,7 @@ def RNAseq_pipeline(sample1,
 
         # GATK base re-calibration
         print('Starting re-calibration')
-        # NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
-        cmd = '{} BaseRecalibrator --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
+        cmd = '{} BaseRecalibratorSpark --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
               '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK, genome, SNPSITES,
                                                                                         KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
@@ -154,15 +153,13 @@ def RNAseq_pipeline(sample1,
     if 'variant' in steps:
         # Variant calling (Samtools pile-ups)
         print('Computing pile-ups')
-        cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, genome)
+        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, genome)
         exec_command(cmd)
 
         # Variant calling VarScan
-        print('Variant calling with varscan')
-        cmd = '{} mpileup2cns sample.pileup varscan --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
-              '--min-var-freq .01 --p-value 0.99 > varscan.vcf'.format(VARSCAN)
-        exec_command(cmd)
-        cmd = '{} IndexFeatureFile --input varscan.vcf'.format(GATK)
+        print('Variant calling with VarScan2')
+        cmd = '{} mpileup2cns sample.pileup --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
+              '--min-var-freq 0.01 --min-avg-qual 15 --p-value 0.99 --strand-filter 1 > varscan_filtered.vcf'.format(VARSCAN)
         exec_command(cmd)
 
         # Variant calling (HaplotypeCaller)
@@ -186,11 +183,7 @@ def RNAseq_pipeline(sample1,
                                                                                                                           genome)
         exec_command(cmd)
 
-        # Filtering variants (VarScan)
-        print("Filtering VarScan variants")
-        cmd = '{} VariantFiltration --reference {} --variant varscan.vcf --window 35 --cluster 3 --filter-name "FS" ' \
-              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output varscan_filtered.vcf'.format(GATK, genome)
-        exec_command(cmd)
+        # TODO add a filter to VarScan2 variants
 
         # Combine with GATK
         print('Combining variants')
@@ -295,11 +288,11 @@ parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA pr
 parser.add_argument('R1_RNA', help='FASTQ file R1 (RNA)')
 parser.add_argument('R2_RNA', help='FASTQ file R2 (RNA)')
 parser.add_argument('--genome',
-                    help='Path to the reference Genome FASTA file', required=True)
+                    help='Path to the reference genome FASTA file', required=True)
 parser.add_argument('--genome-star',
-                    help='Path to the reference Genome STAR index folder', required=True)
+                    help='Path to the reference genome STAR index folder', required=True)
 parser.add_argument('--genome-ref',
-                    help='Path to the reference Genome GTF file', required=True)
+                    help='Path to the reference genome GTF file', required=True)
 parser.add_argument('--sample',
                     help='Name of the sample/experiment. Default is sample', default='sample')
 parser.add_argument('--tumor',
@@ -311,17 +304,17 @@ parser.add_argument('--known1',
 parser.add_argument('--known2',
                     help='Path to the file with 1000G phase indels (GATK bundle)', required=True)
 parser.add_argument('--snpsites',
-                    help='Path to the file with the SNPs (GATK buldle)', required=True)
+                    help='Path to the file with the SNP sites (GATK bundle)', required=True)
 parser.add_argument('--fastaAA',
-                    help='Path to the fasta file with the protein sequences (of transcripts)', required=True)
+                    help='Path to the FASTA file with the protein sequences in the reference genome (of transcripts)', required=True)
 parser.add_argument('--fastacDNA',
-                    help='Path to the fasta file with the cDNA sequences (of transcripts)', required=True)
+                    help='Path to the FASTA file with the cDNA sequences in the reference genome (of transcripts)', required=True)
 parser.add_argument('--annovar-db',
-                    help='String indicated what annovar database to use (default: humandb)',
+                    help='String indicated which Annovar database to use (default: humandb)',
                     default='humandb', required=False)
 parser.add_argument('--annovar-version',
-                    help='String indicated what version of the annovar database to use (default: hg19)',
-                    default='hg19', required=False)
+                    help='String indicated which version of the Annovar database to use (default: hg38)',
+                    default='hg38', required=False)
 parser.add_argument('--threads',
                     help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
 parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
