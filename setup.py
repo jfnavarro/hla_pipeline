@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-DNA (WES and WGS) and RNA-Seq variant calling pipeline with HLA and MHC predictions
+DNA (WES) and RNA-Seq variant calling pipeline with HLA and MHC predictions
 
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
