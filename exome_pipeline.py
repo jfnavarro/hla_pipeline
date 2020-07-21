@@ -293,7 +293,7 @@ def exome_pipeline(R1_NORMAL,
         # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
         cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf '\
               '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf '\
-              '-genotypeMergeOptions UNIQUIFY'.format(GATK3, genome)
+              '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, genome, THREADS)
         exec_command(cmd)
 
         # Annotate with Annovar

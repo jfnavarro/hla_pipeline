@@ -159,7 +159,7 @@ def RNAseq_pipeline(sample1,
         # Variant calling VarScan
         print('Variant calling with VarScan2')
         cmd = '{} mpileup2cns sample.pileup --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
-              '--min-var-freq 0.01 --min-avg-qual 15 --p-value 0.99 --strand-filter 1 > varscan_filtered.vcf'.format(VARSCAN)
+              '--min-var-freq 0.01 --min-avg-qual 15 --p-value 0.99 --strand-filter 1 > varscan.vcf'.format(VARSCAN)
         exec_command(cmd)
 
         # Variant calling (HaplotypeCaller)
@@ -184,13 +184,16 @@ def RNAseq_pipeline(sample1,
         exec_command(cmd)
 
         # TODO add a filter to VarScan2 variants
+        # NOTE replacing IUPAC codes from varscan output (TEMP HACK till the bug is fixed in VarScan)
+        cmd = 'awk \'{if ($1 ~ /#/) {print} else {gsub(/W|K|Y|R|S|M/,"N",$4); OFS = "\t"; print}}\' varscan.vcf > varscan_filtered.vcf'
+        exec_command(cmd)
 
         # Combine with GATK
         print('Combining variants')
         # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
         cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf ' \
               '-V:HaplotypeCaller haplotype_caller_filtered.vcf -o combined_calls.vcf '\
-              '-genotypeMergeOptions UNIQUIFY'.format(GATK3, genome)
+              '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, genome, THREADS)
         exec_command(cmd)
 
         # Annotate with Annovar
