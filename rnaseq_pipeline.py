@@ -185,7 +185,8 @@ def RNAseq_pipeline(sample1,
 
         # TODO add a filter to VarScan2 variants
         # NOTE replacing IUPAC codes from varscan output (TEMP HACK till the bug is fixed in VarScan)
-        cmd = 'awk \'{if ($1 ~ /#/) {print} else {gsub(/W|K|Y|R|S|M/,"N",$4); OFS = "\t"; print}}\' varscan.vcf > varscan_filtered.vcf'
+        cmd = 'awk \'{if ($1 ~ /#/) {print} else {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS = "\t"; print}}\' ' \
+              'varscan.vcf > varscan_filtered.vcf'
         exec_command(cmd)
 
         # Combine with GATK

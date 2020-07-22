@@ -273,6 +273,7 @@ def exome_pipeline(R1_NORMAL,
 
         # Variant calling VarScan
         print('Performing variant calling with VarScan2')
+        # TODO improve the filters, enable perhaps the p-value filter
         cmd = '{} somatic sample2.pileup sample1.pileup varscan --tumor-purity 0.5 --output-vcf 1 ' \
               '--min-coverage 4 --min-var-freq 0.05 --strand-filter 0'.format(VARSCAN)
         exec_command(cmd)
