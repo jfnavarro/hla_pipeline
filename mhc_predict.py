@@ -129,5 +129,8 @@ parser.add_argument('--mode', default='either',
 parser.add_argument('--results', default='all',
                     help='Whether to include all results for each peptide or only the best one (default=all)',
                     choices=['all', 'best'])
+parser.add_argument('--results-filter', default='affinity',
+                    help='What filtering criteria to use when using --results best (default=affinity)',
+                    choices=['presentation_score', 'processing_score', 'affinity', 'affinity_percentile'])
 args = parser.parse_args()
 compute_MHC(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode, args.results)
