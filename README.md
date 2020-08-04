@@ -13,7 +13,7 @@ There are 2 pipelines and 2 tools:
 
 **exome_pipeline.py** processes the WES data and generates a list of unified
 filtered and annotated somatic variants and their epitotes. The variant callers
-are Mutect2, Strelka, Varscan and SomaticSniper and both indels and snvs are
+are Mutect2, Strelka, Varscan and SomaticSniper and both indels and SNPs are
 kept. Annotation is done using Annovar. 
 The pipeline uses bwa to align, trimmomatic to quality trim and GATK4
 best practices. The filters are applied based on allele frecuency and reads
