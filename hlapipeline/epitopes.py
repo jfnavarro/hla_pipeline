@@ -114,15 +114,22 @@ def create_epitopes(input, output, FASTA_AA_DICT, FASTA_cDNA_DICT):
                 if protein_seq == 'AA_seq not present for this transcript':
                     errors += ' AA_seq not present for this transcript'
                 else:
-                    # check annotation is correct
+                    # Check annotation is correct
+                    # Create mut and wt epitopes by extracting 12
+                    # AAs before the mutation, the mutation
+                    # and then 12 AAs after the mutation
+                    # TODO we may be extending over protein_seq
+                    # TODO we should check for that
                     FASTA_AA = protein_seq[position - 1:position]
                     if FASTA_AA == ref_AA:
                         if position >= 13:
                             WT_25mer = protein_seq[position - 13:position + 12]
                             Mut_25mer = protein_seq[position - 13:position - 1] + var_AA + protein_seq[position:position + 12]
-                        elif position < 13:
+                        elif position < 13 and position > 0:
                             WT_25mer = protein_seq[0:position + 12]
                             Mut_25mer = protein_seq[0:position - 1] + var_AA + protein_seq[position:position + 12]
+                        elif position == 0:
+                            errors += ' can not code for this mutated AA_position'
                         if position == 1:
                             errors += ' mutation occurs in start codon'
                     else:
@@ -165,9 +172,14 @@ def create_epitopes(input, output, FASTA_AA_DICT, FASTA_cDNA_DICT):
                     elif protein_strip.startswith('p.X'):
                         position = 0
                         errors += ' mutation occurs in stop codon'
+                    # Obtain protein sequences from DNA
                     ref_FASTA = str(translate_dna(ref_cDNA_seq.replace(' ', '')))
                     mut_FASTA = str(translate_dna(mut_cDNA_seq.replace(' ', '')))
-                    if position >= 13 and mut_stop > 0:
+                    # TODO we may be extending over ref_FASTA and mut_FASTA
+                    # TODO we should check for that
+                    # Create mut and wt epitopes by extracting 12
+                    # AAs before and after the mutation
+                    if position >= 13:
                         WT_25mer = ref_FASTA[position - 13:position + 12]
                         Mut_25mer = mut_FASTA[position - 13:]
                     elif position < 13 and position > 0:
@@ -184,6 +196,9 @@ def create_epitopes(input, output, FASTA_AA_DICT, FASTA_cDNA_DICT):
                 errors += ' stop mutation'
             else:
                 errors += ' unknown exonic function'
+            # NOTE just to make sure that they are not empty
+            WT_25mer = "-" if not WT_25mer else WT_25mer
+            mut_FASTA = "-" if not mut_FASTA else mut_FASTA
             epitope_file.write('{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:]),
                                                              position,
                                                              errors,

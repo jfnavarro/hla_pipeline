@@ -292,6 +292,14 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                         # this should never happen
                         print("Epitope {} was not found in neither DNA or RNA variants".format(key))
                         continue
+                    # NOTE older versions of the pipeline may produce records with missing values
+                    if len(transcript) != len(header_epitopes):
+                        print("Epitope {} with incorrect number of columns\n{}".format(key, '\t'.format(transcript)))
+                        continue
+                    # NOTE older versions of the pipeline may produce records with missing values
+                    if len(data) != len(header):
+                        print("Data in epitope {} with incorrect number of columns\n{}".format(key, '\t'.format(data)))
+                        continue
                     ref_gene_name = data[header.index('Gene.refGene')]
                     ref_gene_mut = data[header.index('ExonicFunc.refGene')]
                     ref_gene_change = data[header.index('AAChange.refGene')]
@@ -343,7 +351,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
     final_file_discarded.close()
 
 parser = argparse.ArgumentParser(description='Script that merges variants and epitopes to create a final report using the\n'\
-                                             'results of the DNA and RNA pipelines\n'
+                                             'results of the DNA and/or RNA pipelines\n'
                                              'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                  prog='merge_results.py',
                                  usage='merge_results.py [options]\n'
