@@ -93,20 +93,20 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results):
     # Run predictions
     print('Predicting MHCs with MUT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_mu.fasta --alleles {} ' \
-          '--no-throw --results-{} --out predictions_mut.csv --peptide-lengths 8 9 10 11 12'.format(results,
-                                                                                                    ' '.join(filtered_hla))
+          '--no-throw --results-{} --out predictions_mut.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla),
+                                                                                                    results)
     exec_command(cmd)
 
     print('Predicting MHCs with WT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_wt.fasta --alleles {} ' \
-          '--no-throw --results-{} --out predictions_wt.csv --peptide-lengths 8 9 10 11 12'.format(results,
-                                                                                                   ' '.join(filtered_hla))
+          '--no-throw --results-{} --out predictions_wt.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla),
+                                                                                                   results)
     exec_command(cmd)
 
     print('Completed')
 
 parser = argparse.ArgumentParser(description='Script that predicts MHCs (MHCflurry) affinity binding scores\n'
-                                             'using data from DNA and RNA variant calling pipelines.\n'
+                                             'using data from DNA and/or RNA variant calling pipelines.\n'
                                              'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                  prog='mhc_predict.py',
                                  usage='mhc_predict.py [options] '

@@ -87,6 +87,7 @@ def create_epitopes(input, output, FASTA_AA_DICT, FASTA_cDNA_DICT):
     header = 'SAMPLE_ID\tVARIANT-KEY\tCHR\tSTART\tSTOP\tREF\tALT\tfunc_ref_gene\texonic_func_ref\tGene\t' \
              'Transcript_ID\tExon_Numb\tNT_CHANGE\tAA_CHANGE\tPOSITION\tERRORS\tWT25MER\tMUT25MER\n'
     epitope_file.write(header)
+    # TODO currently exonic;splicing variants are not treated
     for line in input_file:
         columns = line.rstrip('\n').split('\t')
         if len(columns) < 14:
