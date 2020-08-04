@@ -28,12 +28,12 @@ The pipeline uses trim-galore to trim, STAR to align and GATK4 best practices.
 The gene counts values are computed with featureCounts.
 The pipeline will also perform HLA predictions with arcasHLA.
 
-**merge_resuls.py** combines results from 1 or several runs of the exome and rna-seq
-pipelines in order to generate an unified Excel sheet with useful information where
+**merge_resuls.py** combines results from 1 or several runs of the exome and/or rna-seq
+pipelines in order to generate an unified table with useful information where
 variants are filtered by certain criterias. 
 
 **mhc_predict.py** can take the file generated with merge_results.py and the HLA files
-generated in the exome and rna-seq pipeline and output a list of predicted MHCs
+generated in the exome and/or rna-seq pipeline and output a list of predicted MHCs
 using the most common alleles for each HLA class 1. 
 
 Each tool/pipeline uses a command line interface with parameters which
@@ -57,8 +57,8 @@ Main output files:
 - SQL_Epitopes.txt (all the epitotes for the differents exons in each variant including the reference and mutated sequences)
 
 **merge_resuls.py** 
-- overlap_final.txt (all the AND and RNA variants/epitotes collapsed and filtered with useful information)
-- overlap_final_discarded.txt (all the discarded AND and RNA variants/epitotes collapsed with useful information)
+- overlap_final.txt (all the DNA and/or RNA variants/epitotes collapsed and filtered with useful information)
+- overlap_final_discarded.txt (all the discarded DNA and/or RNA variants/epitotes collapsed with useful information)
 
 **mhc_predict.py** 
 - predictions_mut.csv (all the Mut prediction MHCs)
