@@ -9,7 +9,7 @@ import json
 import argparse
 import sys
 
-def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results):
+def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_filter):
 
     if not hla_dna and not hla_rna:
         sys.stderr.write("Error, need HLAs as input.\n")
@@ -93,14 +93,16 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results):
     # Run predictions
     print('Predicting MHCs with MUT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_mu.fasta --alleles {} ' \
-          '--no-throw --results-{} --out predictions_mut.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla),
-                                                                                                    results)
+          '--no-throw --results-{} {} --out predictions_mut.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla),
+                                                                                                       results,
+                                                                                                       results_filter)
     exec_command(cmd)
 
     print('Predicting MHCs with WT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_wt.fasta --alleles {} ' \
-          '--no-throw --results-{} --out predictions_wt.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla),
-                                                                                                   results)
+          '--no-throw --results-{} {} --out predictions_wt.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla),
+                                                                                                      results,
+                                                                                                      results_filter)
     exec_command(cmd)
 
     print('Completed')
@@ -133,4 +135,4 @@ parser.add_argument('--results-filter', default='affinity',
                     help='What filtering criteria to use when using --results best (default=affinity)',
                     choices=['presentation_score', 'processing_score', 'affinity', 'affinity_percentile'])
 args = parser.parse_args()
-compute_MHC(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode, args.results)
+compute_MHC(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode, args.results, args.results_filter)
