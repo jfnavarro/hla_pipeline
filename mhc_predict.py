@@ -93,16 +93,14 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, re
     # Run predictions
     print('Predicting MHCs with MUT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_mu.fasta --alleles {} ' \
-          '--no-throw --results-{} {} --out predictions_mut.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla),
-                                                                                                       results,
-                                                                                                       results_filter)
+          '--no-throw --results-{} {} --out predictions_mut.csv --peptide-lengths 8-12'.format(' '.join(filtered_hla),
+                                                                                               results, results_filter)
     exec_command(cmd)
 
     print('Predicting MHCs with WT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_wt.fasta --alleles {} ' \
-          '--no-throw --results-{} {} --out predictions_wt.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla),
-                                                                                                      results,
-                                                                                                      results_filter)
+          '--no-throw --results-{} {} --out predictions_wt.csv --peptide-lengths 8-12'.format(' '.join(filtered_hla),
+                                                                                              results, results_filter)
     exec_command(cmd)
 
     print('Completed')
