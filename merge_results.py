@@ -294,11 +294,11 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                         continue
                     # NOTE older versions of the pipeline may produce records with missing values
                     if len(transcript) != len(header_epitopes):
-                        print("Epitope {} with incorrect number of columns\n{}".format(key, '\t'.format(transcript)))
+                        print("Epitope {} with incorrect number of columns\n{}".format(key, '\t'.join(transcript)))
                         continue
                     # NOTE older versions of the pipeline may produce records with missing values
                     if len(data) != len(header):
-                        print("Data in epitope {} with incorrect number of columns\n{}".format(key, '\t'.format(data)))
+                        print("Data in epitope {} with incorrect number of columns\n{}".format(key, '\t'.join(data)))
                         continue
                     ref_gene_name = data[header.index('Gene.refGene')]
                     ref_gene_mut = data[header.index('ExonicFunc.refGene')]
