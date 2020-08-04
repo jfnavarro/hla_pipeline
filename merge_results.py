@@ -256,20 +256,28 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
         rna_samples_pass = ["-"]
         rna_samples_fail = ["-"]
         has_rna = False
+        num_rna_pass = 0
+        num_rna_fail = 0
         if 'RNA' in value:
             rna_cov = '|'.join(x['coverage'] for x in value['RNA'].values())
             rna_samples_pass = [key for key, value in value['RNA'].items() if value['status']]
             rna_samples_fail = [key for key, value in value['RNA'].items() if not value['status']]
+            num_rna_pass = len(rna_samples_pass)
+            num_rna_fail = len(rna_samples_fail)
             has_rna = True
             
         DNA_cov = ["-;-,-,-,-,-,-,-"]
         DNA_samples_pass = ["-"]
         DNA_samples_fail = ["-"]
         has_DNA = False
+        num_dna_pass = 0
+        num_dna_fail = 0
         if 'DNA' in value:
             DNA_cov = '|'.join(x['coverage'] for x in value['DNA'].values())
             DNA_samples_pass = [key for key, value in value['DNA'].items() if value['status']]
             DNA_samples_fail = [key for key, value in value['DNA'].items() if not value['status']]
+            num_dna_pass = len(DNA_samples_pass)
+            num_dna_fail = len(DNA_samples_fail)
             has_DNA = True
             
         if not has_DNA and not has_rna:
@@ -294,11 +302,11 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                         continue
                     # NOTE older versions of the pipeline may produce records with missing values
                     if len(transcript) != len(header_epitopes):
-                        print("Epitope {} with incorrect number of columns\n{}".format(key, '\t'.join(transcript)))
+                        print("Epitope {} with incorrect number of columns\n{}".format(key, '-'.join(transcript)))
                         continue
                     # NOTE older versions of the pipeline may produce records with missing values
                     if len(data) != len(header):
-                        print("Data in epitope {} with incorrect number of columns\n{}".format(key, '\t'.join(data)))
+                        print("Data in epitope {} with incorrect number of columns\n{}".format(key, '-'.join(data)))
                         continue
                     ref_gene_name = data[header.index('Gene.refGene')]
                     ref_gene_mut = data[header.index('ExonicFunc.refGene')]
@@ -332,10 +340,11 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                         counts_mean = 'NA'
                         percentile = 'NA'
                     flags = add_flags(transcript_name, key, transcript_dict, mer_len=25)
-                    to_write = '\t'.join(str(x) for x in [key, ','.join(DNA_samples_pass), len(DNA_samples_pass),
-                                                          ','.join(rna_samples_pass), len(rna_samples_pass),
-                                                          ','.join(DNA_samples_fail), len(DNA_samples_fail),
-                                                          ','.join(rna_samples_fail), len(rna_samples_fail),
+                    to_write = '\t'.join(str(x) for x in [key,
+                                                          ','.join(DNA_samples_pass), num_dna_pass,
+                                                          ','.join(rna_samples_pass), num_rna_pass,
+                                                          ','.join(DNA_samples_fail), num_dna_fail,
+                                                          ','.join(rna_samples_fail), num_rna_fail,
                                                           ref_gene_name, ref_gene_mut, ref_gene_change,
                                                           UCSC_gene_name, UCSC_gene_mut, UCSC_gene_change,
                                                           ENS_gene_name, ENS_gene_mut, ENS_gene_change, genome_all,
