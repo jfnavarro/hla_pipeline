@@ -253,8 +253,8 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
 
     for key, value in variant_dict.items():
         rna_cov = ["-;-,-,-,-,-,-,-"]
-        rna_samples_pass = []
-        rna_samples_fail = []
+        rna_samples_pass = ["-"]
+        rna_samples_fail = ["-"]
         has_rna = False
         if 'RNA' in value:
             rna_cov = '|'.join(x['coverage'] for x in value['RNA'].values())
@@ -263,8 +263,8 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             has_rna = True
             
         DNA_cov = ["-;-,-,-,-,-,-,-"]
-        DNA_samples_pass = []
-        DNA_samples_fail = []
+        DNA_samples_pass = ["-"]
+        DNA_samples_fail = ["-"]
         has_DNA = False
         if 'DNA' in value:
             DNA_cov = '|'.join(x['coverage'] for x in value['DNA'].values())
