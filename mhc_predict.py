@@ -66,7 +66,7 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, re
     added_proteins_wt = set()
     with open('protein_sequences_mu.fasta', 'w') as fwrite_mu:
         with open('protein_sequences_wt.fasta', 'w') as fwrite_wt:
-            with open(overlap_final, 'r') as fread:
+            with open(overlap_final) as fread:
                 lines = fread.readlines()
                 header = lines.pop(0).strip().split('\t')
                 for line in lines:

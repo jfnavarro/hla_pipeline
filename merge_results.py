@@ -9,6 +9,7 @@ import math
 from scipy import stats
 from _collections import defaultdict
 import sys
+import gzip
 
 def add_flags(transcript, variant_key, transcript_info, mer_len=25):
     cDNA_flanks = math.floor(mer_len / 2) * 3
@@ -81,7 +82,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
 
     print('Loading DNA variants..')
     for file in dna_variants if dna_variants else []:
-        DNA_nonsyn = open(file)
+        DNA_nonsyn = gzip.open(file) if file.endswith(".gz") else open(file)
         DNA_nonsyn_lines = DNA_nonsyn.readlines()
         header_DNA = DNA_nonsyn_lines.pop(0).strip().split('\t')
         for line in DNA_nonsyn_lines:
@@ -122,7 +123,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
         
     print('Loading RNA variants..')
     for file in rna_variants if rna_variants else []:
-        RNA_nonsyn = open(file)
+        RNA_nonsyn = gzip.open(file) if file.endswith(".gz") else open(file)
         RNA_nonsyn_lines = RNA_nonsyn.readlines()
         header_rna = RNA_nonsyn_lines.pop(0).strip().split('\t')
         for line in RNA_nonsyn_lines:
@@ -154,7 +155,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
     transcript_dict = {}
     # We assume that the same variant in exactly the same position has the same annotation 
     for file in epitopes:
-        epitopes = open(file)
+        epitopes = gzip.open(file) if file.endswith(".gz") else open(file)
         epitopes_lines = epitopes.readlines()
         header_epitopes = epitopes_lines.pop(0).strip().split('\t')
         for line in epitopes_lines:
@@ -201,7 +202,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
     counts_dict = {}
     counts_dict_sample = defaultdict(list)
     for file in rna_counts:
-        counts_file = open(file)
+        counts_file = gzip.open(file) if file.endswith(".gz") else open(file)
         counts_file_lines = counts_file.readlines()
         header_counts = counts_file_lines.pop(0).strip().split('\t')
         for line in counts_file_lines:
