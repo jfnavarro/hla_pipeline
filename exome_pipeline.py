@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """
-@author: jfnavarro
+@author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import *
 from hlapipeline.tools import *
@@ -25,7 +25,7 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
                  '\tTVAF\tPVAL\tCALLERS\tTUMOUR\tTCOV\tNCOV\tVARIANT-KEY\tCOSMIC70\n'
         nonsyn_file.write(header)
         all_file.write(header)
-    # TODO use header names instead to access the fields
+    # TODO use header names instead of accessing the fields by index
     for line in nonsyn_snv_lines:
         if line.startswith('#'):
             continue
@@ -43,14 +43,13 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
         ExonicFunc_refGene = columns[8]
         ExonicFunc_knownGene = columns[13]
         ExonicFunc_ensGene = columns[18]
-        variant_key = str(Chr) + ':' + str(start) + '-' + str(end) + ' ' + str(ref) + '>' + str(alt)
+        variant_key = Chr + ':' + start + '-' + end + ' ' + ref + '>' + alt
         if ref_gene_detail != 'NA':
             columns[9] = ref_gene_detail
         if known_gene_detail != 'NA':
             columns[14] = known_gene_detail
         if ens_gene_detail != 'NA':
             columns[19] = ens_gene_detail
-        # Can be missing keys if the annotation and the combined variants do not have the same chromosomes
         try:
             p_val = vcf_cov_dict[ID]['pval']
             callers = vcf_cov_dict[ID]['Note']
@@ -186,73 +185,75 @@ def exome_pipeline(R1_NORMAL,
                   'R1_cancer_unpaired_aligned_sorted.bam R2_cancer_unpaired_aligned_sorted.bam'.format(SAMTOOLS)
             exec_command(cmd)
         else:
-            cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMmultNmax 1 --outSAMorder Paired'\
-                  ' --outSAMprimaryFlag OneBestScore --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {} --outFilterIntronMotifs'\
-                  ' RemoveNoncanonical --outFilterType Normal --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c'\
-                  ' --runThreadN {} --outFilterMultimapNmax 20'.format(STAR, genome_star, annotation, THREADS)
+            cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
+                  ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
+                  ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
+                  ' --runThreadN {}'.format(STAR, genome_star, annotation, THREADS)
             exec_command(cmd)
 
     if 'gatk' in steps:
         # Add headers
         print("Adding headers")
         cmd = '{} AddOrReplaceReadGroups I={} O=sample1_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}' \
-              ' RGCN={} RGDS={}'.format(PICARD, 
-                                        'aligned_cancer_merged.bam' if mode == 'DNA' else 'Aligned.sortedByCoord.out.bam', 
-                                        sample1_ID, mode, sample1_ID, sample1_ID, 'VHIO', tumor_type)
+              ' RGCN=VHIO RGDS={}'.format(PICARD,
+                                        'aligned_cancer_merged.bam' if mode == 'DNA' else 'Aligned.sortedByCoord.out.bam',
+                                        sample1_ID, mode, sample1_ID, sample1_ID, tumor_type)
         exec_command(cmd)
-        cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina RGLB={} RGPU={} RGSM={}' \
-              ' RGCN={} RGDS={}'.format(PICARD, sample2_ID, mode, sample2_ID, sample2_ID, 'VHIO', tumor_type)
+        cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina ' \
+              'RGLB={} RGPU={} RGSM={} RGCN=VHIO RGDS={}'.format(PICARD, sample2_ID, mode, sample2_ID, sample2_ID, tumor_type)
         exec_command(cmd)
 
         # Mark duplicates
         print('Marking duplicates')
         # NOTE setting reducers to it works in system that do not allow many files open
-        cmd = GATK + ' MarkDuplicatesSpark -I=sample1_header.bam -O=sample1_dedup.bam -M=dedup_sample1.txt'
+        cmd = '{} MarkDuplicatesSpark --input sample1_header.bam --output sample1_dedup.bam'.format(GATK)
         exec_command(cmd)
-        cmd = GATK + ' MarkDuplicatesSpark -I=sample2_header.bam -O=sample2_dedup.bam -M=dedup_sample2.txt'
+        cmd = '{} MarkDuplicatesSpark --input sample2_header.bam --output sample2_dedup.bam'.format(GATK)
         exec_command(cmd)
 
         # GATK base re-calibration
         print('Starting re-calibration')
-        # NOTE BaseRecalibratorSpark needs the system to allow for many open files (ulimit -n)
-        cmd = '{} BaseRecalibrator -I sample1_dedup.bam -R {} --known-sites {} --known-sites {}' \
-              ' --known-sites {} -O sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+        cmd = '{} BaseRecalibratorSpark --input sample1_dedup.bam --reference {} --known-sites {} --known-sites {}' \
+              ' --known-sites {} --output sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} BaseRecalibrator -I sample2_dedup.bam -R {} --known-sites {} --known-sites {}' \
-              ' --known-sites {} -O sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+        cmd = '{} BaseRecalibratorSpark --input sample2_dedup.bam --reference {} --known-sites {} --known-sites {}' \
+              ' --known-sites {} --output sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR -R {} -I sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt -O sample1_final.bam'.format(
-            GATK, genome)
+        cmd = '{} ApplyBQSR --reference {} --input sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt ' \
+              '--output sample1_final.bam'.format(GATK, genome)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR -R {} -I sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt -O sample2_final.bam'.format(
-            GATK, genome)
+        cmd = '{} ApplyBQSR --reference {} --input sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt ' \
+              '--output sample2_final.bam'.format(GATK, genome)
         exec_command(cmd)
 
     if 'hla' in steps:
         # HLA-LA predictions
         print('Performing HLA-LA predictions')
+        HLA_predictionDNA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
         if mode == 'DNA':
             HLA_predictionDNA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
-            HLA_predictionDNA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
         else:
             HLA_predictionRNA('sample1_final.bam', THREADS)
-            HLA_predictionDNA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
             
     if 'variant' in steps:
         # Variant calling (Samtools pile-ups)
         print('Computing pile-ups')
-        cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample1_final.bam > sample1.pileup'.format(SAMTOOLS, genome)
+        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample1_final.bam > sample1.pileup'.format(SAMTOOLS, genome)
         exec_command(cmd)
-        cmd = '{} mpileup -C50 -B -q 1 -Q 15 -f {} sample2_final.bam > sample2.pileup'.format(SAMTOOLS, genome)
+        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample2_final.bam > sample2.pileup'.format(SAMTOOLS, genome)
         exec_command(cmd)
-        print('Pile-ups were computed for tumor and normal samples')
 
         print('Performing variant calling Mutect2')
         # Variant calling Mutect2
-        cmd = '{} Mutect2 -R {} -I sample1_final.bam -I sample2_final.bam -normal {} -O Mutect_unfiltered.vcf' \
-              ' --germline-resource {} --panel-of-normals {}'.format(GATK, genome, sample2_ID, GERMLINE, PON)
+        cmd = '{} Mutect2 --reference {} --input sample1_final.bam --input sample2_final.bam --normal-sample {} ' \
+              '--output Mutect_unfiltered.vcf --germline-resource {} --panel-of-normals {}'.format(GATK,
+                                                                                                   genome,
+                                                                                                   sample2_ID,
+                                                                                                   GERMLINE,
+                                                                                                   PON)
         exec_command(cmd)
-        cmd = '{} FilterMutectCalls -V Mutect_unfiltered.vcf -O Mutect.vcf -R {}'.format(GATK, genome)
+        cmd = '{} FilterMutectCalls --variant Mutect_unfiltered.vcf --output Mutect.vcf --reference {}'.format(GATK,
+                                                                                                               genome)
         exec_command(cmd)
 
         # Variant calling Strelka2
@@ -266,20 +267,21 @@ def exome_pipeline(R1_NORMAL,
         exec_command(cmd)
 
         # Variant calling Somatic Sniper
-        print('Performing variant calling with Somatic Sniper')
+        print('Performing variant calling with SomaticSniper')
         cmd = '{} -L -G -F vcf -f {} sample1_final.bam sample2_final.bam SS.vcf'.format(SSNIPER, genome)
         exec_command(cmd)
 
         # Variant calling VarScan
-        print('Performing variant calling with Varscan')
-        cmd = VARSCAN + ' somatic sample2.pileup sample1.pileup varscan --tumor-purity .5 --output-vcf 1' \
-                        ' --min-coverage 4 --min-var-freq .05 --strand-filter 0'
+        print('Performing variant calling with VarScan2')
+        # TODO improve the filters, enable perhaps the p-value filter
+        cmd = '{} somatic sample2.pileup sample1.pileup varscan --tumor-purity 0.5 --output-vcf 1 ' \
+              '--min-coverage 4 --min-var-freq 0.05 --strand-filter 0'.format(VARSCAN)
         exec_command(cmd)
 
     if 'filter' in steps:
         print('Filtering variants')
-
-        # TODO filters could be done with vcftools and improved
+        # TODO filters could be performed with VariantFiltration and/or vcftools
+        # TODO filters seems arbitrary, they could be improved
         mutect2_filter('Mutect.vcf', 'mutect_filtered.vcf', sample1_ID, sample2_ID)
         strelka2_filter('Strelka_output/results/variants/somatic.snvs.vcf.gz', 'strelka_filtered.vcf')
         somaticSniper_filter('SS.vcf', 'somaticsniper_filtered.vcf')
@@ -288,16 +290,16 @@ def exome_pipeline(R1_NORMAL,
         varscan_filter('varscan.indel.vcf', 'varscan_filtered_indel.vcf')
 
         # Combine with GATK
-        print('Combining SNV variants')
+        print('Combining SNP variants')
         # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
         cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf -V:mutect mutect_filtered.vcf '\
               '-V:strelka strelka_filtered.vcf -V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf '\
-              '-genotypeMergeOptions UNIQUIFY'.format(GATK3, genome)
+              '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, genome, THREADS)
         exec_command(cmd)
 
         # Annotate with Annovar
         annovardb = '{} -buildver {}'.format(os.path.join(ANNOVAR_PATH, ANNOVAR_DB), ANNOVAR_VERSION)
-        print('Running annovar (SNV)')
+        print('Running annovar (SNP)')
         cmd = '{} -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'.format(
             os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
         exec_command(cmd)
@@ -339,11 +341,12 @@ def exome_pipeline(R1_NORMAL,
                 sniperN = headers.index('NORMAL.somaticsniper')
             if not line.startswith('#'):
                 columns = line.split('\t')
-                chrm = columns[0]
-                pos = columns[1]
-                ref = columns[3]
-                alt = columns[4]
-                info = columns[7]
+                chrm = columns[headers.index('#CHROM')]
+                pos = columns[headers.index('POS')]
+                ref = columns[headers.index('REF')]
+                alt = columns[headers.index('ALT')]
+                info = columns[headers.index('INFO')]
+                form = columns[headers.index('FORMAT')].split(':')
                 DictID = chrm + ':' + pos
                 trfor = 0
                 trrev = 0
@@ -353,7 +356,7 @@ def exome_pipeline(R1_NORMAL,
                 nrrev = 0
                 nvfor = 0
                 nvrev = 0
-                p_val = 0
+                p_val = -1
                 tcov = 0
                 ncov = 0
                 tfreq = 0
@@ -363,18 +366,12 @@ def exome_pipeline(R1_NORMAL,
                 tumor_read2 = 0
                 normal_read2 = 0
                 callers = info.strip().split(';')[-1].replace('set=', '')
-                caller_count = 0
+                caller_count = callers.count('-') + 1 if 'Intersection' not in callers else 4
                 if 'Intersection' in callers or 'varscan' in callers:
-                    if callers == 'Intersection':
-                        caller_count = 4
-                        callers = 'varscan-strelka-mutect-somaticsniper'
-                    else:
-                        caller_count = callers.count('-') + 1
                     if 'SPV=' in info:
                         for x in info.split(';'):
                             if 'SPV=' in x:
                                 p_val = x.replace('SPV=', '')
-                    form = columns[8].split(':')
                     DP4 = form.index('DP4')
                     Freq = form.index('FREQ')
                     t_split = columns[varscanT].split(':')
@@ -396,8 +393,6 @@ def exome_pipeline(R1_NORMAL,
                     ncov = nrfor + nrrev + nvfor + nvrev
                     nfreq = columns[varscanN].split(':')[Freq]
                 elif 'somaticsniper' in callers:
-                    caller_count = callers.count('-') + 1
-                    form = columns[8].split(':')
                     DP4 = form.index('DP4')
                     t_split = columns[sniperT].split(':')
                     n_split = columns[sniperN].split(':')
@@ -415,11 +410,11 @@ def exome_pipeline(R1_NORMAL,
                     normal_read1 = nrfor + nrrev
                     normal_read2 = nvfor + nvrev
                     ncov = nrfor + nrrev + nvfor + nvrev
-                    tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
-                    nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
+                    if tumor_read2 != 0:
+                        tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                    if normal_read2 != 0:
+                        nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
                 elif 'strelka' in callers:
-                    caller_count = callers.count('-') + 1
-                    form = columns[8].split(':')
                     AU = form.index('AU')
                     CU = form.index('CU')
                     GU = form.index('GU')
@@ -450,14 +445,13 @@ def exome_pipeline(R1_NORMAL,
                     elif alt == 'T':
                         tumor_read2 = int(t_split[TU].split(',')[0])
                         normal_read2 = int(n_split[TU].split(',')[0])
-                    if tumor_read2 != '.':
-                        tcov = tumor_read1 + tumor_read2
-                        ncov = normal_read1 + normal_read2
+                    tcov = tumor_read1 + tumor_read2
+                    ncov = normal_read1 + normal_read2
+                    if tumor_read2 != 0:
                         tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                    if normal_read2 != 0:
                         nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
                 elif 'mutect' in callers:
-                    caller_count = callers.count('-') + 1
-                    form = columns[8].split(':')
                     t_split = columns[mutectT].split(':')
                     n_split = columns[mutectN].split(':')
                     if ',' not in alt:
@@ -468,12 +462,13 @@ def exome_pipeline(R1_NORMAL,
                         normal_read2 = int(n_split[AD].split(',')[1])
                         tcov = tumor_read1 + tumor_read2
                         ncov = normal_read1 + normal_read2
-                        tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
-                        nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
-                # populate
+                        if tumor_read2 != 0:
+                            tfreq = str(round((tumor_read2 / tcov) * 100, 2)) + '%'
+                        if normal_read2 != 0:
+                            nfreq = str(round((normal_read2 / ncov) * 100, 2)) + '%'
                 vcf_cov_dict[DictID] = {}
                 vcf_cov_dict[DictID]['pval'] = p_val
-                vcf_cov_dict[DictID]['Note'] = str(caller_count) + ':' + callers
+                vcf_cov_dict[DictID]['Note'] = str(caller_count) + ":" + callers
                 vcf_cov_dict[DictID]['trfor'] = trfor
                 vcf_cov_dict[DictID]['trrev'] = trrev
                 vcf_cov_dict[DictID]['tvfor'] = tvfor
@@ -510,40 +505,35 @@ def exome_pipeline(R1_NORMAL,
                 strelkaN = headers.index('NORMAL.strelka')
             if not line.startswith('#'):
                 columns = line.split('\t')
-                chrm = columns[0]
-                pos = columns[1]
-                info = columns[7]
+                chrm = columns[headers.index('#CHROM')]
+                pos = columns[headers.index('POS')]
+                info = columns[headers.index('INFO')]
+                form = columns[headers.index('FORMAT')].split(':')
                 DictID = chrm + ':' + pos
-                trfor = '.'
-                trrev = '.'
-                tvfor = '.'
-                tvrev = '.'
-                nrfor = '.'
-                nrrev = '.'
-                nvfor = '.'
-                nvrev = '.'
-                p_val = '.'
-                tumor_read1 = '.'
-                tumor_read2 = '.'
-                normal_read1 = '.'
-                normal_read2 = '.'
-                tcov = '.'
-                nfreq = '.'
-                tfreq = '.'
-                ncov = '.'
-                caller_count = '.'
+                trfor = 0
+                trrev = 0
+                tvfor = 0
+                tvrev = 0
+                nrfor = 0
+                nrrev = 0
+                nvfor = 0
+                nvrev = 0
+                p_val = -1
+                tumor_read1 = 0
+                tumor_read2 = 0
+                normal_read1 = 0
+                normal_read2 = 0
+                tcov = 0
+                nfreq = 0
+                tfreq = 0
+                ncov = 0
                 callers = info.strip().split(';')[-1].replace('set=', '')
+                caller_count = callers.count('-') + 1 if 'Intersection' not in callers else 2
                 if 'Intersection' in callers or 'varscan' in callers:
-                    if callers == 'Intersection':
-                        caller_count = 2
-                        callers = 'varscan-strelka'
-                    else:
-                        caller_count = callers.count('-') + 1
                     if 'SPV=' in info:
                         for x in info.split(';'):
                             if 'SPV=' in x:
                                 p_val = x.replace('SPV=', '')
-                    form = columns[8].split(':')
                     DP4 = form.index('DP4')
                     Freq = form.index('FREQ')
                     t_split = columns[varscanT].split(':')
@@ -566,7 +556,6 @@ def exome_pipeline(R1_NORMAL,
                     nfreq = n_split[Freq]
                 elif 'strelka' in callers:
                     caller_count = callers.count('-') + 1
-                    form = columns[8].split(':')
                     DP = form.index('DP')
                     TIR = form.index('TIR')
                     t_split = columns[strelkaT].split(':')
@@ -575,7 +564,8 @@ def exome_pipeline(R1_NORMAL,
                     tumor_read2 = int(t_split[TIR].split(',')[1])
                     ncov = int(n_split[DP])
                     tcov = int(t_split[DP])
-                    tfreq = float((tumor_read2 / tcov) * 100)
+                    if tumor_read2 != 0:
+                        tfreq = float((tumor_read2 / tcov) * 100)
                     if normal_read2 != 0:
                         nfreq = float(normal_read2 / ncov)
                     tumor_read1 = tcov - tumor_read2
@@ -614,7 +604,7 @@ def exome_pipeline(R1_NORMAL,
 
     print("COMPLETED!")
 
-parser = argparse.ArgumentParser(description='Exome somatic variant calling and HLA prediction pipeline\n'
+parser = argparse.ArgumentParser(description='WES somatic variant calling and HLA prediction pipeline\n'
                                  'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                  prog='exome_pipeline.py',
                                  usage='exome_pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer)')
@@ -623,13 +613,13 @@ parser.add_argument('R2_NORMAL', help='FASTQ file R2 (Normal)')
 parser.add_argument('R1_CANCER', help='FASTQ file R1 (Cancer)')
 parser.add_argument('R2_CANCER', help='FASTQ file R2 (Cancer)')
 parser.add_argument('--adapter',
-                    help='Path to the Illumina adapters FASTA file.', required=True)
+                    help='Path to the Illumina adapters (FASTA file)', required=True)
 parser.add_argument('--genome',
-                    help='Path to the reference Genome FASTA file (must contain BWA index)', required=True)
+                    help='Path to the reference genome FASTA file (must contain BWA index)', required=True)
 parser.add_argument('--genome-star',
-                    help='Path to the reference Genome STAR index folder (RNA mode)', required=False)
+                    help='Path to the reference genome STAR index folder (RNA mode)', required=False)
 parser.add_argument('--genome-ref',
-                    help='Path to the reference Genome GTF file (RNA mode)', required=False)
+                    help='Path to the reference genome GTF file (RNA mode)', required=False)
 parser.add_argument('--sample',
                     help='Name of the sample/experiment. Default is sample', default='sample')
 parser.add_argument('--tumor',
@@ -647,22 +637,22 @@ parser.add_argument('--germline',
 parser.add_argument('--pon',
                     help='Path to the file with the panel of normals for Mutect2 (GATK bundle)', required=True)
 parser.add_argument('--fastaAA',
-                    help='Path to the fasta file with the protein sequences (of transcripts)', required=True)
+                    help='Path to the FASTA file with the protein sequences in the reference genome (of transcripts)', required=True)
 parser.add_argument('--fastacDNA',
-                    help='Path to the fasta file with the cDNA sequences (of transcripts)', required=True)
+                    help='Path to the FASTA file with the cDNA sequences in the reference genome (of transcripts)', required=True)
 parser.add_argument('--annovar-db',
-                    help='String indicated what annovar database to use (default: humandb)',
+                    help='String indicated which Annovar database to use (default: humandb)',
                     default='humandb', required=False)
 parser.add_argument('--annovar-version',
-                    help='String indicated what version of the annovar database to use (default: hg19)',
-                    default='hg19', required=False)
+                    help='String indicated which version of the Annovar database to use (default: hg38)',
+                    default='hg38', required=False)
 parser.add_argument('--threads',
                     help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
 parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                     help='Steps to perform in the pipeline', 
                     choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 parser.add_argument('--mode', default='DNA',
-                    help='Mode to use (dna if tumor samples are from WES/WGS and rna if tumor samples are from RNA', 
+                    help='Mode to use (DNA (default) if tumor samples are from WES and RNA if tumor samples are from RNA)',
                     choices=['DNA', 'RNA'])
 
 # Parse arguments

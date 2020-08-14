@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """
-@author: jfnavarro
+@author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import exec_command
 from collections import Counter
@@ -9,7 +9,7 @@ import json
 import argparse
 import sys
 
-def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode):
+def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_filter):
 
     if not hla_dna and not hla_rna:
         sys.stderr.write("Error, need HLAs as input.\n")
@@ -66,7 +66,7 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode):
     added_proteins_wt = set()
     with open('protein_sequences_mu.fasta', 'w') as fwrite_mu:
         with open('protein_sequences_wt.fasta', 'w') as fwrite_wt:
-            with open(overlap_final, 'r') as fread:
+            with open(overlap_final) as fread:
                 lines = fread.readlines()
                 header = lines.pop(0).strip().split('\t')
                 for line in lines:
@@ -93,17 +93,20 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode):
     # Run predictions
     print('Predicting MHCs with MUT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_mu.fasta --alleles {} ' \
-          '--no-throw --results-all --out predictions_mut.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla))
+          '--no-throw --results-{} {} --out predictions_mut.csv --peptide-lengths 8-12'.format(' '.join(filtered_hla),
+                                                                                               results, results_filter)
     exec_command(cmd)
 
     print('Predicting MHCs with WT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_wt.fasta --alleles {} ' \
-          '--no-throw --results-all --out predictions_wt.csv --peptide-lengths 8 9 10 11 12'.format(' '.join(filtered_hla))
+          '--no-throw --results-{} {} --out predictions_wt.csv --peptide-lengths 8-12'.format(' '.join(filtered_hla),
+                                                                                              results, results_filter)
     exec_command(cmd)
 
     print('Completed')
 
-parser = argparse.ArgumentParser(description='Script to predict MHCs (MHCflurry) using data from DNA and RNA variant calling pipelines\n'
+parser = argparse.ArgumentParser(description='Script that predicts MHCs (MHCflurry) affinity binding scores\n'
+                                             'using data from DNA and/or RNA variant calling pipelines.\n'
                                              'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                  prog='mhc_predict.py',
                                  usage='mhc_predict.py [options] '
@@ -111,7 +114,6 @@ parser = argparse.ArgumentParser(description='Script to predict MHCs (MHCflurry)
                                        '--hla-rna [file/s with HLA predictions from RNA]\n'
                                        '--alleles [file with supported alleles in MHCflurry]\n'
                                        '--variants [file with the final variants generated with merge_results.py]')
-
 parser.add_argument('--hla-dna', nargs='+', default=None, required=False,
                     help='A file or files containing predicted HLAs from normal DNA (HLA-LA table format)')
 parser.add_argument('--hla-rna', nargs='+', default=None, required=False,
@@ -121,7 +123,14 @@ parser.add_argument('--variants', default=None, required=True,
 parser.add_argument('--alleles', default=None, required=True,
                     help='A file containing the allowed alleles in MHCflurry')
 parser.add_argument('--mode', default='either',
-                    help='Mode to use to extract sequences from the variants (both (DNA and RNA), only DNA, only RNA or either (default))', 
+                    help='Mode to use to extract sequences from the variants (both (DNA and RNA), '
+                         'only DNA, only RNA or either (default))',
                     choices=['both', 'dna', 'rna', 'either'])
+parser.add_argument('--results', default='all',
+                    help='Whether to include all results for each peptide or only the best one (default=all)',
+                    choices=['all', 'best'])
+parser.add_argument('--results-filter', default='affinity',
+                    help='What filtering criteria to use when using --results best (default=affinity)',
+                    choices=['presentation_score', 'processing_score', 'affinity', 'affinity_percentile'])
 args = parser.parse_args()
-compute_MHC(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode)
+compute_MHC(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode, args.results, args.results_filter)

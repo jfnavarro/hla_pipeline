@@ -1,9 +1,8 @@
 #! /usr/bin/env python
 """
-@author: jfnavarro
+@author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 import statistics
-from re import sub
 import argparse
 import numpy as np
 import math
@@ -12,7 +11,7 @@ from _collections import defaultdict
 import sys
 
 def add_flags(transcript, variant_key, transcript_info, mer_len=25):
-    cDNA_flanks = (math.floor(mer_len / 2)) * 3
+    cDNA_flanks = math.floor(mer_len / 2) * 3
     tups = sorted(list(zip(transcript_info[transcript]['position'],
                            transcript_info[transcript]['mutation'],
                            transcript_info[transcript]['aa'],
@@ -74,7 +73,7 @@ def add_flags(transcript, variant_key, transcript_info, mer_len=25):
 # with 2 lists of epitopes (DNA and RNA) and a dict of Gene counts
 def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
 
-    if len(dna_variants) == 0 and len(rna_variants) == 0:
+    if not dna_variants and not rna_variants:
         sys.stderr.write("Error, no variants given as input (DNA or RNA).\n")
         sys.exit(1)
         
@@ -86,8 +85,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
         DNA_nonsyn_lines = DNA_nonsyn.readlines()
         header_DNA = DNA_nonsyn_lines.pop(0).strip().split('\t')
         for line in DNA_nonsyn_lines:
-
-            columns = [x.replace('.', '0') if x is "." else x for x in line.strip().split('\t')]
+            columns = line.strip().split('\t')
             variant_key = columns[header_DNA.index('VARIANT-KEY')]
             sample = columns[header_DNA.index('SAMPLE_ID')]
             if variant_key not in variant_dict:
@@ -128,7 +126,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
         RNA_nonsyn_lines = RNA_nonsyn.readlines()
         header_rna = RNA_nonsyn_lines.pop(0).strip().split('\t')
         for line in RNA_nonsyn_lines:
-            columns = [x.replace('.', '0') for x in line.strip().split('\t')]
+            columns = line.strip().split('\t')
             variant_key = columns[header_rna.index('VARIANT-KEY')]
             sample = columns[header_rna.index('SAMPLE_ID')]
             if variant_key not in variant_dict:
@@ -137,12 +135,14 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                 variant_dict[variant_key]['RNA'] = {}
             if sample not in variant_dict[variant_key]['RNA']:
                 variant_dict[variant_key]['RNA'][sample] = {}
+            P_val = columns[header_rna.index('PVAL')]
+            callers = columns[header_rna.index('CALLERS')]
             # Compute coverage and pass/fail
-            r1 = float(columns[header_rna.index('TUMOR_READ1')])
-            r2 = float(columns[header_rna.index('TUMOR_READ2')])
+            r1 = int(columns[header_rna.index('TUMOR_READ1')])
+            r2 = int(columns[header_rna.index('TUMOR_READ2')])
             rfreq = float(columns[header_rna.index('TVAF')].replace('%', ''))
-            rcov = r1 + r2
-            cov = '{};{},{},{},{}'.format(sample, r1, r2, rfreq, rcov)
+            rcov = int(columns[header_rna.index('TCOV')])
+            cov = '{};{},{},{},{},{},{}'.format(sample, r1, r2, rfreq, rcov, P_val, callers)
             # Storage coverage, data and status
             status = rfreq >= 5 and rcov >= 5
             variant_dict[variant_key]['RNA'][sample]['data'] = columns[0:]
@@ -243,8 +243,8 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                    '1000genome all freq\tdbSNP_ID\tCosmic Info\tGene Name\ttranscript ID\tMutation type\t'\
                    'Exon\tcDNA change\tAA change\tAA position\tEpitope creation flags\tWt Epitope\t'\
                    'Mut Epitope\tDNA Coverage info (Sample,Tumor coverage,Normal Coverage,Tumor var freq,'\
-                   'Normal var freq,Tumor variant reads,p_value (varscan),callers)\tError flags\t'\
-                   'RNA Coverage info (Sample,read1,read2,variant frequency,coverage)\t' \
+                   'Normal var freq,Tumor variant reads,p_value(varscan),callers)\tError flags\t'\
+                   'RNA Coverage info (Sample,read1,read2,variant frequency,coverage,p_value(varscan),callers)\t' \
                    'GeneCounts info per sample (locus,exp)\tGeneCounts mean(all samples)\tGeneCounts percentile (all samples)\n'
     final_file = open('overlap_final.txt', 'w')
     final_file.write(header_final)
@@ -252,25 +252,32 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
     final_file_discarded.write(header_final)
 
     for key, value in variant_dict.items():
-
-        rna_cov = ["-;-,-,-,-"]
-        rna_samples_pass = []
-        rna_samples_fail = []
+        rna_cov = ["-;-,-,-,-,-,-,-"]
+        rna_samples_pass = ["-"]
+        rna_samples_fail = ["-"]
         has_rna = False
+        num_rna_pass = 0
+        num_rna_fail = 0
         if 'RNA' in value:
             rna_cov = '|'.join(x['coverage'] for x in value['RNA'].values())
             rna_samples_pass = [key for key, value in value['RNA'].items() if value['status']]
             rna_samples_fail = [key for key, value in value['RNA'].items() if not value['status']]
+            num_rna_pass = len(rna_samples_pass)
+            num_rna_fail = len(rna_samples_fail)
             has_rna = True
             
-        DNA_cov = ["-;-,-,-,-"]
-        DNA_samples_pass = []
-        DNA_samples_fail = []
+        DNA_cov = ["-;-,-,-,-,-,-,-"]
+        DNA_samples_pass = ["-"]
+        DNA_samples_fail = ["-"]
         has_DNA = False
+        num_dna_pass = 0
+        num_dna_fail = 0
         if 'DNA' in value:
             DNA_cov = '|'.join(x['coverage'] for x in value['DNA'].values())
             DNA_samples_pass = [key for key, value in value['DNA'].items() if value['status']]
             DNA_samples_fail = [key for key, value in value['DNA'].items() if not value['status']]
+            num_dna_pass = len(DNA_samples_pass)
+            num_dna_fail = len(DNA_samples_fail)
             has_DNA = True
             
         if not has_DNA and not has_rna:
@@ -282,15 +289,24 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             for mer in value['Epitopes'].values():
                 for transcript in sorted(mer.values(), reverse=True):
                     sampleID = transcript[header_epitopes.index('SAMPLE_ID')]
-                    # TODO very ugly hack to distinguish RNA and DNA epitopes from the same variant (FIX THIS!)
+                    # TODO very ugly hack to distinguish RNA and DNA epitopes from the same variant (FIX THIS!!!)
                     if has_DNA and sampleID in value['DNA'] and len(value['DNA'][sampleID]['data']) == 45:
                         data = value['DNA'][sampleID]['data']
                         header = header_DNA
-                    elif has_rna and sampleID in value['RNA'] and len(value['RNA'][sampleID]['data']) == 35:
+                    elif has_rna and sampleID in value['RNA'] and len(value['RNA'][sampleID]['data']) == 33:
                         data = value['RNA'][sampleID]['data']
                         header = header_rna
                     else:
                         # this should never happen
+                        print("Epitope {} was not found in neither DNA or RNA variants".format(key))
+                        continue
+                    # NOTE older versions of the pipeline may produce records with missing values
+                    if len(transcript) != len(header_epitopes):
+                        print("Epitope {} with incorrect number of columns".format(key))
+                        continue
+                    # NOTE older versions of the pipeline may produce records with missing values
+                    if len(data) != len(header):
+                        print("Data in epitope {} with incorrect number of columns".format(key))
                         continue
                     ref_gene_name = data[header.index('Gene.refGene')]
                     ref_gene_mut = data[header.index('ExonicFunc.refGene')]
@@ -313,15 +329,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                     aa_position = transcript[header_epitopes.index('POSITION')]
                     error_flags = transcript[header_epitopes.index('ERRORS')]
                     wt_mer = transcript[header_epitopes.index('WT25MER')]
-                    #TODO this is no longer needed as we do not create peptides after stop codon
-                    stop_codon = wt_mer.find("*")
-                    if stop_codon != -1:
-                        wt_mer = wt_mer[0:stop_codon]
                     mu_mer = transcript[header_epitopes.index('MUT25MER')]
-                    # TODO this is no longer needed as we do not create peptides after stop codon
-                    stop_codon = mu_mer.find("*")
-                    if stop_codon != -1:
-                        mu_mer = mu_mer[0:stop_codon]
                     if ENS_gene_name in counts_dict:
                         counts_info = '|'.join(
                             ['{},{}'.format(x['locus'], x['expression']) for x in counts_dict[ENS_gene_name].values()])
@@ -332,10 +340,11 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                         counts_mean = 'NA'
                         percentile = 'NA'
                     flags = add_flags(transcript_name, key, transcript_dict, mer_len=25)
-                    to_write = '\t'.join(str(x) for x in [key, ','.join(DNA_samples_pass), len(DNA_samples_pass),
-                                                          ','.join(rna_samples_pass), len(rna_samples_pass),
-                                                          ','.join(DNA_samples_fail), len(DNA_samples_fail),
-                                                          ','.join(rna_samples_fail), len(rna_samples_fail),
+                    to_write = '\t'.join(str(x) for x in [key,
+                                                          ','.join(DNA_samples_pass), num_dna_pass,
+                                                          ','.join(rna_samples_pass), num_rna_pass,
+                                                          ','.join(DNA_samples_fail), num_dna_fail,
+                                                          ','.join(rna_samples_fail), num_rna_fail,
                                                           ref_gene_name, ref_gene_mut, ref_gene_change,
                                                           UCSC_gene_name, UCSC_gene_mut, UCSC_gene_change,
                                                           ENS_gene_name, ENS_gene_mut, ENS_gene_change, genome_all,
@@ -350,22 +359,21 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
     final_file.close()
     final_file_discarded.close()
 
-parser = argparse.ArgumentParser(description='Script that merges variants and creates a final report using the\n'\
-                                             'resuls of the DNA and RNA pipelines\n'
+parser = argparse.ArgumentParser(description='Script that merges variants and epitopes to create a final report using the\n'\
+                                             'results of the DNA and/or RNA pipelines\n'
                                              'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                  prog='merge_results.py',
                                  usage='merge_results.py [options]\n'
                                        '--dna [dna variants results files]\n'
-                                       '--epitope [epitope results files]\n'
+                                       '--epitope [epitopes results files]\n'
                                        '--rna [rna variants results files]\n'
                                        '--counts [rna gene counts results]')
-
 parser.add_argument('--dna', nargs='+', default=None, required=False,
-                    help='List of files with the results of the DNA pipeline')
+                    help='List of files with the variants of the DNA pipeline')
 parser.add_argument('--epitope', nargs='+', default=None, required=True,
                     help='List of files with the the epitotes (DNA and RNA)')
 parser.add_argument('--rna', nargs='+', default=None, required=False,
-                    help='List of files with the results of the RNA pipeline')
+                    help='List of files with the variants of the RNA pipeline')
 parser.add_argument('--counts', nargs='+', default=None, required=True,
                     help='List of files with the gene counts results of the RNA pipeline')
 
