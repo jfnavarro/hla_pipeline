@@ -34,8 +34,9 @@ pipelines in order to generate an unified file with useful information where
 variants are filtered by certain criterias. 
 
 **mhc_predict.py** can take the file generated with merge_results.py and the HLA files
-generated in the exome and rna-seq pipelines and then output a list of predicted neo-antigens
-using the most common alleles for each HLA class 1. 
+generated in the exome and/or rna-seq pipelines and then output a list of predicted neo-antigens.
+Variants are filtered by certain criterias and only the most common alleles for each HLA class 1
+are used. 
 
 Each tool/pipeline uses a command line interface with parameters which
 can be shown and described with --help.
