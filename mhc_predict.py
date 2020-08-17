@@ -62,13 +62,13 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, re
 
     # Create protein FASTA file
     print('Creating protein sequencess..')
-    added_proteins_mu = set()
-    added_proteins_wt = set()
     with open('protein_sequences_mu.fasta', 'w') as fwrite_mu:
         with open('protein_sequences_wt.fasta', 'w') as fwrite_wt:
             with open(overlap_final) as fread:
                 lines = fread.readlines()
                 header = lines.pop(0).strip().split('\t')
+                added_proteins_mu = set()
+                added_proteins_wt = set()
                 for line in lines:
                     columns = line.strip().split('\t')
                     pass_dna = int(columns[header.index('Number of DNA samples (passing)')]) > 0
@@ -85,12 +85,12 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, re
                         if protein_seq_mu != '-' and '.' not in protein_seq_mu and protein_seq_mu not in added_proteins_mu:
                             fwrite_mu.write('>{}\n{}\n'.format(protein_name, protein_seq_mu))
                             added_proteins_mu.add(protein_seq_mu)
-                        del added_proteins_mu
                         # Should probably make sure that all the letters in the protein seq are alpha (isalpha())
                         if protein_seq_wt != '-' and '.' not in protein_seq_wt and protein_seq_wt not in added_proteins_wt:
                             fwrite_wt.write('>{}\n{}\n'.format(protein_name, protein_seq_wt))
                             added_proteins_wt.add(protein_seq_wt)
-                        del added_proteins_wt
+                del added_proteins_mu
+                del added_proteins_wt
 
     # Run predictions
     print('Predicting MHCs with MUT peptides..')
