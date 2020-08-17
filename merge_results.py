@@ -137,6 +137,10 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                 variant_dict[variant_key]['RNA'][sample] = {}
             P_val = columns[header_rna.index('PVAL')]
             callers = columns[header_rna.index('CALLERS')]
+            try:
+                no_callers = int(callers.strip().split(':')[0])
+            except ValueError:
+                no_callers = 0
             # Compute coverage and pass/fail
             r1 = int(columns[header_rna.index('TUMOR_READ1')])
             r2 = int(columns[header_rna.index('TUMOR_READ2')])
@@ -144,7 +148,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             rcov = int(columns[header_rna.index('TCOV')])
             cov = '{};{},{},{},{},{},{}'.format(sample, r1, r2, rfreq, rcov, P_val, callers)
             # Storage coverage, data and status
-            status = rfreq >= 5 and rcov >= 5
+            status = rfreq >= 5 and rcov >= 5 and no_callers >= 2
             variant_dict[variant_key]['RNA'][sample]['data'] = columns[0:]
             variant_dict[variant_key]['RNA'][sample]['status'] = status
             variant_dict[variant_key]['RNA'][sample]['coverage'] = cov
