@@ -85,10 +85,12 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, re
                         if protein_seq_mu != '-' and '.' not in protein_seq_mu and protein_seq_mu not in added_proteins_mu:
                             fwrite_mu.write('>{}\n{}\n'.format(protein_name, protein_seq_mu))
                             added_proteins_mu.add(protein_seq_mu)
+                        del added_proteins_mu
                         # Should probably make sure that all the letters in the protein seq are alpha (isalpha())
                         if protein_seq_wt != '-' and '.' not in protein_seq_wt and protein_seq_wt not in added_proteins_wt:
                             fwrite_wt.write('>{}\n{}\n'.format(protein_name, protein_seq_wt))
                             added_proteins_wt.add(protein_seq_wt)
+                        del added_proteins_wt
 
     # Run predictions
     print('Predicting MHCs with MUT peptides..')
