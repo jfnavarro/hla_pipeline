@@ -355,7 +355,7 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                                                           dbSNP_ID, cosmic, gene_name, transcript_name, mutation_type,
                                                           exon, cdna_change, aa_change, aa_position, error_flags, wt_mer,
                                                           mu_mer, DNA_cov, flags, rna_cov, counts_info, counts_mean, percentile])
-                    if len(num_dna_pass) >= 1 or len(num_rna_pass) >= 1:
+                    if num_dna_pass >= 1 or num_rna_pass >= 1:
                         final_file.write(to_write + '\n')
                     else:
                         final_file_discarded.write(to_write + '\n')
