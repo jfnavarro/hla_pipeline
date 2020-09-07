@@ -84,50 +84,56 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
     all_file.close()
     snv.close()
 
-def RNAseq_pipeline(sample1,
-                    sample2,
-                    sampleID,
-                    genome,
-                    genome_star,
-                    annotation,
-                    tumor_type,
-                    SNPSITES,
-                    KNOWN_SITE1,
-                    KNOWN_SITE2,
-                    FASTA_AA_DICT,
-                    FASTA_cDNA_DICT,
-                    THREADS,
-                    ANNOVAR_DB,
-                    ANNOVAR_VERSION,
-                    steps):
-    print("RNA-seq pipeline")
+def germline_pipeline(sample1,
+                      sample2,
+                      sampleID,
+                      genome,
+                      genome_star,
+                      annotation,
+                      tumor_type,
+                      SNPSITES,
+                      KNOWN_SITE1,
+                      KNOWN_SITE2,
+                      FASTA_AA_DICT,
+                      FASTA_cDNA_DICT,
+                      THREADS,
+                      ANNOVAR_DB,
+                      ANNOVAR_VERSION,
+                      steps,
+                      mode):
+    print("Germline pipeline")
 
     # Create sub-folder to store all results
-    os.makedirs('rna', exist_ok=True)
-    os.chdir('rna')
+    os.makedirs('germline', exist_ok=True)
+    os.chdir('germline')
 
     if 'mapping' in steps:
         print('Trimming reads')
         cmd = '{} --paired --basename sample {} {}'.format(TRIMGALORE, sample1, sample2)
         exec_command(cmd)
 
-        print('Aligning with STAR')
-        cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
-              ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
-              ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
-              ' --runThreadN {}'.format(STAR, genome_star, annotation, THREADS)
+        # ALIGNMENT
+        print('Starting alignment')
+        if mode == "DNA":
+            # Paired
+            cmd = '{} -t {} {} sample_val_1.fq.gz sample_val_2.fq.gz | ' \
+                  '{} sort --threads {} > trimmed_paired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
+            exec_command(cmd)
+        else:
+            cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
+                  ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
+                  ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
+                  ' --runThreadN {}'.format(STAR, genome_star, annotation, THREADS)
+            exec_command(cmd)
 
-        exec_command(cmd)
+            cmd = 'mv Aligned.sortedByCoord.out.bam trimmed_paired_aligned_sorted.bam'
+            exec_command(cmd)
 
         # Add headers
         print("Adding headers")
-        cmd = '{} AddOrReplaceReadGroups I=Aligned.sortedByCoord.out.bam O=sample_header.bam SO=coordinate RGID=RNA RGLB=VHIO' \
-              ' RGPL=Illumina RGPU=VHIO RGSM={} Create_Index=true Validation_Stringency=SILENT'.format(PICARD, sampleID)
+        cmd = '{} AddOrReplaceReadGroups I=trimmed_paired_aligned_sorted.bam O=sample_header.bam SO=coordinate RGID={} RGLB=VHIO' \
+              ' RGPL=Illumina RGPU=VHIO RGSM={} Create_Index=true Validation_Stringency=SILENT'.format(PICARD, mode, sampleID)
         exec_command(cmd)
-
-    if 'hla' in steps:
-        print('Predicting HLAs')
-        HLA_predictionRNA('sample_header.bam', THREADS)
 
     if 'gatk' in steps:
         # Mark duplicates
@@ -135,20 +141,32 @@ def RNAseq_pipeline(sample1,
         cmd = '{} MarkDuplicatesSpark --input sample_header.bam --output sample_dedup.bam'.format(GATK)
         exec_command(cmd)
 
-        # Split N and cigars
-        print('Splitting NCigar Reads')
-        cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK, genome)
-        exec_command(cmd)
+        if mode == 'RNA':
+            # Split N and cigars
+            print('Splitting NCigar Reads')
+            cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK, genome)
+            exec_command(cmd)
 
         # GATK base re-calibration
         print('Starting re-calibration')
-        cmd = '{} BaseRecalibratorSpark --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
-              '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK, genome, SNPSITES,
+        cmd = '{} BaseRecalibratorSpark --use-original-qualities --input {} --reference {} --known-sites {} ' \
+              '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK,
+                                                                                        'sample_split.bam' if mode == 'RNA' else 'sample_dedup.bam',
+                                                                                        genome, SNPSITES,
                                                                                         KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input sample_split.bam ' \
-              '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK, genome)
+        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input {}' \
+              '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK,
+                                                                                         'sample_split.bam' if mode == 'RNA' else 'sample_dedup.bam',
+                                                                                         genome)
         exec_command(cmd)
+
+    if 'hla' in steps:
+        print('Predicting HLAs')
+        if mode == 'DNA':
+            HLA_predictionDNA('sample_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+        else:
+            HLA_predictionRNA('sample_final.bam', THREADS)
 
     if 'variant' in steps:
         # Variant calling (Samtools pile-ups)
@@ -169,11 +187,12 @@ def RNAseq_pipeline(sample1,
               '--dbsnp {}'.format(GATK, genome, SNPSITES)
         exec_command(cmd)
 
-        # Computing gene counts
-        print('Computing gene counts with featureCounts')
-        cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
-              '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, annotation)
-        exec_command(cmd)
+        if mode == 'RNA':
+            # Computing gene counts
+            print('Computing gene counts with featureCounts')
+            cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
+                  '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, annotation)
+            exec_command(cmd)
 
     if 'filter' in steps:
         # Filtering variants (HaplotypeCaller)
@@ -269,36 +288,37 @@ def RNAseq_pipeline(sample1,
         # Create epitopes
         create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
 
-        # Reformat Gene counts file
-        print('Creating Gene counts info file')
-        counts_file = open('gene.counts')
-        lines = counts_file.readlines()
-        if lines[0].startswith("#"):
-            lines.pop(0)
-        secondline = lines.pop(0)
-        counts_out = open('GeneCounts_SQL_insert.txt', 'w')
-        header = 'SAMPLE_ID\tTUMOUR\t' + secondline
-        counts_out.write(header)
-        for line in lines:
-            counts_out.write('{}\t{}\t{}'.format(sampleID, tumor_type, line))
-        counts_out.close()
-        counts_file.close()
+        if mode == 'RNA':
+            # Reformat Gene counts file
+            print('Creating Gene counts info file')
+            counts_file = open('gene.counts')
+            lines = counts_file.readlines()
+            if lines[0].startswith("#"):
+                lines.pop(0)
+            secondline = lines.pop(0)
+            counts_out = open('GeneCounts_SQL_insert.txt', 'w')
+            header = 'SAMPLE_ID\tTUMOUR\t' + secondline
+            counts_out.write(header)
+            for line in lines:
+                counts_out.write('{}\t{}\t{}'.format(sampleID, tumor_type, line))
+            counts_out.close()
+            counts_file.close()
 
     print("COMPLETED!")
 
 
 parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA prediction pipeline\n'
                                              'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
-                                 prog='rnaseq_pipeline.py',
-                                 usage='rnaseq_pipeline.py [options] R1(RNA) R2(RNA)')
+                                 prog='germline_pipeline.py',
+                                 usage='germline_pipeline.py [options] R1(RNA) R2(RNA)')
 parser.add_argument('R1_RNA', help='FASTQ file R1 (RNA)')
 parser.add_argument('R2_RNA', help='FASTQ file R2 (RNA)')
 parser.add_argument('--genome',
                     help='Path to the reference genome FASTA file', required=True)
 parser.add_argument('--genome-star',
-                    help='Path to the reference genome STAR index folder', required=True)
+                    help='Path to the reference genome STAR index folder (when in RNA mode)', required=False)
 parser.add_argument('--genome-ref',
-                    help='Path to the reference genome GTF file', required=True)
+                    help='Path to the reference genome GTF file (when in RNA mode)', required=False)
 parser.add_argument('--sample',
                     help='Name of the sample/experiment. Default is sample', default='sample')
 parser.add_argument('--tumor',
@@ -326,6 +346,9 @@ parser.add_argument('--threads',
 parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                     help='Steps to perform in the pipeline',
                     choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
+parser.add_argument('--mode', default='RNA',
+                    help='Mode to use (RNA (default) or DNA)',
+                    choices=['DNA', 'RNA'])
 
 # Parse arguments
 args = parser.parse_args()
@@ -343,9 +366,13 @@ KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
 FASTA_AA_DICT = os.path.abspath(args.fastaAA)
 FASTA_cDNA_DICT = os.path.abspath(args.fastacDNA)
-RNA_STEPS = args.steps
+STEPS = args.steps
 ANNOVAR_DB = args.annovar_db
 ANNOVAR_VERSION = args.annovar_version
+MODE = args.mode
+if MODE == "RNA" and (not GENOME_REF_STAR or not GENOME_ANNOTATION):
+    sys.stderr.write("Error, RNA mode but STAR reference or annotation files are missing\n")
+    sys.exit(1)
 
 # Move to output dir
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -366,4 +393,5 @@ RNAseq_pipeline(R1_RNA,
                 THREADS,
                 ANNOVAR_DB,
                 ANNOVAR_VERSION,
-                RNA_STEPS)
+                STEPS,
+                MODE)

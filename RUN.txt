@@ -7,9 +7,8 @@ export PATH="~/shared/gitlfs:$PATH"
 
 conda activate hla
 
-exome_pipeline.py \
+somatic_pipeline.py \
   --genome ~/shared/GRCh38/Homo_sapiens_assembly38.fasta \
-  --adapter ~/shared/TruSeq2-PE.fa \
   --sample G001 \
   --tumor BC \
   --dir out \
@@ -23,10 +22,11 @@ exome_pipeline.py \
   --threads 20 \
   --annovar-db humandb \
   --annovar-version hg38 \
+  --mode DNA \
   NormalR1.fastq.gz NormalR2.fastq.gz \
   TumorR1.fastq.gz TumorR2.fastq.gz
 
-rnaseq_pipeline.py \
+germline_pipeline.py \
   --genome ~/shared/GRCh38/Homo_sapiens_assembly38.fasta \
   --genome-star ~/shared/GRCh38/STARIndex \
   --genome-ref ~/shared/GRCh38/gencode.v34.primary_assembly.annotation.gtf \
@@ -41,6 +41,7 @@ rnaseq_pipeline.py \
   --threads 20 \
   --annovar-db humandb \
   --annovar-version hg38 \
+  --mode RNA \
   RNAR1.fastq.gz RNAR2.fastq.gz
   
 merge_results.py \
