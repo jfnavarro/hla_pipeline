@@ -109,13 +109,12 @@ def germline_pipeline(sample1,
 
     if 'mapping' in steps:
         print('Trimming reads')
-        cmd = '{} --paired --basename sample {} {}'.format(TRIMGALORE, sample1, sample2)
+        cmd = '{} --cores {} --paired --basename sample {} {}'.format(TRIMGALORE, THREADS, sample1, sample2)
         exec_command(cmd)
 
         # ALIGNMENT
         print('Starting alignment')
-        if mode == "DNA":
-            # Paired
+        if mode == 'DNA':
             cmd = '{} -t {} {} sample_val_1.fq.gz sample_val_2.fq.gz | ' \
                   '{} sort --threads {} > trimmed_paired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
             exec_command(cmd)
@@ -164,7 +163,7 @@ def germline_pipeline(sample1,
     if 'hla' in steps:
         print('Predicting HLAs')
         if mode == 'DNA':
-            HLA_predictionDNA('sample_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+            HLA_predictionDNA('sample_final.bam', sampleID, 'PRG-HLA-LA_output.txt', THREADS)
         else:
             HLA_predictionRNA('sample_final.bam', THREADS)
 
@@ -289,20 +288,7 @@ def germline_pipeline(sample1,
         create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
 
         if mode == 'RNA':
-            # Reformat Gene counts file
-            print('Creating Gene counts info file')
-            counts_file = open('gene.counts')
-            lines = counts_file.readlines()
-            if lines[0].startswith("#"):
-                lines.pop(0)
-            secondline = lines.pop(0)
-            counts_out = open('GeneCounts_SQL_insert.txt', 'w')
-            header = 'SAMPLE_ID\tTUMOUR\t' + secondline
-            counts_out.write(header)
-            for line in lines:
-                counts_out.write('{}\t{}\t{}'.format(sampleID, tumor_type, line))
-            counts_out.close()
-            counts_file.close()
+            reformat_gene_counts('gene.counts', 'GeneCounts_SQL_insert.txt', sampleID, tumor_type)
 
     print("COMPLETED!")
 
@@ -378,20 +364,20 @@ if MODE == "RNA" and (not GENOME_REF_STAR or not GENOME_ANNOTATION):
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
 
-RNAseq_pipeline(R1_RNA,
-                R2_RNA,
-                sampleID,
-                GENOME_REF,
-                GENOME_REF_STAR,
-                GENOME_ANNOTATION,
-                tumor_type,
-                SNPSITES,
-                KNOWN_SITE1,
-                KNOWN_SITE2,
-                FASTA_AA_DICT,
-                FASTA_cDNA_DICT,
-                THREADS,
-                ANNOVAR_DB,
-                ANNOVAR_VERSION,
-                STEPS,
-                MODE)
+germline_pipeline(R1_RNA,
+                  R2_RNA,
+                  sampleID,
+                  GENOME_REF,
+                  GENOME_REF_STAR,
+                  GENOME_ANNOTATION,
+                  tumor_type,
+                  SNPSITES,
+                  KNOWN_SITE1,
+                  KNOWN_SITE2,
+                  FASTA_AA_DICT,
+                  FASTA_cDNA_DICT,
+                  THREADS,
+                  ANNOVAR_DB,
+                  ANNOVAR_VERSION,
+                  STEPS,
+                  MODE)

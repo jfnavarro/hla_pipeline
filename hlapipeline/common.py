@@ -68,3 +68,18 @@ def HLA_predictionRNA(sample, threads):
                                                                                                          clean_name,
                                                                                                          clean_name)
     exec_command(cmd)
+
+
+def reformat_gene_counts(input, output, sampleID, tumor_type):
+    counts_file = open(input)
+    lines = counts_file.readlines()
+    if lines[0].startswith("#"):
+        lines.pop(0)
+    secondline = lines.pop(0)
+    counts_out = open(output, 'w')
+    header = 'SAMPLE_ID\tTUMOUR\t' + secondline
+    counts_out.write(header)
+    for line in lines:
+        counts_out.write('{}\t{}\t{}'.format(sampleID, tumor_type, line))
+    counts_out.close()
+    counts_file.close()

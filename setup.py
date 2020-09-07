@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-DNA (WES) and RNA-Seq variant calling pipeline with HLA and MHC predictions
+DNA and RNA-Seq variant calling pipeline with HLA and MHC predictions
 
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
@@ -17,7 +17,7 @@ with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
   name='hlapipeline',
-  version="0.1.1",
+  version="0.2.0",
   description=__doc__.split("\n", 1)[0],
   long_description=long_description,
   keywords='rna-seq analysis dna WES WGS HLA MHC variant',
