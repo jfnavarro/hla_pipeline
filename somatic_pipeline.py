@@ -255,8 +255,8 @@ def somatic_pipeline(R1_NORMAL,
 
     if 'filter' in steps:
         print('Filtering variants')
-        # TODO filters could be performed with VariantFiltration and/or vcftools
-        # TODO filters seems arbitrary, they could be improved
+        #TODO filters could be performed with VariantFiltration and/or vcftools
+        #TODO filters seems arbitrary, they could be improved
         mutect2_filter('Mutect.vcf', 'mutect_filtered.vcf', sample1_ID, sample2_ID)
         strelka2_filter('Strelka_output/results/variants/somatic.snvs.vcf.gz', 'strelka_filtered.vcf')
         somaticSniper_filter('SS.vcf', 'somaticsniper_filtered.vcf')

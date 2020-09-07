@@ -30,7 +30,7 @@ def mutect2_filter(input, output, sample1_ID, sample2_ID):
                 tumor_var_freq = float(float(columns[Tmut].split(':')[2]) * 100)
                 normal_var_freq = float(float(columns[Nmut].split(':')[2]) * 100)
                 if normal_var_freq != 0:
-                    t2n_ratio = float(tumor_var_freq) / float(normal_var_freq)
+                    t2n_ratio = tumor_var_freq / normal_var_freq
                 else:
                     t2n_ratio = 5
                 # NOTE this filter seems to too strict with Mutect2 (where variants are already filtered)
@@ -44,9 +44,9 @@ def strelka2_filter(input, output):
     filtered_vcf = open(output, 'w')
     vcf = gzip.open(input, 'rt')
     for line in vcf:
-        if line.startswith('#') and not re.search('##FORMAT=<ID=DP,', line) and not line.startswith('#CHROM'):
+        if line.startswith('#') and not '##FORMAT=<ID=DP,' in line and not line.startswith('#CHROM'):
             filtered_vcf.write(line)
-        elif line.startswith('#') and re.search('##FORMAT=<ID=DP,', line):
+        elif line.startswith('#') and '##FORMAT=<ID=DP,' in line:
             filtered_vcf.write('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n' + line)
         elif line.startswith('#CHROM'):
             headers = line.strip().split('\t')
@@ -62,7 +62,7 @@ def strelka2_filter(input, output):
             Format = columns[8]
             Normal = columns[Nst]
             Tumor = columns[Tst]
-            if re.search('PASS', Filter):
+            if 'PASS' in Filter:
                 n_split = Normal.split(':')
                 t_split = Tumor.split(':')
                 normal_variant_depth = int(n_split[alt_index[alt]].split(',')[0])
@@ -139,7 +139,8 @@ def somaticSniper_filter(input, output):
                 t2nratio = float(Tumor_variant_freq / normal_freq)
             else:
                 t2nratio = 5
-            if normal_coverage >= 10 and tumor_coverage >= 10 and somatic_status == 2 and variant_count >= 3 and Tumor_variant_freq >= 5 and t2nratio >= 5:
+            if normal_coverage >= 10 and tumor_coverage >= 10 and somatic_status == 2 \
+                    and variant_count >= 3 and Tumor_variant_freq >= 5 and t2nratio >= 5:
                 filtered_vcf.write(line)
     vcf.close()
     filtered_vcf.close()
@@ -148,9 +149,9 @@ def strelka2_filter_indels(input, output):
     filtered_vcf = open(output, 'w')
     vcf = gzip.open(input, 'rt')
     for line in vcf:
-        if line.startswith('#') and not re.search('##FORMAT=<ID=DP,', line) and not line.startswith('#CHROM'):
+        if line.startswith('#') and not '##FORMAT=<ID=DP,' in line and not line.startswith('#CHROM'):
             filtered_vcf.write(line)
-        elif line.startswith('#') and re.search('##FORMAT=<ID=DP,', line):
+        elif line.startswith('#') and '##FORMAT=<ID=DP,' in line:
             filtered_vcf.write(
                 '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n')
         elif line.startswith('#CHROM'):
@@ -165,7 +166,7 @@ def strelka2_filter_indels(input, output):
             Format = columns[8]
             Normal = columns[Nst]
             Tumor = columns[Tst]
-            if re.search('PASS', Filter):
+            if 'PASS' in Filter:
                 n_split = columns[Nst].split(':')
                 t_split = columns[Tst].split(':')
                 normal_variant_depth = int(n_split[3].split(',')[1])
@@ -197,7 +198,7 @@ def varscan_filter(input, output):
     filtered_vcf = open(output, 'w')
     vcf = open(input)
     for line in vcf:
-        if line.startswith('#') and re.search(r'DP4', line):
+        if line.startswith('#') and 'DP4' in line:
             # Ugly hack so CombineVariants works
             new_DP4 = line.replace(
                 'ID=DP4,Number=1,Type=String,Description="Strand read counts: ref/fwd, ref/rev, var/fwd, var/rev"',
@@ -214,7 +215,7 @@ def varscan_filter(input, output):
             columns = line.strip().split('\t')
             Filter = columns[6]
             INFO = columns[7]
-            if re.search(r'SOMATIC', INFO) and re.search('PASS', Filter):
+            if 'SOMATIC' in INFO and 'PASS' in Filter:
                 n_split = columns[Nvs].split(':')
                 t_split = columns[Tvs].split(':')
                 normal_coverage = int(n_split[2])
