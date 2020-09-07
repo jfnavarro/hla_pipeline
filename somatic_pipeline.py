@@ -604,10 +604,10 @@ def exome_pipeline(R1_NORMAL,
 
     print("COMPLETED!")
 
-parser = argparse.ArgumentParser(description='WES somatic variant calling and HLA prediction pipeline\n'
+parser = argparse.ArgumentParser(description='DNA/RNA Somatic variant calling and HLA prediction pipeline\n'
                                  'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
-                                 prog='exome_pipeline.py',
-                                 usage='exome_pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer)')
+                                 prog='somatic_pipeline.py',
+                                 usage='somatic_pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer)')
 parser.add_argument('R1_NORMAL', help='FASTQ file R1 (Normal)')
 parser.add_argument('R2_NORMAL', help='FASTQ file R2 (Normal)')
 parser.add_argument('R1_CANCER', help='FASTQ file R1 (Cancer)')

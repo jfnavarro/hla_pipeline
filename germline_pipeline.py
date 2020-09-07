@@ -84,27 +84,27 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
     all_file.close()
     snv.close()
 
-def RNAseq_pipeline(sample1,
-                    sample2,
-                    sampleID,
-                    genome,
-                    genome_star,
-                    annotation,
-                    tumor_type,
-                    SNPSITES,
-                    KNOWN_SITE1,
-                    KNOWN_SITE2,
-                    FASTA_AA_DICT,
-                    FASTA_cDNA_DICT,
-                    THREADS,
-                    ANNOVAR_DB,
-                    ANNOVAR_VERSION,
-                    steps):
-    print("RNA-seq pipeline")
+def germline_pipeline(sample1,
+                      sample2,
+                      sampleID,
+                      genome,
+                      genome_star,
+                      annotation,
+                      tumor_type,
+                      SNPSITES,
+                      KNOWN_SITE1,
+                      KNOWN_SITE2,
+                      FASTA_AA_DICT,
+                      FASTA_cDNA_DICT,
+                      THREADS,
+                      ANNOVAR_DB,
+                      ANNOVAR_VERSION,
+                      steps):
+    print("Germline pipeline")
 
     # Create sub-folder to store all results
-    os.makedirs('rna', exist_ok=True)
-    os.chdir('rna')
+    os.makedirs('germline', exist_ok=True)
+    os.chdir('germline')
 
     if 'mapping' in steps:
         print('Trimming reads')
@@ -289,8 +289,8 @@ def RNAseq_pipeline(sample1,
 
 parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA prediction pipeline\n'
                                              'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
-                                 prog='rnaseq_pipeline.py',
-                                 usage='rnaseq_pipeline.py [options] R1(RNA) R2(RNA)')
+                                 prog='germline_pipeline.py',
+                                 usage='germline_pipeline.py [options] R1(RNA) R2(RNA)')
 parser.add_argument('R1_RNA', help='FASTQ file R1 (RNA)')
 parser.add_argument('R2_RNA', help='FASTQ file R2 (RNA)')
 parser.add_argument('--genome',
