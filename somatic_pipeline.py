@@ -118,10 +118,10 @@ def somatic_pipeline(R1_NORMAL,
     if 'mapping' in steps:
         # TRIMMING
         print('Starting trimming')
-        cmd = '{} --paired --basename normal {} {}'.format(TRIMGALORE, R1_NORMAL, R2_NORMAL)
+        cmd = '{} --cores {} --paired --basename normal {} {}'.format(TRIMGALORE, THREADS, R1_NORMAL, R2_NORMAL)
         exec_command(cmd)
 
-        cmd = '{} --paired --basename cancer {} {}'.format(TRIMGALORE, R1_CANCER, R2_CANCER)
+        cmd = '{} --cores {} --paired --basename cancer {} {}'.format(TRIMGALORE, THREADS, R1_CANCER, R2_CANCER)
         exec_command(cmd)
 
         # ALIGNMENT

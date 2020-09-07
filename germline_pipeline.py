@@ -109,7 +109,7 @@ def germline_pipeline(sample1,
 
     if 'mapping' in steps:
         print('Trimming reads')
-        cmd = '{} --paired --basename sample {} {}'.format(TRIMGALORE, sample1, sample2)
+        cmd = '{} --cores {} --paired --basename sample {} {}'.format(TRIMGALORE, THREADS, sample1, sample2)
         exec_command(cmd)
 
         # ALIGNMENT
