@@ -154,7 +154,7 @@ def germline_pipeline(sample1,
                                                                                         genome, SNPSITES,
                                                                                         KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input {}' \
+        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input {} ' \
               '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK,
                                                                                          'sample_split.bam' if mode == 'RNA' else 'sample_dedup.bam',
                                                                                          genome)
