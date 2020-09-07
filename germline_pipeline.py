@@ -151,13 +151,15 @@ def germline_pipeline(sample1,
         cmd = '{} BaseRecalibratorSpark --use-original-qualities --input {} --reference {} --known-sites {} ' \
               '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK,
                                                                                         'sample_split.bam' if mode == 'RNA' else 'sample_dedup.bam',
-                                                                                        genome, SNPSITES,
-                                                                                        KNOWN_SITE1, KNOWN_SITE2)
+                                                                                        genome,
+                                                                                        SNPSITES,
+                                                                                        KNOWN_SITE1,
+                                                                                        KNOWN_SITE2)
         exec_command(cmd)
         cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input {} ' \
               '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK,
-                                                                                         'sample_split.bam' if mode == 'RNA' else 'sample_dedup.bam',
-                                                                                         genome)
+                                                                                         genome,
+                                                                                         'sample_split.bam' if mode == 'RNA' else 'sample_dedup.bam')
         exec_command(cmd)
 
     if 'hla' in steps:
