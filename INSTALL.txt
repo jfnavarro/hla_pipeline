@@ -92,10 +92,11 @@ gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/1000G_phase1.snps
 gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/dbsnp_138.b37.vcf.gz* .
 gsutil -m cp -r gs://gatk-best-practices/somatic-b37/af-only-gnomad.raw.sites.vcf* .
 gsutil -m cp -r gs://gatk-best-practices/somatic-b37/Mutect2-exome-panel.vcf* .
+wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.pc_transcripts.fa.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.pc_translations.fa.gz
 wget ftp://ftp.ensembl.org/pub/grch37/release-100/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz
-wget ftp://ftp.ensembl.org/pub/grch37/release-100/fasta/homo_sapiens/pep/Homo_sapiens.GRCh37.pep.all.fa.gz
-wget ftp://ftp.ensembl.org/pub/grch37/release-100/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh37.cdna.all.fa.gz
-gunzip Homo_sapiens*
+gunzip Homo_sapiens.GRCh37.87.gtf.gz
+gunzip gencode*
 mkdir -p STARIndex
 STAR --runMode genomeGenerate --runThreadN 20 --genomeDir STARIndex \
   --genomeFastaFiles Homo_sapiens_assembly19.fasta \
