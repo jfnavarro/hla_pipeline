@@ -84,27 +84,27 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
     all_file.close()
     nonsyn_snv.close()
 
-def exome_pipeline(R1_NORMAL,
-                   R2_NORMAL,
-                   R1_CANCER,
-                   R2_CANCER,
-                   tumor_type,
-                   genome,
-                   genome_star,
-                   annotation,
-                   sampleID,
-                   THREADS,
-                   FASTA_AA_DICT,
-                   FASTA_cDNA_DICT,
-                   KNOWN_SITE1,
-                   KNOWN_SITE2,
-                   SNPSITES,
-                   GERMLINE,
-                   PON,
-                   ANNOVAR_DB,
-                   ANNOVAR_VERSION,
-                   steps,
-                   mode):
+def somatic_pipeline(R1_NORMAL,
+                     R2_NORMAL,
+                     R1_CANCER,
+                     R2_CANCER,
+                     tumor_type,
+                     genome,
+                     genome_star,
+                     annotation,
+                     sampleID,
+                     THREADS,
+                     FASTA_AA_DICT,
+                     FASTA_cDNA_DICT,
+                     KNOWN_SITE1,
+                     KNOWN_SITE2,
+                     SNPSITES,
+                     GERMLINE,
+                     PON,
+                     ANNOVAR_DB,
+                     ANNOVAR_VERSION,
+                     steps,
+                     mode):
     print("Somatic pipeline")
 
     # Sample 1 cancer, sample 2 normal
@@ -664,7 +664,7 @@ KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
 GERMLINE = os.path.abspath(args.germline)
 PON = os.path.abspath(args.pon)
- = args.steps
+STEPS = args.steps
 ANNOVAR_DB = args.annovar_db
 ANNOVAR_VERSION = args.annovar_version
 MODE = args.mode
@@ -676,24 +676,24 @@ if MODE == "RNA" and (not GENOME_REF_STAR or not GENOME_ANNOTATION):
 os.makedirs(os.path.abspath(DIR), exist_ok=True)
 os.chdir(os.path.abspath(DIR))
 
-exome_pipeline(R1_NORMAL,
-               R2_NORMAL,
-               R1_CANCER,
-               R2_CANCER,
-               tumor_type,
-               GENOME_REF,
-               GENOME_REF_STAR,
-               GENOME_ANNOTATION,
-               sampleID,
-               THREADS,
-               FASTA_AA_DICT,
-               FASTA_cDNA_DICT,
-               KNOWN_SITE1,
-               KNOWN_SITE2,
-               SNPSITES,
-               GERMLINE,
-               PON,
-               ANNOVAR_DB,
-               ANNOVAR_VERSION,
-               STEPS,
-               MODE)
+somatic_pipeline(R1_NORMAL,
+                 R2_NORMAL,
+                 R1_CANCER,
+                 R2_CANCER,
+                 tumor_type,
+                 GENOME_REF,
+                 GENOME_REF_STAR,
+                 GENOME_ANNOTATION,
+                 sampleID,
+                 THREADS,
+                 FASTA_AA_DICT,
+                 FASTA_cDNA_DICT,
+                 KNOWN_SITE1,
+                 KNOWN_SITE2,
+                 SNPSITES,
+                 GERMLINE,
+                 PON,
+                 ANNOVAR_DB,
+                 ANNOVAR_VERSION,
+                 STEPS,
+                 MODE)
