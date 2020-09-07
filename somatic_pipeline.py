@@ -126,15 +126,10 @@ def somatic_pipeline(R1_NORMAL,
 
         # ALIGNMENT
         print('Starting alignment')
-        if mode == "DNA":
+        if mode in ['DNA', 'DNA-RNA']:
             # Normal (paired)
             cmd = '{} -t {} {} normal_val_1.fq.gz normal_val_1.fq.gz | ' \
                   '{} sort --threads {} > aligned_normal_merged.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
-            exec_command(cmd)
-
-            # Cancer (paired)
-            cmd = '{} -t {} {} cancer_val_1.fq.gz cancer_val_2.fq.gz | ' \
-                  '{} sort --threads {} > aligned_cancer_merged.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
             exec_command(cmd)
         else:
             # Normal (paired)
@@ -143,10 +138,10 @@ def somatic_pipeline(R1_NORMAL,
                   ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
                   ' --runThreadN {}'.format(STAR, genome_star, annotation, THREADS)
             exec_command(cmd)
-
             cmd = 'mv Aligned.sortedByCoord.out.bam aligned_normal_merged.bam'
             exec_command(cmd)
 
+        if mode in ['RNA', 'DNA-RNA']:
             # Cancer (paired)
             cmd = '{} --genomeDir {} --readFilesIn cancer_val_1.fq.gz cancer_val_2.fq.gz --outSAMorder Paired' \
                   ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
@@ -155,6 +150,11 @@ def somatic_pipeline(R1_NORMAL,
             exec_command(cmd)
 
             cmd = 'mv Aligned.sortedByCoord.out.bam aligned_cancer_merged.bam'
+            exec_command(cmd)
+        else:
+            # Cancer (paired)
+            cmd = '{} -t {} {} cancer_val_1.fq.gz cancer_val_2.fq.gz | ' \
+                  '{} sort --threads {} > aligned_cancer_merged.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
             exec_command(cmd)
 
         # Add headers
@@ -183,12 +183,15 @@ def somatic_pipeline(R1_NORMAL,
         cmd = '{} BaseRecalibratorSpark --input sample1_dedup.bam --reference {} --known-sites {} --known-sites {}' \
               ' --known-sites {} --output sample1_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
+
         cmd = '{} BaseRecalibratorSpark --input sample2_dedup.bam --reference {} --known-sites {} --known-sites {}' \
               ' --known-sites {} --output sample2_recal_data.txt'.format(GATK, genome, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
         exec_command(cmd)
+
         cmd = '{} ApplyBQSR --reference {} --input sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt ' \
               '--output sample1_final.bam'.format(GATK, genome)
         exec_command(cmd)
+
         cmd = '{} ApplyBQSR --reference {} --input sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt ' \
               '--output sample2_final.bam'.format(GATK, genome)
         exec_command(cmd)
@@ -246,11 +249,17 @@ def somatic_pipeline(R1_NORMAL,
               '--min-coverage 4 --min-var-freq 0.05 --strand-filter 0'.format(VARSCAN)
         exec_command(cmd)
 
-        if mode == 'RNA':
+        if mode in ['RNA', 'DNA-RNA']:
             # Computing gene counts
-            print('Computing gene counts with featureCounts')
+            print('Computing gene counts with featureCounts for tumor sample')
             cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
-                  '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, annotation)
+                  '-g gene_name -a {} -o tumor-gene.counts sample1_dedup.bam'.format(FEATURECOUNTS, THREADS, annotation)
+            exec_command(cmd)
+
+        if mode in ['RNA', 'RNA-DNA']:
+            print('Computing gene counts with featureCounts for normal sample')
+            cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
+                  '-g gene_name -a {} -o normal-gene.counts sample2_dedup.bam'.format(FEATURECOUNTS, THREADS, annotation)
             exec_command(cmd)
 
     if 'filter' in steps:
@@ -577,21 +586,11 @@ def somatic_pipeline(R1_NORMAL,
         # Create epitopes
         create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
 
-        if mode == 'RNA':
-            # Reformat Gene counts file
-            print('Creating Gene counts info file')
-            counts_file = open('gene.counts')
-            lines = counts_file.readlines()
-            if lines[0].startswith("#"):
-                lines.pop(0)
-            secondline = lines.pop(0)
-            counts_out = open('GeneCounts_SQL_insert.txt', 'w')
-            header = 'SAMPLE_ID\tTUMOUR\t' + secondline
-            counts_out.write(header)
-            for line in lines:
-                counts_out.write('{}\t{}\t{}'.format(sampleID, tumor_type, line))
-            counts_out.close()
-            counts_file.close()
+        if mode in ['RNA', 'DNA-RNA']:
+            reformat_gene_counts('tumor-gene.counts', 'Tumor_GeneCounts_SQL_insert.txt', sampleID, tumor_type)
+
+        if mode in ['RNA', 'RNA-DNA']:
+            reformat_gene_counts('normal-gene.counts', 'Normal_GeneCounts_SQL_insert.txt', sampleID, tumor_type)
 
     print("COMPLETED!")
 
@@ -641,8 +640,8 @@ parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'va
                     help='Steps to perform in the pipeline', 
                     choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
 parser.add_argument('--mode', default='DNA',
-                    help='Mode to use (DNA (default) or RNA)',
-                    choices=['DNA', 'RNA'])
+                    help='Mode to use (DNA (default), RNA, DNA-RNA and RNA-DNA)',
+                    choices=['DNA', 'RNA', 'DNA-RNA', 'RNA-DNA'])
 
 # Parse arguments
 args = parser.parse_args()
@@ -668,7 +667,7 @@ STEPS = args.steps
 ANNOVAR_DB = args.annovar_db
 ANNOVAR_VERSION = args.annovar_version
 MODE = args.mode
-if MODE == "RNA" and (not GENOME_REF_STAR or not GENOME_ANNOTATION):
+if 'RNA' in MODE and (not GENOME_REF_STAR or not GENOME_ANNOTATION):
     sys.stderr.write("Error, RNA mode but STAR reference or annotation files are missing\n")
     sys.exit(1)
     
