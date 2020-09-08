@@ -16,16 +16,16 @@ filtered and annotated somatic variants, their epitopes and also a list of gene 
 The variant callers are Mutect2, Strelka, Varscan and SomaticSniper and both indels and SNPs are
 reported. Annotation is performed using Annovar. 
 The pipeline uses trim-galore to trim, STAR (RNA) or bwa-men (DNA) to align and GATK4 best practices. 
-The pipeline will also perform HLA predictions with HLA-LA (DNA) and arcasHLA (RNA).
-The gene counts values are computed with featureCounts (when in RNA mode)
+The pipeline also performs HLA predictions with HLA-LA (DNA) and arcasHLA (RNA).
+The gene counts values are computed with featureCounts (when in RNA mode).
 When in RNA mode the STAR index and annotation reference (GTF) must be provided as arguments.
 
 **germline_pipeline.py** processes DNA/RNA data and generates a list of unified
 annotated germline variants (weak filtered), their epitopes and also a list of gene counts values (when in RNA mode). 
 The variant callers used are Varscan and HaplotypeCaller. Annotation is performed with Annovar.
 The pipeline uses trim-galore to trim, STAR (RNA) or bwa-men (DNA) to align and GATK4 best practices. 
-The pipeline will also perform HLA predictions with HLA-LA (DNA) and arcasHLA (RNA).
-The gene counts values are computed with featureCounts (when in RNA mode)
+The pipeline also performs HLA predictions with HLA-LA (DNA) and arcasHLA (RNA).
+The gene counts values are computed with featureCounts (when in RNA mode).
 When in RNA mode the STAR index and annotation reference (GTF) must be provided as arguments.
 
 **merge_resuls.py** combines results from 1 or several runs of the somatic and germline
@@ -33,7 +33,7 @@ pipelines in order to generate an unified file with useful information where
 variants are filtered by certain criteria. 
 
 **mhc_predict.py** can take the file generated with merge_results.py and the HLA files
-generated in the exome and/or rna-seq pipelines and then output a list of predicted neo-antigens.
+generated in the germline or somatic pipelines and then output a list of predicted neo-antigens.
 Variants are filtered by certain criterias and only the most common alleles for each HLA class 1
 are used. 
 
@@ -49,14 +49,17 @@ Main output files:
 **somatic_pipeline.py** 
 - nonsyn_SQL_insert.txt (nonsynonymous variants filtered and annotated)
 - all_other_mutations.txt (synonymous variants filtered and annotated)
-- GeneCounts_SQL_insert.txt (all the counts of the genes found if RNA mode is used)
+- Tumor_GeneCounts_SQL_insert.txt (all the counts of the genes found in the tumor sample if RNA mode is used)
+- Normal_GeneCounts_SQL_insert.txt (all the counts of the genes found in the normal sample if RNA mode is used)
 - SQL_Epitopes.txt (all the epitopes for the different isoforms in each variant including the reference and mutated sequences)
+- HLA predictions (Tumor and normal)
 
 **germline_pipeline.py** 
 - nonsyn_SQL_insert.txt (nonsynonymous variants filtered and annotated)
 - all_other_mutations.txt (synonymous variants filtered and annotated)
 - GeneCounts_SQL_insert.txt (all the counts of the genes found if RNA mode is used)
 - SQL_Epitopes.txt (all the epitopes for the different isoforms in each variant including the reference and mutated sequences)
+- HLA predictions
 
 **merge_resuls.py** 
 - overlap_final.txt (all the AND and RNA variants/epitopes collapsed and filtered with useful information)
