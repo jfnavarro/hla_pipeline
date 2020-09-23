@@ -62,8 +62,9 @@ Main output files:
 - HLA predictions
 
 **merge_resuls.py** 
-- overlap_final.txt (all the AND and RNA variants/epitopes collapsed and filtered with useful information)
-- overlap_final_discarded.txt (all the discarded AND and RNA variants/epitopes collapsed with useful information)
+- overlap_final.txt (all the somatic and germline variants collapsed and filtered with useful information)
+- overlap_final_unique_germline.txt (all the unique germline variants collapsed and filtered with useful information)
+- overlap_final_discarded.txt (all the discarded somatic and germline variants collapsed with useful information)
 
 **mhc_predict.py** 
 - predictions_mut.csv (all the mutated peptides predictions)

@@ -94,8 +94,8 @@ def germline_pipeline(sample1,
                       SNPSITES,
                       KNOWN_SITE1,
                       KNOWN_SITE2,
-                      FASTA_AA_DICT,
-                      FASTA_cDNA_DICT,
+                      AA_DICT,
+                      cDNA_DICT,
                       THREADS,
                       ANNOVAR_DB,
                       ANNOVAR_VERSION,
@@ -287,7 +287,7 @@ def germline_pipeline(sample1,
         extract_peptides('nonsyn_SQL_insert.txt', 'Formatted_epitope_variant.txt', sampleID)
 
         # Create epitopes
-        create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
+        create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', AA_DICT, cDNA_DICT)
 
         if mode == 'RNA':
             reformat_gene_counts('gene.counts', 'GeneCounts_SQL_insert.txt', sampleID, tumor_type)
@@ -319,10 +319,10 @@ parser.add_argument('--known2',
                     help='Path to the file with 1000G phase indels (GATK bundle)', required=True)
 parser.add_argument('--snpsites',
                     help='Path to the file with the SNP sites (GATK bundle)', required=True)
-parser.add_argument('--fastaAA',
-                    help='Path to the FASTA file with the protein sequences in the reference genome (of transcripts)', required=True)
-parser.add_argument('--fastacDNA',
-                    help='Path to the FASTA file with the cDNA sequences in the reference genome (of transcripts)', required=True)
+parser.add_argument('--dictAA',
+                    help='Path to a dictionary of transcript IDs to peptide sequences', required=True)
+parser.add_argument('--dictcDNA',
+                    help='Path to a dictionary of transcript IDs to DNA sequences', required=True)
 parser.add_argument('--annovar-db',
                     help='String indicated which Annovar database to use (default: humandb)',
                     default='humandb', required=False)
@@ -352,8 +352,8 @@ THREADS = int(args.threads)
 KNOWN_SITE1 = os.path.abspath(args.known1)
 KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
-FASTA_AA_DICT = os.path.abspath(args.fastaAA)
-FASTA_cDNA_DICT = os.path.abspath(args.fastacDNA)
+AA_DICT = os.path.abspath(args.dictAA)
+cDNA_DICT = os.path.abspath(args.dictcDNA)
 STEPS = args.steps
 ANNOVAR_DB = args.annovar_db
 ANNOVAR_VERSION = args.annovar_version
@@ -376,8 +376,8 @@ germline_pipeline(R1_RNA,
                   SNPSITES,
                   KNOWN_SITE1,
                   KNOWN_SITE2,
-                  FASTA_AA_DICT,
-                  FASTA_cDNA_DICT,
+                  AA_DICT,
+                  cDNA_DICT,
                   THREADS,
                   ANNOVAR_DB,
                   ANNOVAR_VERSION,

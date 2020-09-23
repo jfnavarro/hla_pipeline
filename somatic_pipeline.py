@@ -94,8 +94,8 @@ def somatic_pipeline(R1_NORMAL,
                      annotation,
                      sampleID,
                      THREADS,
-                     FASTA_AA_DICT,
-                     FASTA_cDNA_DICT,
+                     AA_DICT,
+                     cDNA_DICT,
                      KNOWN_SITE1,
                      KNOWN_SITE2,
                      SNPSITES,
@@ -584,7 +584,7 @@ def somatic_pipeline(R1_NORMAL,
         extract_peptides('nonsyn_SQL_insert.txt', 'Formatted_epitope_variant.txt', sampleID)
 
         # Create epitopes
-        create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', FASTA_AA_DICT, FASTA_cDNA_DICT)
+        create_epitopes('Formatted_epitope_variant.txt', 'SQL_Epitopes.txt', AA_DICT, cDNA_DICT)
 
         if mode in ['RNA', 'DNA-RNA']:
             reformat_gene_counts('tumor-gene.counts', 'Tumor_GeneCounts_SQL_insert.txt', sampleID, tumor_type)
@@ -624,10 +624,10 @@ parser.add_argument('--germline',
                     help='Path to the file with the germline resources Nomad for Mutect2 (GATK bundle)', required=True)
 parser.add_argument('--pon',
                     help='Path to the file with the panel of normals for Mutect2 (GATK bundle)', required=True)
-parser.add_argument('--fastaAA',
-                    help='Path to the FASTA file with the protein sequences in the reference genome (of transcripts)', required=True)
-parser.add_argument('--fastacDNA',
-                    help='Path to the FASTA file with the cDNA sequences in the reference genome (of transcripts)', required=True)
+parser.add_argument('--dictAA',
+                    help='Path to a dictionary of transcript IDs to peptide sequences', required=True)
+parser.add_argument('--dictcDNA',
+                    help='Path to a dictionary of transcript IDs to DNA sequences', required=True)
 parser.add_argument('--annovar-db',
                     help='String indicated which Annovar database to use (default: humandb)',
                     default='humandb', required=False)
@@ -656,8 +656,8 @@ GENOME_REF = os.path.abspath(args.genome)
 GENOME_REF_STAR = os.path.abspath(args.genome_star) if args.genome_star else None
 GENOME_ANNOTATION = os.path.abspath(args.genome_ref) if args.genome_ref else None
 THREADS = int(args.threads)
-FASTA_AA_DICT = os.path.abspath(args.fastaAA)
-FASTA_cDNA_DICT = os.path.abspath(args.fastacDNA)
+AA_DICT = os.path.abspath(args.dictAA)
+cDNA_DICT = os.path.abspath(args.dictcDNA)
 KNOWN_SITE1 = os.path.abspath(args.known1)
 KNOWN_SITE2 = os.path.abspath(args.known2)
 SNPSITES = os.path.abspath(args.snpsites)
@@ -685,8 +685,8 @@ somatic_pipeline(R1_NORMAL,
                  GENOME_ANNOTATION,
                  sampleID,
                  THREADS,
-                 FASTA_AA_DICT,
-                 FASTA_cDNA_DICT,
+                 AA_DICT,
+                 cDNA_DICT,
                  KNOWN_SITE1,
                  KNOWN_SITE2,
                  SNPSITES,

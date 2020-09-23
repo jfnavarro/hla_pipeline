@@ -71,19 +71,21 @@ def extract_peptides(input, output, sampleID):
     epitope_file.close()
     snv.close()
 
-def create_epitopes(input, output, FASTA_AA_DICT, FASTA_cDNA_DICT):
+def create_epitopes(input, output, AA_DICT, cDNA_DICT):
     # Create list of AA and cDNA sequences
     print('Creating epitopes')
     AA_seq = dict()
-    with open(FASTA_AA_DICT, "rU") as handle:
-        for record in SeqIO.parse(handle, "fasta"):
-            AA_seq[record.id.split("|")[1]] = str(record.seq)
+    with open(AA_DICT, "r") as handle:
+        for line in handle.readlines():
+            tokens = line.split(":")
+            AA_seq[tokens[0]] = tokens[1].strip()
     cDNA_seq = dict()
-    with open(FASTA_cDNA_DICT, "rU") as handle:
-        for record in SeqIO.parse(handle, "fasta"):
-            cDNA_seq[record.id.split("|")[0]] = str(record.seq)
-    epitope_file = open('SQL_Epitopes.txt', 'w')
-    input_file = open('Formatted_epitope_variant.txt')
+    with open(cDNA_DICT, "r") as handle:
+        for line in handle.readlines():
+            tokens = line.split(":")
+            cDNA_seq[tokens[0]] = tokens[1].strip()
+    epitope_file = open(output, 'w')
+    input_file = open(input, 'r')
     header = 'SAMPLE_ID\tVARIANT-KEY\tCHR\tSTART\tSTOP\tREF\tALT\tfunc_ref_gene\texonic_func_ref\tGene\t' \
              'Transcript_ID\tExon_Numb\tNT_CHANGE\tAA_CHANGE\tPOSITION\tERRORS\tWT25MER\tMUT25MER\n'
     epitope_file.write(header)

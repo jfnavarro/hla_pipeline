@@ -70,40 +70,40 @@ def add_flags(transcript, variant_key, transcript_info, mer_len=25):
     return flags if flags != '' else '-'
 
 # TODO the whole approach would be easier by creating a Variant class
-# with 2 lists of epitopes (DNA and RNA) and a dict of Gene counts
-def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
+# with 2 lists of epitopes (somatic and germline) and a dict of Gene counts
+def overlap_analysis(somatic, epitopes, germline, rna_counts):
 
-    if not dna_variants and not rna_variants:
-        sys.stderr.write("Error, no variants given as input (DNA or RNA).\n")
+    if not somatic and not germline:
+        sys.stderr.write("Error, no variants given as input (somatic or germline).\n")
         sys.exit(1)
         
     variant_dict = {}
 
-    print('Loading DNA variants..')
-    for file in dna_variants if dna_variants else []:
-        DNA_nonsyn = open(file)
-        DNA_nonsyn_lines = DNA_nonsyn.readlines()
-        header_DNA = DNA_nonsyn_lines.pop(0).strip().split('\t')
-        for line in DNA_nonsyn_lines:
+    print('Loading somatic variants..')
+    for file in somatic if somatic else []:
+        somatic_nonsyn = open(file)
+        somatic_nonsyn_lines = somatic_nonsyn.readlines()
+        header_somatic = somatic_nonsyn_lines.pop(0).strip().split('\t')
+        for line in somatic_nonsyn_lines:
             columns = line.strip().split('\t')
-            variant_key = columns[header_DNA.index('VARIANT-KEY')]
-            sample = columns[header_DNA.index('SAMPLE_ID')]
+            variant_key = columns[header_somatic.index('VARIANT-KEY')]
+            sample = columns[header_somatic.index('SAMPLE_ID')]
             if variant_key not in variant_dict:
                 variant_dict[variant_key] = {}
-                variant_dict[variant_key]['DNA'] = {}
-            if sample not in variant_dict[variant_key]['DNA']:
-                variant_dict[variant_key]['DNA'][sample] = {}
+                variant_dict[variant_key]['somatic'] = {}
+            if sample not in variant_dict[variant_key]['somatic']:
+                variant_dict[variant_key]['somatic'][sample] = {}
             # Compute coverage and pass/fail
-            N_cov = int(columns[header_DNA.index('NCOV')])
-            T_cov = int(columns[header_DNA.index('TCOV')])
-            T_freq = float(columns[header_DNA.index('TVAF')].replace('%', ''))
-            N_freq = float(columns[header_DNA.index('NVAF')].replace('%', ''))
-            T_reads = int(columns[header_DNA.index('TUMOR_READ2')])
-            P_val = columns[header_DNA.index('PVAL')]
-            callers = columns[header_DNA.index('CALLERS')]
-            ref_gene_mut = columns[header_DNA.index('ExonicFunc.refGene')]
-            UCSC_gene_mut = columns[header_DNA.index('ExonicFunc.knownGene')]
-            ENS_gene_mut = columns[header_DNA.index('ExonicFunc.ensGene')]
+            N_cov = int(columns[header_somatic.index('NCOV')])
+            T_cov = int(columns[header_somatic.index('TCOV')])
+            T_freq = float(columns[header_somatic.index('TVAF')].replace('%', ''))
+            N_freq = float(columns[header_somatic.index('NVAF')].replace('%', ''))
+            T_reads = int(columns[header_somatic.index('TUMOR_READ2')])
+            P_val = columns[header_somatic.index('PVAL')]
+            callers = columns[header_somatic.index('CALLERS')]
+            ref_gene_mut = columns[header_somatic.index('ExonicFunc.refGene')]
+            UCSC_gene_mut = columns[header_somatic.index('ExonicFunc.knownGene')]
+            ENS_gene_mut = columns[header_somatic.index('ExonicFunc.ensGene')]
             try:
                 no_callers = int(callers.strip().split(':')[0])
             except ValueError:
@@ -115,44 +115,44 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             status = (has_frame and (no_callers >= 1 and (has_cov1 or has_cov2))) \
                      or (no_callers >= 2 and (has_cov1 or has_cov2))
             # Store data, coverage and status
-            variant_dict[variant_key]['DNA'][sample]['data'] = columns
-            variant_dict[variant_key]['DNA'][sample]['status'] = status
-            variant_dict[variant_key]['DNA'][sample]['coverage'] = cov
-        DNA_nonsyn.close()
+            variant_dict[variant_key]['somatic'][sample]['data'] = columns
+            variant_dict[variant_key]['somatic'][sample]['status'] = status
+            variant_dict[variant_key]['somatic'][sample]['coverage'] = cov
+        somatic_nonsyn.close()
         
-    print('Loading RNA variants..')
-    for file in rna_variants if rna_variants else []:
-        RNA_nonsyn = open(file)
-        RNA_nonsyn_lines = RNA_nonsyn.readlines()
-        header_rna = RNA_nonsyn_lines.pop(0).strip().split('\t')
-        for line in RNA_nonsyn_lines:
+    print('Loading germline variants..')
+    for file in germline if germline else []:
+        germline_nonsyn = open(file)
+        germline_nonsyn_lines = germline_nonsyn.readlines()
+        header_germline = germline_nonsyn_lines.pop(0).strip().split('\t')
+        for line in germline_nonsyn_lines:
             columns = line.strip().split('\t')
-            variant_key = columns[header_rna.index('VARIANT-KEY')]
-            sample = columns[header_rna.index('SAMPLE_ID')]
+            variant_key = columns[header_germline.index('VARIANT-KEY')]
+            sample = columns[header_germline.index('SAMPLE_ID')]
             if variant_key not in variant_dict:
                 variant_dict[variant_key] = {}
-            if 'RNA' not in variant_dict[variant_key]:
-                variant_dict[variant_key]['RNA'] = {}
-            if sample not in variant_dict[variant_key]['RNA']:
-                variant_dict[variant_key]['RNA'][sample] = {}
-            P_val = columns[header_rna.index('PVAL')]
-            callers = columns[header_rna.index('CALLERS')]
+            if 'germline' not in variant_dict[variant_key]:
+                variant_dict[variant_key]['germline'] = {}
+            if sample not in variant_dict[variant_key]['germline']:
+                variant_dict[variant_key]['germline'][sample] = {}
+            P_val = columns[header_germline.index('PVAL')]
+            callers = columns[header_germline.index('CALLERS')]
             try:
                 no_callers = int(callers.strip().split(':')[0])
             except ValueError:
                 no_callers = 0
             # Compute coverage and pass/fail
-            r1 = int(columns[header_rna.index('TUMOR_READ1')])
-            r2 = int(columns[header_rna.index('TUMOR_READ2')])
-            rfreq = float(columns[header_rna.index('TVAF')].replace('%', ''))
-            rcov = int(columns[header_rna.index('TCOV')])
+            r1 = int(columns[header_germline.index('TUMOR_READ1')])
+            r2 = int(columns[header_germline.index('TUMOR_READ2')])
+            rfreq = float(columns[header_germline.index('TVAF')].replace('%', ''))
+            rcov = int(columns[header_germline.index('TCOV')])
             cov = '{};{},{},{},{},{},{}'.format(sample, r1, r2, rfreq, rcov, P_val, callers)
             # Storage coverage, data and status
             status = rfreq >= 5 and rcov >= 5 and no_callers >= 2
-            variant_dict[variant_key]['RNA'][sample]['data'] = columns[0:]
-            variant_dict[variant_key]['RNA'][sample]['status'] = status
-            variant_dict[variant_key]['RNA'][sample]['coverage'] = cov
-        RNA_nonsyn.close()
+            variant_dict[variant_key]['germline'][sample]['data'] = columns[0:]
+            variant_dict[variant_key]['germline'][sample]['status'] = status
+            variant_dict[variant_key]['germline'][sample]['coverage'] = cov
+        germline_nonsyn.close()
 
     print('Loading Epitopes..')
     transcript_dict = {}
@@ -192,16 +192,16 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                 transcript_dict[transcript]['position'].append(int(cDNAposition))
                 transcript_dict[transcript]['mutation'].append(function)
                 transcript_dict[transcript]['variant_key'].append(key)
-                status_DNA = False
-                if 'DNA' in variant_dict[key] and sample in variant_dict[key]['DNA']:
-                    status_DNA = variant_dict[key]['DNA'][sample]['status']
-                status_rna = False
-                if 'RNA' in variant_dict[key] and sample in variant_dict[key]['RNA']:
-                    status_rna = variant_dict[key]['RNA'][sample]['status']
-                transcript_dict[transcript]['status'].append(status_DNA or status_rna)
+                status_somatic = False
+                if 'somatic' in variant_dict[key] and sample in variant_dict[key]['somatic']:
+                    status_somatic = variant_dict[key]['somatic'][sample]['status']
+                status_germline = False
+                if 'germline' in variant_dict[key] and sample in variant_dict[key]['germline']:
+                    status_germline = variant_dict[key]['germline'][sample]['status']
+                transcript_dict[transcript]['status'].append(status_somatic or status_germline)
         epitopes.close()
 
-    print('Loading Gene counts data..')
+    print('Loading Gene counts..')
     counts_dict = {}
     counts_dict_sample = defaultdict(list)
     for file in rna_counts:
@@ -238,53 +238,58 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                                   for sample, x in samples.items()]
 
     print('Creating final files..')
-    header_final = 'Variant key\tDNAs samples (passing)\tNumber of DNA samples (passing)\t' \
-                   'RNA samples (passing)\tNumber of RNA samples (passing)\t'\
-                   'DNA samples (failing)\tNumber of DNA samples (failing)\t'\
-                   'RNA samples (failing)\tNumber of RNA samples (failing)\t'\
+    header_final = 'Variant key\tSomatic samples (passing)\tNumber of Somatic samples (passing)\t' \
+                   'Germline samples (passing)\tNumber of Germline samples (passing)\t'\
+                   'Somatic samples (failing)\tNumber of Somatic samples (failing)\t'\
+                   'Germline samples (failing)\tNumber of Germline samples (failing)\t'\
                    'RefGene name\tRefGene mutation\tRefGene AA change\tUCSC gene name\tUCSC mutation\t'\
                    'UCSC AA change\tEnsembl Gene name\tEnsembl mutation\tEnsembl AA change\t'\
                    '1000genome all freq\tdbSNP_ID\tCosmic Info\tGene Name\ttranscript ID\tMutation type\t'\
                    'Exon\tcDNA change\tAA change\tAA position\tEpitope creation flags\tWt Epitope\t'\
-                   'Mut Epitope\tDNA Coverage info (Sample,Tumor coverage,Normal Coverage,Tumor var freq,'\
+                   'Mut Epitope\tSomatic Coverage info (Sample,Tumor coverage,Normal Coverage,Tumor var freq,'\
                    'Normal var freq,Tumor variant reads,p_value(varscan),callers)\tError flags\t'\
-                   'RNA Coverage info (Sample,read1,read2,variant frequency,coverage,p_value(varscan),callers)\t' \
+                   'Germline Coverage info (Sample,read1,read2,variant frequency,coverage,p_value(varscan),callers)\t' \
                    'GeneCounts info per sample (locus,exp)\tGeneCounts mean(all samples)\tGeneCounts percentile (all samples)\n'
+
     final_file = open('overlap_final.txt', 'w')
     final_file.write(header_final)
+
+    final_file_germline = open('overlap_final_germline_unique.txt')
+    final_file_germline.write(header_final)
+
     final_file_discarded = open('overlap_final_discarded.txt', 'w')
     final_file_discarded.write(header_final)
 
     for key, value in variant_dict.items():
-        rna_cov = ["-;-,-,-,-,-,-,-"]
-        rna_samples_pass = ["-"]
-        rna_samples_fail = ["-"]
-        has_rna = False
-        num_rna_pass = 0
-        num_rna_fail = 0
-        if 'RNA' in value:
-            rna_cov = '|'.join(x['coverage'] for x in value['RNA'].values())
-            rna_samples_pass = [key for key, value in value['RNA'].items() if value['status']]
-            rna_samples_fail = [key for key, value in value['RNA'].items() if not value['status']]
-            num_rna_pass = len(rna_samples_pass)
-            num_rna_fail = len(rna_samples_fail)
-            has_rna = True
+        germline_cov = ["-;-,-,-,-,-,-,-"]
+        germline_samples_pass = ["-"]
+        germline_samples_fail = ["-"]
+        has_germline = False
+        num_germline_pass = 0
+        num_germline_fail = 0
+        if 'germline' in value:
+            germline_cov = '|'.join(x['coverage'] for x in value['germline'].values())
+            germline_samples_pass = [key for key, value in value['germline'].items() if value['status']]
+            germline_samples_fail = [key for key, value in value['germline'].items() if not value['status']]
+            num_germline_pass = len(germline_samples_pass)
+            num_germline_fail = len(germline_samples_fail)
+            has_germline = True
             
-        DNA_cov = ["-;-,-,-,-,-,-,-"]
-        DNA_samples_pass = ["-"]
-        DNA_samples_fail = ["-"]
-        has_DNA = False
-        num_dna_pass = 0
-        num_dna_fail = 0
-        if 'DNA' in value:
-            DNA_cov = '|'.join(x['coverage'] for x in value['DNA'].values())
-            DNA_samples_pass = [key for key, value in value['DNA'].items() if value['status']]
-            DNA_samples_fail = [key for key, value in value['DNA'].items() if not value['status']]
-            num_dna_pass = len(DNA_samples_pass)
-            num_dna_fail = len(DNA_samples_fail)
-            has_DNA = True
+        somatic_cov = ["-;-,-,-,-,-,-,-"]
+        somatic_samples_pass = ["-"]
+        somatic_samples_fail = ["-"]
+        has_somatic = False
+        num_somatic_pass = 0
+        num_somatic_fail = 0
+        if 'somatic' in value:
+            somatic_cov = '|'.join(x['coverage'] for x in value['somatic'].values())
+            somatic_samples_pass = [key for key, value in value['somatic'].items() if value['status']]
+            somatic_samples_fail = [key for key, value in value['somatic'].items() if not value['status']]
+            num_somatic_pass = len(somatic_samples_pass)
+            num_somatic_fail = len(somatic_samples_fail)
+            has_somatic = True
             
-        if not has_DNA and not has_rna:
+        if not has_somatic and not has_germline:
             print("Variant {} is only present in the epitopes file!".format(key))
             continue
             
@@ -293,16 +298,16 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
             for mer in value['Epitopes'].values():
                 for transcript in sorted(mer.values(), reverse=True):
                     sampleID = transcript[header_epitopes.index('SAMPLE_ID')]
-                    # TODO very ugly hack to distinguish RNA and DNA epitopes from the same variant (FIX THIS!!!)
-                    if has_DNA and sampleID in value['DNA'] and len(value['DNA'][sampleID]['data']) == 45:
-                        data = value['DNA'][sampleID]['data']
-                        header = header_DNA
-                    elif has_rna and sampleID in value['RNA'] and len(value['RNA'][sampleID]['data']) == 33:
-                        data = value['RNA'][sampleID]['data']
-                        header = header_rna
+                    # TODO very ugly hack to distinguish somatic and germline epitopes from the same variant (FIX THIS!!!)
+                    if has_somatic and sampleID in value['somatic'] and len(value['somatic'][sampleID]['data']) == 45:
+                        data = value['somatic'][sampleID]['data']
+                        header = header_somatic
+                    elif has_germline and sampleID in value['germline'] and len(value['germline'][sampleID]['data']) == 33:
+                        data = value['germline'][sampleID]['data']
+                        header = header_germline
                     else:
                         # this should never happen
-                        print("Epitope {} was not found in neither DNA or RNA variants".format(key))
+                        print("Epitope {} was not found in neither somatic or germline variants".format(key))
                         continue
                     # NOTE older versions of the pipeline may produce records with missing values
                     if len(transcript) != len(header_epitopes):
@@ -345,41 +350,44 @@ def overlap_analysis(dna_variants, epitopes, rna_variants, rna_counts):
                         percentile = 'NA'
                     flags = add_flags(transcript_name, key, transcript_dict, mer_len=25)
                     to_write = '\t'.join(str(x) for x in [key,
-                                                          ','.join(DNA_samples_pass), num_dna_pass,
-                                                          ','.join(rna_samples_pass), num_rna_pass,
-                                                          ','.join(DNA_samples_fail), num_dna_fail,
-                                                          ','.join(rna_samples_fail), num_rna_fail,
+                                                          ','.join(somatic_samples_pass), num_somatic_pass,
+                                                          ','.join(germline_samples_pass), num_germline_pass,
+                                                          ','.join(somatic_samples_fail), num_somatic_fail,
+                                                          ','.join(germline_samples_fail), num_germline_fail,
                                                           ref_gene_name, ref_gene_mut, ref_gene_change,
                                                           UCSC_gene_name, UCSC_gene_mut, UCSC_gene_change,
                                                           ENS_gene_name, ENS_gene_mut, ENS_gene_change, genome_all,
                                                           dbSNP_ID, cosmic, gene_name, transcript_name, mutation_type,
                                                           exon, cdna_change, aa_change, aa_position, error_flags, wt_mer,
-                                                          mu_mer, DNA_cov, flags, rna_cov, counts_info, counts_mean, percentile])
-                    if num_dna_pass >= 1 or num_rna_pass >= 1:
+                                                          mu_mer, somatic_cov, flags, germline_cov, counts_info, counts_mean, percentile])
+                    if num_somatic_pass >= 1:
                         final_file.write(to_write + '\n')
+                    elif num_germline_pass >= 1:
+                        final_file_germline.write(to_write + '\n')
                     else:
                         final_file_discarded.write(to_write + '\n')
 
     final_file.close()
+    final_file_rna.close()
     final_file_discarded.close()
 
 parser = argparse.ArgumentParser(description='Script that merges variants and epitopes to create a final report using the\n'\
-                                             'results of the DNA and/or RNA pipelines\n'
+                                             'results of the somatic and/or germline pipelines\n'
                                              'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
                                  prog='merge_results.py',
                                  usage='merge_results.py [options]\n'
-                                       '--dna [dna variants results files]\n'
+                                       '--somatic [somatic variants results files]\n'
                                        '--epitope [epitopes results files]\n'
-                                       '--rna [rna variants results files]\n'
+                                       '--germine [germine variants results files]\n'
                                        '--counts [rna gene counts results]')
-parser.add_argument('--dna', nargs='+', default=None, required=False,
-                    help='List of files with the variants of the DNA pipeline')
+parser.add_argument('--somatic', nargs='+', default=None, required=False,
+                    help='List of files with the variants obtained with the somatic pipeline')
 parser.add_argument('--epitope', nargs='+', default=None, required=True,
-                    help='List of files with the the epitotes (DNA and RNA)')
-parser.add_argument('--rna', nargs='+', default=None, required=False,
-                    help='List of files with the variants of the RNA pipeline')
+                    help='List of files with the the epitotes (somatic and/or germline)')
+parser.add_argument('--germine', nargs='+', default=None, required=False,
+                    help='List of files with the variants obtained with the germline pipeline')
 parser.add_argument('--counts', nargs='+', default=None, required=True,
-                    help='List of files with the gene counts results of the RNA pipeline')
+                    help='List of files with the gene counts results of the samples')
 
 args = parser.parse_args()
-overlap_analysis(args.dna, args.epitope, args.rna, args.counts)
+overlap_analysis(args.somatic, args.epitope, args.rna, args.germine)

@@ -17,8 +17,8 @@ somatic_pipeline.py \
   --snpsites ~/shared/GRCh38/Homo_sapiens_assembly38.dbsnp138.vcf \
   --germline ~/shared/GRCh38/af-only-gnomad.hg38.vcf.gz \
   --pon ~/shared/GRCh38/1000g_pon.hg38.vcf.gz \
-  --fastacDNA ~/shared/GRCh38/gencode.v34.transcripts.fa \
-  --fastaAA ~/shared/GRCh38/gencode.v34.pc_translations.fa \
+  --dictcDNA ~/shared/GRCh38/hg38_cDNA_DICT.dict \
+  --dictAA ~/shared/GRCh38/hg38_AA_DICT.dict \
   --threads 20 \
   --annovar-db humandb \
   --annovar-version hg38 \
@@ -36,8 +36,8 @@ germline_pipeline.py \
   --known1 ~/shared/GRCh38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
   --known2 ~/shared/GRCh38/1000G_phase1.snps.high_confidence.hg38.vcf.gz \
   --snpsites ~/shared/GRCh38/Homo_sapiens_assembly38.dbsnp138.vcf \
-  --fastacDNA ~/shared/GRCh38/gencode.v34.transcripts.fa \
-  --fastaAA ~/shared/GRCh38/gencode.v34.pc_translations.fa \
+  --dictcDNA ~/shared/GRCh38/hg38_cDNA_DICT.dict \
+  --dictAA ~/shared/GRCh38/hg38_AA_DICT.dict \
   --threads 20 \
   --annovar-db humandb \
   --annovar-version hg38 \
@@ -45,10 +45,10 @@ germline_pipeline.py \
   RNAR1.fastq.gz RNAR2.fastq.gz
   
 merge_results.py \
-  --dna out/exome/nonsyn_SQL_insert.txt \
-  --epitope out/exome/SQL_epitotes.txt out/rna/SQL_epitotes.txt \
-  --rna out/rna/nonsyn_SQL_insert.txt \
-  --counts out/rna/GeneCounts_SQL_insert.txt
+  --somatic out/somatic/nonsyn_SQL_insert.txt \
+  --epitope out/somatic/SQL_epitotes.txt out/germline/SQL_epitotes.txt \
+  --germline out/germline/nonsyn_SQL_insert.txt \
+  --counts out/germline/GeneCounts_SQL_insert.txt
 
 mhc_predict.py \
   --hla-dna out/exome/PRG-HLA-LA_Tumor_output.txt \
