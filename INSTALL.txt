@@ -26,12 +26,12 @@ cd arcasHLA/
 
 cd ~/shared
 wget http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz
-mkdir -p HLA-PA/graphs
+mkdir -p HLA-LA/graphs
 tar -xvf PRG_MHC_GRCh38_withIMGT.tar.gz
-mv PRG_MHC_GRCh38_withIMGT HLA-LA/graphs
+mv PRG_MHC_GRCh38_withIMGT HLA-LA/graphs/
 ~/anaconda3/envs/hla/opt/hla-la/bin/HLA-LA --action prepareGraph --PRG_graph_dir HLA-LA/graphs/PRG_MHC_GRCh38_withIMGT
 mkdir ~/anaconda3/envs/hla/opt/hla-la/graphs
-mv ~/shared/HLA-LA/graphs/PRG_MHC_GRCh38_withIMGT ~/anaconda3/hla/jared/opt/hla-la/graphs/
+mv ~/shared/HLA-LA/graphs/PRG_MHC_GRCh38_withIMGT ~/anaconda3/envs/hla/opt/hla-la/graphs/
 
 cd ~/shared
 wget https://github.com/Illumina/strelka/releases/download/v2.9.10/strelka-2.9.10.centos6_x86_64.tar.bz2

@@ -44,7 +44,15 @@ See INSTALL.txt for installation instructions.
 
 See RUN.txt for running instructions.
 
-Main output files:
+## cDNA and Peptides dictionaries
+Both pipelines requires two dictionaries, one mapping transcript ids to DNA sequences and another
+one mapping transcript ids to peptide sequences. The format is the following for both files:
+
+TRANSCRIPT_ID:SEQUENCE 
+
+To build these dictionaries you can use as reference the Jupyter Notebooks located in dictionaries
+
+## Output
 
 **somatic_pipeline.py** 
 - nonsyn_SQL_insert.txt (nonsynonymous variants filtered and annotated)
@@ -70,6 +78,7 @@ Main output files:
 - predictions_mut.csv (all the mutated peptides predictions)
 - predictions_wt.csv (all the WT peptides predictions)
 
+## Contact
 Contact: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 
 

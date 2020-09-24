@@ -204,7 +204,7 @@ def overlap_analysis(somatic, epitopes, germline, rna_counts):
     print('Loading Gene counts..')
     counts_dict = {}
     counts_dict_sample = defaultdict(list)
-    for file in rna_counts:
+    for file in rna_counts if rna_counts else []:
         counts_file = open(file)
         counts_file_lines = counts_file.readlines()
         header_counts = counts_file_lines.pop(0).strip().split('\t')
@@ -368,7 +368,7 @@ def overlap_analysis(somatic, epitopes, germline, rna_counts):
                         final_file_discarded.write(to_write + '\n')
 
     final_file.close()
-    final_file_rna.close()
+    final_file_germline.close()
     final_file_discarded.close()
 
 parser = argparse.ArgumentParser(description='Script that merges variants and epitopes to create a final report using the\n'\
@@ -386,8 +386,8 @@ parser.add_argument('--epitope', nargs='+', default=None, required=True,
                     help='List of files with the the epitotes (somatic and/or germline)')
 parser.add_argument('--germine', nargs='+', default=None, required=False,
                     help='List of files with the variants obtained with the germline pipeline')
-parser.add_argument('--counts', nargs='+', default=None, required=True,
-                    help='List of files with the gene counts results of the samples')
+parser.add_argument('--counts', nargs='+', default=None, required=False,
+                    help='List of files with the gene counts results of the samples (if any)')
 
 args = parser.parse_args()
 overlap_analysis(args.somatic, args.epitope, args.rna, args.germine)
