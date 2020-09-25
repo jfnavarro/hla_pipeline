@@ -201,7 +201,7 @@ def create_epitopes(input, output, AA_DICT, cDNA_DICT):
                 errors += ' unknown exonic function'
             # NOTE just to make sure that they are not empty
             WT_25mer = "-" if not WT_25mer else WT_25mer
-            mut_FASTA = "-" if not mut_FASTA else mut_FASTA
+            Mut_25mer = "-" if not Mut_25mer else Mut_25mer
             epitope_file.write('{}\t{}\t{}\t{}\t{}\n'.format('\t'.join(columns[0:]),
                                                              position,
                                                              errors,
