@@ -260,6 +260,9 @@ def overlap_analysis(somatic, epitopes, germline, rna_counts):
     final_file_discarded = open('overlap_final_discarded.txt', 'w')
     final_file_discarded.write(header_final)
 
+    final_file_discarded_germline = open('overlap_final_discarded_germline.txt', 'w')
+    final_file_discarded_germline.write(header_final)
+
     for key, value in variant_dict.items():
         germline_cov = ["-;-,-,-,-,-,-,-"]
         germline_samples_pass = ["-"]
@@ -298,10 +301,12 @@ def overlap_analysis(somatic, epitopes, germline, rna_counts):
             for mer in value['Epitopes'].values():
                 for transcript in sorted(mer.values(), reverse=True):
                     sampleID = transcript[header_epitopes.index('SAMPLE_ID')]
+                    is_somatic = False
                     # TODO very ugly hack to distinguish somatic and germline epitopes from the same variant (FIX THIS!!!)
                     if has_somatic and sampleID in value['somatic'] and len(value['somatic'][sampleID]['data']) == 45:
                         data = value['somatic'][sampleID]['data']
                         header = header_somatic
+                        is_somatic = True
                     elif has_germline and sampleID in value['germline'] and len(value['germline'][sampleID]['data']) == 33:
                         data = value['germline'][sampleID]['data']
                         header = header_germline
@@ -364,8 +369,10 @@ def overlap_analysis(somatic, epitopes, germline, rna_counts):
                         final_file.write(to_write + '\n')
                     elif num_germline_pass >= 1:
                         final_file_germline.write(to_write + '\n')
-                    else:
+                    elif is_somatic:
                         final_file_discarded.write(to_write + '\n')
+                    else:
+                        final_file_discarded_germline.write(to_write + '\n')
 
     final_file.close()
     final_file_germline.close()
