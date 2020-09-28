@@ -384,10 +384,10 @@ parser.add_argument('--somatic', nargs='+', default=None, required=False,
                     help='List of files with the variants obtained with the somatic pipeline')
 parser.add_argument('--epitope', nargs='+', default=None, required=True,
                     help='List of files with the the epitotes (somatic and/or germline)')
-parser.add_argument('--germine', nargs='+', default=None, required=False,
+parser.add_argument('--germline', nargs='+', default=None, required=False,
                     help='List of files with the variants obtained with the germline pipeline')
 parser.add_argument('--counts', nargs='+', default=None, required=False,
                     help='List of files with the gene counts results of the samples (if any)')
 
 args = parser.parse_args()
-overlap_analysis(args.somatic, args.epitope, args.rna, args.germine)
+overlap_analysis(args.somatic, args.epitope, args.germline, args.counts)
