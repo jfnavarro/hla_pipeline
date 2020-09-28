@@ -254,7 +254,7 @@ def overlap_analysis(somatic, epitopes, germline, rna_counts):
     final_file = open('overlap_final.txt', 'w')
     final_file.write(header_final)
 
-    final_file_germline = open('overlap_final_germline_unique.txt')
+    final_file_germline = open('overlap_final_germline_unique.txt', 'w')
     final_file_germline.write(header_final)
 
     final_file_discarded = open('overlap_final_discarded.txt', 'w')
