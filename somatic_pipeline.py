@@ -245,8 +245,8 @@ def somatic_pipeline(R1_NORMAL,
         # Variant calling VarScan
         print('Performing variant calling with VarScan2')
         # TODO improve the filters, enable perhaps the p-value filter
-        cmd = '{} somatic sample2.pileup sample1.pileup --tumor-purity 0.5 --output-vcf 1 ' \
-              '--min-coverage 4 --min-var-freq 0.05 --strand-filter 0'.format(VARSCAN)
+        cmd = '{} somatic sample2.pileup sample1.pileup --tumor-purity .5 --output-vcf 1 ' \
+              '--min-coverage 4 --min-var-freq .05 --min-reads 2 --strand-filter 1'.format(VARSCAN)
         exec_command(cmd)
 
         if mode in ['RNA', 'DNA-RNA']:
