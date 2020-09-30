@@ -166,30 +166,31 @@ def strelka2_filter_indels(input, output):
             Format = columns[8]
             Normal = columns[Nst]
             Tumor = columns[Tst]
-            n_split = columns[Nst].split(':')
-            t_split = columns[Tst].split(':')
-            normal_variant_depth = int(n_split[3].split(',')[1])
-            tumor_variant_depth = int(t_split[3].split(',')[1])
-            n_cov = int(n_split[0])
-            t_cov = int(t_split[0])
-            T_freq = float((tumor_variant_depth / t_cov) * 100)
-            if normal_variant_depth != 0:
-                N_freq = float(normal_variant_depth / n_cov)
-                t2n_ratio = T_freq / N_freq
-            else:
-                t2n_ratio = 5
-            if n_cov >= 10 and t_cov >= 10 and tumor_variant_depth >= 3 and T_freq >= 5 and t2n_ratio >= 5:
-                Format = 'GT:' + Format
-                INFO_split = INFO.split(';')
-                SGT_index = index_column_substring(INFO_split, 'SGT')
-                SGT = INFO_split[SGT_index].replace('SGT=', '').split('->')
-                Normal_GT = '0/0'
-                if SGT[1] == 'het':
-                    Tumor_GT = '0/1'
+            if 'PASS' in Filter:
+                n_split = columns[Nst].split(':')
+                t_split = columns[Tst].split(':')
+                normal_variant_depth = int(n_split[3].split(',')[1])
+                tumor_variant_depth = int(t_split[3].split(',')[1])
+                n_cov = int(n_split[0])
+                t_cov = int(t_split[0])
+                T_freq = float((tumor_variant_depth / t_cov) * 100)
+                if normal_variant_depth != 0:
+                    N_freq = float(normal_variant_depth / n_cov)
+                    t2n_ratio = T_freq / N_freq
                 else:
-                    Tumor_GT = '1/1'
-                filtered_vcf.write('{}\t{}\t{}:{}\t{}:{}\n'.format('\t'.join(columns[0:8]), Format,
-                                                                   Normal_GT, Normal, Tumor_GT, Tumor))
+                    t2n_ratio = 5
+                if n_cov >= 10 and t_cov >= 10 and tumor_variant_depth >= 3 and T_freq >= 5 and t2n_ratio >= 5:
+                    Format = 'GT:' + Format
+                    INFO_split = INFO.split(';')
+                    SGT_index = index_column_substring(INFO_split, 'SGT')
+                    SGT = INFO_split[SGT_index].replace('SGT=', '').split('->')
+                    Normal_GT = '0/0'
+                    if SGT[1] == 'het':
+                        Tumor_GT = '0/1'
+                    else:
+                        Tumor_GT = '1/1'
+                    filtered_vcf.write('{}\t{}\t{}:{}\t{}:{}\n'.format('\t'.join(columns[0:8]), Format,
+                                                                       Normal_GT, Normal, Tumor_GT, Tumor))
     vcf.close()
     filtered_vcf.close()
 
