@@ -19,7 +19,7 @@ def mutect2_filter(input, output, sample1_ID, sample2_ID):
         elif not line.startswith('#'):
             columns = line.strip().split('\t')
             Filter = columns[6]
-            if re.search('PASS', Filter):
+            if 'PASS' in Filter:
                 # AD variable
                 n_split = columns[Nmut].split(':')[1].split(',')
                 t_split = columns[Tmut].split(':')[1].split(',')
