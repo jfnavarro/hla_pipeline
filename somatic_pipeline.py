@@ -128,7 +128,7 @@ def somatic_pipeline(R1_NORMAL,
         print('Starting alignment')
         if mode in ['DNA', 'DNA-RNA']:
             # Normal (paired)
-            cmd = '{} -t {} {} normal_val_1.fq.gz normal_val_2.fq.gz | ' \
+            cmd = '{} -t {} {} normal_val_1.fq.gz normal_val_2.fq.gz | ' \ 
                   '{} sort --threads {} > aligned_normal_merged.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
             exec_command(cmd)
         else:
@@ -178,6 +178,20 @@ def somatic_pipeline(R1_NORMAL,
         cmd = '{} MarkDuplicatesSpark --input sample2_header.bam --output sample2_dedup.bam'.format(GATK)
         exec_command(cmd)
 
+        if mode in ['RNA', 'DNA-RNA']:
+            cmd = '{} SplitNCigarReads --reference {} --input sample1_dedup.bam --output sample1_split.bam'.format(GATK, genome)
+            exec_command(cmd)
+
+            cmd = 'mv sample1_split.bam sample1_dedup.bam'
+            exec_command(cmd)
+
+        if mode in ['RNA', 'RNA-DNA']:
+            cmd = '{} SplitNCigarReads --reference {} --input sample2_dedup.bam --output sample2_split.bam'.format(GATK, genome)
+            exec_command(cmd)
+
+            cmd = 'mv sample2_split.bam sample2_dedup.bam'
+            exec_command(cmd)
+
         # GATK base re-calibration
         print('Starting re-calibration')
         cmd = '{} BaseRecalibratorSpark --input sample1_dedup.bam --reference {} --known-sites {} --known-sites {}' \
@@ -201,6 +215,12 @@ def somatic_pipeline(R1_NORMAL,
         print('Performing HLA-LA predictions')
         if mode == 'DNA':
             HLA_predictionDNA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
+            HLA_predictionDNA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
+        elif mode == 'DNA-RNA':
+            HLA_predictionDNA('sample2_final.bam', sampleID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
+            HLA_predictionRNA('sample1_final.bam', THREADS)
+        elif mode == 'RNA-DNA':
+            HLA_predictionRNA('sample2_final.bam', THREADS)
             HLA_predictionDNA('sample1_final.bam', sampleID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
         else:
             HLA_predictionRNA('sample2_final.bam', THREADS)

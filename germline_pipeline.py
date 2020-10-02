@@ -146,20 +146,20 @@ def germline_pipeline(sample1,
             cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK, genome)
             exec_command(cmd)
 
+            cmd = 'mv sample_split.bam sample_dedup.bam'
+            exec_command(cmd)
+
         # GATK base re-calibration
         print('Starting re-calibration')
-        cmd = '{} BaseRecalibratorSpark --use-original-qualities --input {} --reference {} --known-sites {} ' \
+        cmd = '{} BaseRecalibratorSpark --use-original-qualities --input sample_dedup.bam --reference {} --known-sites {} ' \
               '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK,
-                                                                                        'sample_split.bam' if mode == 'RNA' else 'sample_dedup.bam',
                                                                                         genome,
                                                                                         SNPSITES,
                                                                                         KNOWN_SITE1,
                                                                                         KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input {} ' \
-              '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK,
-                                                                                         genome,
-                                                                                         'sample_split.bam' if mode == 'RNA' else 'sample_dedup.bam')
+        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input sample_dedup.bam ' \
+              '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK, genome)
         exec_command(cmd)
 
     if 'hla' in steps:
