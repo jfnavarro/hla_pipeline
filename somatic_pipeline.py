@@ -134,7 +134,7 @@ def somatic_pipeline(R1_NORMAL,
         else:
             # Normal (paired)
             cmd = '{} --genomeDir {} --readFilesIn normal_val_1.fq.gz normal_val_2.fq.gz --outSAMorder Paired' \
-                  ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
+                  ' --twopassMode None --outSAMunmapped Within --sjdbGTFfile {}' \
                   ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
                   ' --runThreadN {}'.format(STAR, genome_star, annotation, THREADS)
             exec_command(cmd)
@@ -144,7 +144,7 @@ def somatic_pipeline(R1_NORMAL,
         if mode in ['RNA', 'DNA-RNA']:
             # Cancer (paired)
             cmd = '{} --genomeDir {} --readFilesIn cancer_val_1.fq.gz cancer_val_2.fq.gz --outSAMorder Paired' \
-                  ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
+                  ' --twopassMode None --outSAMunmapped Within --sjdbGTFfile {}' \
                   ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
                   ' --runThreadN {}'.format(STAR, genome_star, annotation, THREADS)
             exec_command(cmd)
