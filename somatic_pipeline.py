@@ -128,7 +128,7 @@ def somatic_pipeline(R1_NORMAL,
         print('Starting alignment')
         if mode in ['DNA', 'DNA-RNA']:
             # Normal (paired)
-            cmd = '{} -t {} {} normal_val_1.fq.gz normal_val_2.fq.gz | ' \ 
+            cmd = '{} -t {} {} normal_val_1.fq.gz normal_val_2.fq.gz | ' \
                   '{} sort --threads {} > aligned_normal_merged.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
             exec_command(cmd)
         else:
