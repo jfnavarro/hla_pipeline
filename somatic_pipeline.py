@@ -181,7 +181,7 @@ def somatic_pipeline(R1_NORMAL,
                                                                                                                    genome)
             exec_command(cmd)
 
-            cmd = 'mv sample1_split.bam sample1_dedup.bam'
+            cmd = 'rm -rf sample1_dedup* && mv sample1_split.bam sample1_dedup.bam && mv sample1_split.bai sample1_dedup.bai'
             exec_command(cmd)
 
         if mode in ['RNA', 'RNA-DNA']:
@@ -189,7 +189,7 @@ def somatic_pipeline(R1_NORMAL,
                                                                                                                    genome)
             exec_command(cmd)
 
-            cmd = 'mv sample2_split.bam sample2_dedup.bam'
+            cmd = 'rm -rf sample2_dedup* && mv sample2_split.bam sample2_dedup.bam && mv sample2_split.bai sample2_dedup.bai'
             exec_command(cmd)
 
         # GATK base re-calibration
