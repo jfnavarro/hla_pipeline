@@ -304,10 +304,7 @@ def somatic_pipeline(R1_NORMAL,
         # Annotate with Annovar
         annovardb = '{} -buildver {}'.format(os.path.join(ANNOVAR_PATH, ANNOVAR_DB), ANNOVAR_VERSION)
         print('Running annovar (SNP)')
-        cmd = '{} -format vcf4old combined_calls.vcf --withzyg --comment --includeinfo -outfile snp.av'.format(
-            os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
-        exec_command(cmd)
-        cmd = '{} snp.av {} -thread {} -out snp.sum -remove -protocol {}'.format(
+        cmd = '{} combined_calls.vcf {} -thread {} -out snp.sum -vcfinput -remove -protocol {}'.format(
             os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, THREADS,  annovar_anno)
         exec_command(cmd)
 
@@ -321,10 +318,7 @@ def somatic_pipeline(R1_NORMAL,
 
         # Annotate with Annovar
         print('Runnin annovar (indels)')
-        cmd = '{} -format vcf4old combined_indel_calls.vcf --withzyg --comment --includeinfo -outfile indel.av'.format(
-            os.path.join(ANNOVAR_PATH, 'convert2annovar.pl'))
-        exec_command(cmd)
-        cmd = '{} indel.av {} -thread {} -out indel.sum -remove -protocol {}'.format(
+        cmd = '{} combined_indel_calls.vcf {} -thread {} -out indel.sum -vcfinput -remove -protocol {}'.format(
             os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, THREADS, annovar_anno)
         exec_command(cmd)
 
@@ -349,9 +343,6 @@ def somatic_pipeline(R1_NORMAL,
                 pos = columns[headers.index('POS')]
                 ref = columns[headers.index('REF')]
                 alt = columns[headers.index('ALT')]
-                # NOTE Annovar will trim INS so we need to increase the position by 1 to not lose the variant :(
-                if len(ref) > len(alt):
-                    pos += 1
                 info = columns[headers.index('INFO')]
                 form = columns[headers.index('FORMAT')].split(':')
                 DictID = chrm + ':' + pos
@@ -514,13 +505,8 @@ def somatic_pipeline(R1_NORMAL,
                 columns = line.split('\t')
                 chrm = columns[headers.index('#CHROM')]
                 pos = columns[headers.index('POS')]
-                ref = columns[headers.index('REF')]
-                alt = columns[headers.index('ALT')]
                 info = columns[headers.index('INFO')]
                 form = columns[headers.index('FORMAT')].split(':')
-                # NOTE Annovar will trim INS so we need to increase the position by 1 to not lose the variant :(
-                if len(ref) > len(alt):
-                    pos += 1
                 DictID = chrm + ':' + pos
                 trfor = 0
                 trrev = 0
