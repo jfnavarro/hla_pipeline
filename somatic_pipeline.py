@@ -44,11 +44,11 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
         ExonicFunc_knownGene = columns[13]
         ExonicFunc_ensGene = columns[18]
         variant_key = Chr + ':' + start + '-' + end + ' ' + ref + '>' + alt
-        if ref_gene_detail != 'NA':
+        if ref_gene_detail != '.':
             columns[9] = ref_gene_detail
-        if known_gene_detail != 'NA':
+        if known_gene_detail != '.':
             columns[14] = known_gene_detail
-        if ens_gene_detail != 'NA':
+        if ens_gene_detail != '.':
             columns[19] = ens_gene_detail
         try:
             p_val = vcf_cov_dict[ID]['pval']
@@ -317,7 +317,7 @@ def somatic_pipeline(R1_NORMAL,
         exec_command(cmd)
 
         # Annotate with Annovar
-        print('Runnin annovar (indels)')
+        print('Running annovar (indels)')
         cmd = '{} combined_indel_calls.vcf {} -thread {} -out indel.sum -vcfinput -remove -protocol {}'.format(
             os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, THREADS, annovar_anno)
         exec_command(cmd)

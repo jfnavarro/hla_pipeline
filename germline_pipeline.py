@@ -54,11 +54,11 @@ def final_variants(input, output, output_other, vcf_cov_dict, sampleID, tumor_ty
         cosmic = columns[header.index('cosmic70')]
         ID = Chr + ':' + start
         variant_key = Chr + ':' + start + '-' + end + ' ' + ref + '>' + alt
-        if ref_gene_detail != 'NA':
+        if ref_gene_detail != '.':
             AA_change_refGene = ref_gene_detail
-        if known_gene_detail != 'NA':
+        if known_gene_detail != '.':
             AA_change_knownGene = known_gene_detail
-        if ens_gene_detail != 'NA':
+        if ens_gene_detail != '.':
             AA_change_ensGene = ens_gene_detail
         try:
             tumor_reads1 = vcf_cov_dict[ID]['read1']
