@@ -239,9 +239,13 @@ def germline_pipeline(sample1,
                 columns = line.split('\t')
                 chrm = columns[headers.index('#CHROM')]
                 pos = columns[headers.index('POS')]
+                ref = columns[headers.index('ALT')]
                 alt = columns[headers.index('ALT')]
                 info = columns[headers.index('INFO')]
                 form = columns[headers.index('FORMAT')].split(':')
+                # HACK to correct a bug in Annovar with deletions (not in their VCF output)
+                if len(ref) > len(alt):
+                    pos += 1
                 ID = chrm + ':' + pos
                 pval = -1
                 freq = 0
