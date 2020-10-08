@@ -242,9 +242,13 @@ def germline_pipeline(sample1,
                 columns = line.split('\t')
                 chrm = columns[headers.index('#CHROM')]
                 pos = columns[headers.index('POS')]
+                ref = columns[headers.index('REF')]
                 alt = columns[headers.index('ALT')]
                 info = columns[headers.index('INFO')]
                 form = columns[headers.index('FORMAT')].split(':')
+                # NOTE Annovar will trim INS so we need to increase the position by 1 to not lose the variant :(
+                if len(ref) > len(alt):
+                    pos += 1
                 ID = chrm + ':' + pos
                 pval = -1
                 freq = 0
