@@ -194,7 +194,7 @@ def create_epitopes(input, output, AA_DICT, cDNA_DICT):
                         errors += ' no ATG start codon for this transcript cDNA'
                     if position == 1:
                         errors += ' mutation occurs in start codon'
-            elif re.search(r'^stop', exonic_func):
+            elif 'stop' in exonic_func:
                 position = ''.join([s for s in protein_strip if s.isdigit()])
                 errors += ' stop mutation'
             else:
