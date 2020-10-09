@@ -345,7 +345,7 @@ def somatic_pipeline(R1_NORMAL,
                 alt = columns[headers.index('ALT')]
                 info = columns[headers.index('INFO')]
                 form = columns[headers.index('FORMAT')].split(':')
-                if len(ref) > len(alt):
+                if len(ref) != len(alt):
                     pos = str(int(pos) + 1)
                 DictID = chrm + ':' + pos
                 trfor = 0
@@ -511,7 +511,7 @@ def somatic_pipeline(R1_NORMAL,
                 alt = columns[headers.index('ALT')]
                 info = columns[headers.index('INFO')]
                 form = columns[headers.index('FORMAT')].split(':')
-                if len(ref) > len(alt):
+                if len(ref) != len(alt):
                     pos = str(int(pos) + 1)
                 DictID = chrm + ':' + pos
                 trfor = 0
