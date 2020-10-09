@@ -244,7 +244,7 @@ def germline_pipeline(sample1,
                 info = columns[headers.index('INFO')]
                 form = columns[headers.index('FORMAT')].split(':')
                 if len(ref) > len(alt):
-                    pos += 1
+                    pos = str(int(pos) + 1)
                 ID = chrm + ':' + pos
                 pval = -1
                 freq = 0
