@@ -239,7 +239,7 @@ def germline_pipeline(sample1,
                 columns = line.split('\t')
                 chrm = columns[headers.index('#CHROM')]
                 pos = columns[headers.index('POS')]
-                ref = columns[headers.index('ALT')]
+                ref = columns[headers.index('REF')]
                 alt = columns[headers.index('ALT')]
                 info = columns[headers.index('INFO')]
                 form = columns[headers.index('FORMAT')].split(':')
