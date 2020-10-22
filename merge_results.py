@@ -168,7 +168,7 @@ def overlap_analysis(somatic, epitopes, germline, rna_counts):
             # Load variant data variant -> mut -> transcript
             if key in variant_dict:
                 transcript = columns[header_epitopes.index('Transcript_ID')]
-                mut_ep = columns[header_epitopes.index('func_ref_gene')]
+                mut_ep = columns[header_epitopes.index('MUT25MER')]
                 function = columns[header_epitopes.index('func_ref_gene')]
                 cDNA = columns[header_epitopes.index('NT_CHANGE')]
                 AA = columns[header_epitopes.index('AA_CHANGE')]
