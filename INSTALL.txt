@@ -10,7 +10,7 @@ conda config --add channels conda-forge
 conda create -n hla python=3.6.1
 conda activate hla
 
-conda install -y pandas hla-la gatk4 bwa samtools picard trimmomatic varscan subread picard trim-galore star somatic-sniper bedtools biopython tensorflow==1.15.0 mhcflurry kallisto bcftools
+conda install -y pandas hla-la gatk4 bwa samtools picard trimmomatic varscan subread picard trim-galore star somatic-sniper bedtools biopython tensorflow==1.15.0 mhcflurry kallisto bcftools vcftools vcfpy
 pip install gsutil
 # You may need to create .boto config with gsutil config and then disable integrity check by setting this line check_hashes = if_fast_else_skip
 
@@ -97,11 +97,6 @@ mkdir -p STARIndex
 STAR --runMode genomeGenerate --runThreadN 20 --genomeDir STARIndex \
   --genomeFastaFiles Homo_sapiens_assembly19.fasta \
   --sjdbGTFfile Homo_sapiens.GRCh37.87.gtf
-
-cd ~/shared
-gsutil cp gs://gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2 .
-tar xjf GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2
-mv GenomeAnalysisTK-3.8-1-0-gf15c1c3ef/GenomeAnalysisTK.jar gatk3.8.jar
 
 mkdir -p ~/Analysis
 cd ~/Analysis

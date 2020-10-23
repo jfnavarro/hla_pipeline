@@ -3,20 +3,10 @@
 """
 import subprocess
 import sys
-from Bio.Seq import translate
 from hlapipeline.tools import *
 import pandas as pd
 import re
 import os
-
-def index_column_substring(your_list, substring):
-    for i, s in enumerate(your_list):
-        if substring in s:
-            return i
-    return -1
-
-def translate_dna(seq):
-    return translate(seq, to_stop=True)
 
 def exec_command(cmd):
     print(cmd)
@@ -69,17 +59,9 @@ def HLA_predictionRNA(sample, threads):
                                                                                                          clean_name)
     exec_command(cmd)
 
-
-def reformat_gene_counts(input, output, sampleID, tumor_type):
-    counts_file = open(input)
-    lines = counts_file.readlines()
-    if lines[0].startswith("#"):
-        lines.pop(0)
-    secondline = lines.pop(0)
-    counts_out = open(output, 'w')
-    header = 'SAMPLE_ID\tTUMOUR\t' + secondline
-    counts_out.write(header)
-    for line in lines:
-        counts_out.write('{}\t{}\t{}'.format(sampleID, tumor_type, line))
-    counts_out.close()
-    counts_file.close()
+def annotate_varinats(input, output, ANNOVAR_DB, ANNOVAR_VERSION, annovar_anno, THREADS):
+    # Annotate with Annovar
+    annovardb = '{} -buildver {}'.format(os.path.join(ANNOVAR_PATH, ANNOVAR_DB), ANNOVAR_VERSION)
+    cmd = '{} {} {} -thread {} -out output -vcfinput -remove -protocol {}'.format(
+        os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, input, THREADS, output, annovar_anno)
+    exec_command(cmd)

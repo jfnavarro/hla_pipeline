@@ -9,7 +9,7 @@ import json
 import argparse
 import sys
 
-def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_filter):
+def main(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_filter):
 
     if not hla_dna and not hla_rna:
         sys.stderr.write("Error, need HLAs as input.\n")
@@ -71,9 +71,8 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, re
                 added_proteins_wt = set()
                 for line in lines:
                     columns = line.strip().split('\t')
-                    has_cosmic = 'ID=' in columns[header.index('Cosmic Info')]
-                    pass_somatic = int(columns[header.index('Number of Somatic samples (passing)')]) > 0 or has_cosmic
-                    pass_germline = int(columns[header.index('Number of Germline samples (passing)')]) > 0 or has_cosmic
+                    pass_somatic = int(columns[header.index('Number of Somatic samples (passing)')]) > 0
+                    pass_germline = int(columns[header.index('Number of Germline samples (passing)')]) > 0
                     if (mode == "both" and pass_somatic and pass_germline) or (mode == "somatic" and pass_somatic)\
                         or (mode == "germline" and pass_germline) or (mode == "either" and (pass_somatic or pass_germline)):
                         protein_name = '{}_{}_{}_{}'.format('_'.join(columns[header.index('Variant key')].split()),
@@ -108,31 +107,32 @@ def compute_MHC(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, re
 
     print('Completed')
 
-parser = argparse.ArgumentParser(description='Script that predicts MHCs (MHCflurry) affinity binding scores\n'
-                                             'using data from HLAs from DNA and/or RNA and variants from the somatic and germline pipelines.\n'
-                                             'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
-                                 prog='mhc_predict.py',
-                                 usage='mhc_predict.py [options] '
-                                       '--hla-dna [file/s with HLA predictions from DNA data]\n'
-                                       '--hla-rna [file/s with HLA predictions from RNA data]\n'
-                                       '--alleles [file with supported alleles in MHCflurry]\n'
-                                       '--variants [file with the final variants generated with merge_results.py]')
-parser.add_argument('--hla-dna', nargs='+', default=None, required=False,
-                    help='A file or files containing predicted HLAs from normal DNA (HLA-LA table format)')
-parser.add_argument('--hla-rna', nargs='+', default=None, required=False,
-                    help='A file or files containing predicted HLAs from RNA (arcasHLA JSON format)')
-parser.add_argument('--variants', default=None, required=True,
-                    help='A file with the final variants generated with merge_results.py (table format)')
-parser.add_argument('--alleles', default=None, required=True,
-                    help='A file containing the allowed alleles in MHCflurry')
-parser.add_argument('--mode', default='either',
-                    help='Mode to use to extract peptides from the variants (both, somatic (default), germline, either)',
-                    choices=['both', 'somatic', 'germline', 'either'])
-parser.add_argument('--results', default='all',
-                    help='Whether to include all results for each peptide or only the best one (default=all)',
-                    choices=['all', 'best'])
-parser.add_argument('--results-filter', default='affinity',
-                    help='What filtering criteria to use when using --results best (default=affinity)',
-                    choices=['presentation_score', 'processing_score', 'affinity', 'affinity_percentile'])
-args = parser.parse_args()
-compute_MHC(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode, args.results, args.results_filter)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Script that predicts MHCs (MHCflurry) affinity binding scores\n'
+                                                 'using data from HLAs from DNA and/or RNA and variants from the somatic and germline pipelines.\n'
+                                                 'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
+                                     prog='mhc_predict.py',
+                                     usage='mhc_predict.py [options] '
+                                           '--hla-dna [file/s with HLA predictions from DNA data]\n'
+                                           '--hla-rna [file/s with HLA predictions from RNA data]\n'
+                                           '--alleles [file with supported alleles in MHCflurry]\n'
+                                           '--variants [file with the final variants generated with merge_results.py]')
+    parser.add_argument('--hla-dna', nargs='+', default=None, required=False,
+                        help='A file or files containing predicted HLAs from normal DNA (HLA-LA table format)')
+    parser.add_argument('--hla-rna', nargs='+', default=None, required=False,
+                        help='A file or files containing predicted HLAs from RNA (arcasHLA JSON format)')
+    parser.add_argument('--variants', default=None, required=True,
+                        help='A file with the final variants generated with merge_results.py (table format)')
+    parser.add_argument('--alleles', default=None, required=True,
+                        help='A file containing the allowed alleles in MHCflurry')
+    parser.add_argument('--mode', default='either',
+                        help='Mode to use to extract peptides from the variants (both, somatic (default), germline, either)',
+                        choices=['both', 'somatic', 'germline', 'either'])
+    parser.add_argument('--results', default='all',
+                        help='Whether to include all results for each peptide or only the best one (default=all)',
+                        choices=['all', 'best'])
+    parser.add_argument('--results-filter', default='affinity',
+                        help='What filtering criteria to use when using --results best (default=affinity)',
+                        choices=['presentation_score', 'processing_score', 'affinity', 'affinity_percentile'])
+    args = parser.parse_args()
+    main(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode, args.results, args.results_filter)
