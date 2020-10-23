@@ -452,6 +452,7 @@ def main(somatic, somatic_names, germline, germline_names, rna_counts, cDNA_DICT
             variants.append(name)
             variant_dict[variants[0]]['somatic'].append(variants)
         
+<<<<<<< HEAD
     if len(germline) > 0 and len(germline) == len(germline_names):
         print('Loading germline variants..')
         for file, name in zip(germline, germline_names):
@@ -471,6 +472,137 @@ def main(somatic, somatic_names, germline, germline_names, rna_counts, cDNA_DICT
     if os.path.isfile(rna_counts):
         print('Loading Gene counts..')
         counts_file = open(rna_counts)
+=======
+    variant_dict = {}
+
+    print('Loading somatic variants..')
+    for file in somatic if somatic else []:
+        somatic_nonsyn = open(file)
+        somatic_nonsyn_lines = somatic_nonsyn.readlines()
+        header_somatic = somatic_nonsyn_lines.pop(0).strip().split('\t')
+        for line in somatic_nonsyn_lines:
+            columns = line.strip().split('\t')
+            variant_key = columns[header_somatic.index('VARIANT-KEY')]
+            sample = columns[header_somatic.index('SAMPLE_ID')]
+            if variant_key not in variant_dict:
+                variant_dict[variant_key] = {}
+                variant_dict[variant_key]['somatic'] = {}
+            if sample not in variant_dict[variant_key]['somatic']:
+                variant_dict[variant_key]['somatic'][sample] = {}
+            # Compute coverage and pass/fail
+            N_cov = int(columns[header_somatic.index('NCOV')])
+            T_cov = int(columns[header_somatic.index('TCOV')])
+            T_freq = float(columns[header_somatic.index('TVAF')].replace('%', ''))
+            N_freq = float(columns[header_somatic.index('NVAF')].replace('%', ''))
+            T_reads = int(columns[header_somatic.index('TUMOR_READ2')])
+            P_val = columns[header_somatic.index('PVAL')]
+            callers = columns[header_somatic.index('CALLERS')]
+            ref_gene_mut = columns[header_somatic.index('ExonicFunc.refGene')]
+            UCSC_gene_mut = columns[header_somatic.index('ExonicFunc.knownGene')]
+            ENS_gene_mut = columns[header_somatic.index('ExonicFunc.ensGene')]
+            try:
+                no_callers = int(callers.strip().split(':')[0])
+            except ValueError:
+                no_callers = 0
+            cov = '{};{},{},{},{},{},{},{}'.format(sample, T_cov, N_cov, T_freq, N_freq, T_reads, P_val, callers)
+            has_frame = 'frame' in ''.join([ref_gene_mut, UCSC_gene_mut, ENS_gene_mut])
+            has_cov1 = T_cov >= 10 and N_freq < 1.0 and T_freq >= 7 and T_reads >= 4
+            has_cov2 = T_cov >= 10 and N_freq >= 1.0 and T_freq >= 7 and T_reads >= 4 and T_freq / N_freq >= 5
+            status = (has_frame and (no_callers >= 1 and (has_cov1 or has_cov2))) \
+                     or (no_callers >= 2 and (has_cov1 or has_cov2))
+            # Store data, coverage and status
+            variant_dict[variant_key]['somatic'][sample]['data'] = columns
+            variant_dict[variant_key]['somatic'][sample]['status'] = status
+            variant_dict[variant_key]['somatic'][sample]['coverage'] = cov
+        somatic_nonsyn.close()
+        
+    print('Loading germline variants..')
+    for file in germline if germline else []:
+        germline_nonsyn = open(file)
+        germline_nonsyn_lines = germline_nonsyn.readlines()
+        header_germline = germline_nonsyn_lines.pop(0).strip().split('\t')
+        for line in germline_nonsyn_lines:
+            columns = line.strip().split('\t')
+            variant_key = columns[header_germline.index('VARIANT-KEY')]
+            sample = columns[header_germline.index('SAMPLE_ID')]
+            if variant_key not in variant_dict:
+                variant_dict[variant_key] = {}
+            if 'germline' not in variant_dict[variant_key]:
+                variant_dict[variant_key]['germline'] = {}
+            if sample not in variant_dict[variant_key]['germline']:
+                variant_dict[variant_key]['germline'][sample] = {}
+            P_val = columns[header_germline.index('PVAL')]
+            callers = columns[header_germline.index('CALLERS')]
+            try:
+                no_callers = int(callers.strip().split(':')[0])
+            except ValueError:
+                no_callers = 0
+            # Compute coverage and pass/fail
+            r1 = int(columns[header_germline.index('TUMOR_READ1')])
+            r2 = int(columns[header_germline.index('TUMOR_READ2')])
+            rfreq = float(columns[header_germline.index('TVAF')].replace('%', ''))
+            rcov = int(columns[header_germline.index('TCOV')])
+            cov = '{};{},{},{},{},{},{}'.format(sample, r1, r2, rfreq, rcov, P_val, callers)
+            # Storage coverage, data and status
+            status = rfreq >= 5 and rcov >= 5 and no_callers >= 2
+            variant_dict[variant_key]['germline'][sample]['data'] = columns[0:]
+            variant_dict[variant_key]['germline'][sample]['status'] = status
+            variant_dict[variant_key]['germline'][sample]['coverage'] = cov
+        germline_nonsyn.close()
+
+    print('Loading Epitopes..')
+    transcript_dict = {}
+    # We assume that the same variant in exactly the same position has the same annotation 
+    for file in epitopes:
+        epitopes = open(file)
+        epitopes_lines = epitopes.readlines()
+        header_epitopes = epitopes_lines.pop(0).strip().split('\t')
+        for line in epitopes_lines:
+            columns = line.strip().split('\t')
+            key = columns[header_epitopes.index('VARIANT-KEY')]
+            sample = columns[header_epitopes.index('SAMPLE_ID')]
+            # Load variant data variant -> mut -> transcript
+            if key in variant_dict:
+                transcript = columns[header_epitopes.index('Transcript_ID')]
+                mut_ep = columns[header_epitopes.index('MUT25MER')]
+                function = columns[header_epitopes.index('func_ref_gene')]
+                cDNA = columns[header_epitopes.index('NT_CHANGE')]
+                AA = columns[header_epitopes.index('AA_CHANGE')]
+                cDNAposition = ''.join([s for s in cDNA if s.isdigit()])
+                if 'Epitopes' not in variant_dict[key]:
+                    variant_dict[key]['Epitopes'] = {}
+                if mut_ep not in variant_dict[key]['Epitopes']:
+                    variant_dict[key]['Epitopes'][mut_ep] = {}
+                variant_dict[key]['Epitopes'][mut_ep][transcript] = columns
+                # Load transcript data transcript -> variant
+                if transcript not in transcript_dict:
+                    transcript_dict[transcript] = {}
+                    transcript_dict[transcript]['cDNA'] = []
+                    transcript_dict[transcript]['aa'] = []
+                    transcript_dict[transcript]['position'] = []
+                    transcript_dict[transcript]['mutation'] = []
+                    transcript_dict[transcript]['variant_key'] = []
+                    transcript_dict[transcript]['status'] = []
+                transcript_dict[transcript]['cDNA'].append(cDNA)
+                transcript_dict[transcript]['aa'].append(AA)
+                transcript_dict[transcript]['position'].append(int(cDNAposition))
+                transcript_dict[transcript]['mutation'].append(function)
+                transcript_dict[transcript]['variant_key'].append(key)
+                status_somatic = False
+                if 'somatic' in variant_dict[key] and sample in variant_dict[key]['somatic']:
+                    status_somatic = variant_dict[key]['somatic'][sample]['status']
+                status_germline = False
+                if 'germline' in variant_dict[key] and sample in variant_dict[key]['germline']:
+                    status_germline = variant_dict[key]['germline'][sample]['status']
+                transcript_dict[transcript]['status'].append(status_somatic or status_germline)
+        epitopes.close()
+
+    print('Loading Gene counts..')
+    counts_dict = {}
+    counts_dict_sample = defaultdict(list)
+    for file in rna_counts if rna_counts else []:
+        counts_file = open(file)
+>>>>>>> 1cb5c5f1bb4f22410b0d6032e8e907ad9fc371f9
         counts_file_lines = counts_file.readlines()
         header_cmd = counts_file_lines.pop(0)
         header_counts = counts_file_lines.pop(0).strip().split('\t')
