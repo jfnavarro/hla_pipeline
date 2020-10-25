@@ -162,7 +162,6 @@ def main(R1_NORMAL,
 
         # Variant calling VarScan
         print('Performing variant calling with VarScan2')
-        # TODO improve the filters, enable perhaps the p-value filter
         cmd = '{} somatic sample2.pileup sample1.pileup varscan --tumor-purity .5 --output-vcf 1 ' \
               '--min-coverage 4 --min-var-freq .05 --min-reads 2 --strand-filter 1'.format(VARSCAN)
         exec_command(cmd)
@@ -203,7 +202,7 @@ def main(R1_NORMAL,
     print("COMPLETED!")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='DNA/RNA Somatic variant calling and HLA prediction pipeline\n'
+    parser = argparse.ArgumentParser(description='Somatic variant calling and HLA prediction pipeline\n'
                                      'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                      prog='somatic_pipeline.py',
                                      usage='somatic_pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer)')
@@ -239,9 +238,9 @@ if __name__ == '__main__':
                         default='hg38', required=False)
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
-    parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'annotation'],
+    parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                         help='Steps to perform in the pipeline',
-                        choices=['mapping', 'gatk', 'hla', 'variant', 'annotation', "none"])
+                        choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
     parser.add_argument('--mode', default='DNA',
                         help='DNA if tumor sample is from DNA or else RNA if tumor sample is from RNA [DNA].',
                         choices=['DNA', 'RNA'])

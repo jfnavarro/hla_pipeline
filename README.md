@@ -1,6 +1,4 @@
 # DNA and RNA-Seq variant calling pipelines with HLA and MHC predictions
-This a private repository that contains a simplified, more generic, up-to-date
-and optimized version of a pipeline provided by Jared Gartner <jared.gartner@nhi.gov>
 The pipeline can process DNA/RNA in somatic (tumor and normal) and germline (tumor) modes
 and generate a list of variants, HLAs and neo-antigens with affinity scores. 
 
@@ -30,7 +28,8 @@ When in RNA mode the STAR index and annotation reference (GTF) must be provided 
 
 **merge_resuls.py** combines results from 1 or several runs of the somatic and germline
 pipelines in order to generate an unified file with useful information where
-variants are filtered by certain criteria and epitopes are computed. 
+variants are filtered by certain criteria and epitopes are created for each of the variants
+effects. 
 
 **mhc_predict.py** can take the file generated with merge_results.py and the HLA files
 generated in the germline or somatic pipelines and then output a list of predicted neo-antigens.

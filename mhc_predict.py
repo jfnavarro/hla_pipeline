@@ -1,12 +1,17 @@
 #! /usr/bin/env python
 """
+This tools uses the ouput of merge_results.py and HLAs predicted with either
+the somatic_pipeline.py and/or the germline_pipeline.py. The tool extracts the WT and MUT peptides
+and makes affinity binding predictions for the HLAs (class I).
+The tools uses MHC-flurry for the predictions.
+
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import exec_command
 from collections import Counter
 from _collections import defaultdict
 import json
-import argparse
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import sys
 
 def main(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_filter):
@@ -75,10 +80,9 @@ def main(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_f
                     pass_germline = int(columns[header.index('Number of Germline samples (passing)')]) > 0
                     if (mode == "both" and pass_somatic and pass_germline) or (mode == "somatic" and pass_somatic)\
                         or (mode == "germline" and pass_germline) or (mode == "either" and (pass_somatic or pass_germline)):
-                        protein_name = '{}_{}_{}_{}'.format('_'.join(columns[header.index('Variant key')].split()),
-                                                            columns[header.index('transcript ID')],
-                                                            columns[header.index('cDNA change')],
-                                                            columns[header.index('AA change')])
+                        protein_name = '{}_{}_{}'.format(''.join(columns[header.index('Variant key')].split()),
+                                                         columns[header.index('cDNA change')],
+                                                         columns[header.index('AA change')])
                         protein_seq_mu = columns[header.index('Mut Epitope')].strip()
                         protein_seq_wt = columns[header.index('Wt Epitope')].strip()
                         # Should probably make sure that all the letters in the protein seq are alpha (isalpha())
@@ -108,15 +112,7 @@ def main(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_f
     print('Completed')
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Script that predicts MHCs (MHCflurry) affinity binding scores\n'
-                                                 'using data from HLAs from DNA and/or RNA and variants from the somatic and germline pipelines.\n'
-                                                 'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>',
-                                     prog='mhc_predict.py',
-                                     usage='mhc_predict.py [options] '
-                                           '--hla-dna [file/s with HLA predictions from DNA data]\n'
-                                           '--hla-rna [file/s with HLA predictions from RNA data]\n'
-                                           '--alleles [file with supported alleles in MHCflurry]\n'
-                                           '--variants [file with the final variants generated with merge_results.py]')
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('--hla-dna', nargs='+', default=None, required=False,
                         help='A file or files containing predicted HLAs from normal DNA (HLA-LA table format)')
     parser.add_argument('--hla-rna', nargs='+', default=None, required=False,

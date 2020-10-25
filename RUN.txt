@@ -42,11 +42,13 @@ merge_results.py \
   --dictcDNA ~/shared/GRCh38/hg38_cDNA_DICT.dict \
   --dictAA ~/shared/GRCh38/hg38_AA_DICT.dict \
   --somatic out/somatic/annotated.hg38_multianno.vcf\
+  --somatic-names Tumor
   --germline out/germline/annotated.hg38_multianno.vcf \
+  --germline-names RNA
   --counts out/germline/gene.counts'
 
 mhc_predict.py \
-  --hla-dna out/exome/PRG-HLA-LA_Tumor_output.txt \
-  --hla-rna out/rna/hla/sample_header.genotype.json \
-  --variants out/overlap_final.txt \
+  --hla-dna PRG-HLA-LA_Tumor_output.txt \
+  --hla-rna sample_header.genotype.json \
+  --variants overlap_final.txt \
   --alleles ~/shared/alleles.txt

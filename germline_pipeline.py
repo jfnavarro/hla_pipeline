@@ -126,7 +126,6 @@ def main(sample1,
         cmd = 'sed -i \'s/{}/HaplotypeCaller/g\' haplotype_caller_filtered.vcf'.format(sampleID)
         exec_command(cmd)
 
-        # TODO add a filter to VarScan2 variants
         # NOTE replacing IUPAC codes from varscan output (TEMP HACK till the bug is fixed in VarScan)
         # NOTE this will also skip variants whose REF and ALT fields are identical (another bug in VarScan)
         cmd = 'awk \'{if ($1 ~ /#/) {print} else if ($4 != $5) {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS="\t"; print}}\' ' \
@@ -138,6 +137,7 @@ def main(sample1,
 
         # Combine with GATK
         print('Combining variants')
+        # TODO replace this with jacquard merge
         # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
         cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf ' \
               '-V:HaplotypeCaller haplotype_caller_filtered.vcf -o combined_calls.vcf '\
@@ -154,12 +154,12 @@ def main(sample1,
     print("COMPLETED!")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='RNA-seq variant calling and HLA prediction pipeline\n'
+    parser = argparse.ArgumentParser(description='Germline variant calling and HLA prediction pipeline\n'
                                                  'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
                                      prog='germline_pipeline.py',
-                                     usage='germline_pipeline.py [options] R1(RNA) R2(RNA)')
-    parser.add_argument('R1_RNA', help='FASTQ file R1 (RNA)')
-    parser.add_argument('R2_RNA', help='FASTQ file R2 (RNA)')
+                                     usage='germline_pipeline.py [options] R1 R2')
+    parser.add_argument('R1', help='FASTQ file R1 (DNA or RNA)')
+    parser.add_argument('R2', help='FASTQ file R2 (DNA or RNA)')
     parser.add_argument('--genome',
                         help='Path to the reference genome FASTA file', required=True)
     parser.add_argument('--genome-star',
@@ -186,7 +186,7 @@ if __name__ == '__main__':
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                         help='Steps to perform in the pipeline',
-                        choices=['mapping', 'gatk', 'hla', 'variant', 'annotation', "none"])
+                        choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
     parser.add_argument('--mode', default='RNA',
                         help='Mode to use (RNA (default) or DNA)',
                         choices=['DNA', 'RNA'])
@@ -194,8 +194,8 @@ if __name__ == '__main__':
     # Parse arguments
     args = parser.parse_args()
     DIR = args.dir
-    R1_RNA = os.path.abspath(args.R1_RNA)
-    R2_RNA = os.path.abspath(args.R2_RNA)
+    R1_RNA = os.path.abspath(args.R1)
+    R2_RNA = os.path.abspath(args.R2)
     sampleID = args.sample
     GENOME_REF = os.path.abspath(args.genome)
     GENOME_REF_STAR = os.path.abspath(args.genome_star)
