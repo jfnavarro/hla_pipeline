@@ -52,16 +52,16 @@ To build these dictionaries you can use as reference the Jupyter Notebooks locat
 ## Output (important files)
 
 **somatic_pipeline.py** 
-- annotated.hg38_multianno.vcf (annotated and combined somatic variants)
+- annotated.hgXX_multianno.vcf (annotated and combined somatic variants)
 - gene.counts (all the counts of the genes found in the tumor sample if RNA mode is used)
 - HLA predictions (Tumor and normal)
 
 **germline_pipeline.py** 
-- annotated.hg38_multianno.vcf (annotated and combined germline variants)
+- annotated.hgXX_multianno.vcf (annotated and combined germline variants)
 - gene.counts (all the counts of the genes found in the tumor sample if RNA mode is used)
 - HLA predictions
 
-**merge_resuls.py** 
+**merge_results.py** 
 - overlap_final.txt (all the somatic and germline variants collapsed and filtered with useful information and epitopes)
 - overlap_final_unique_germline.txt (all the unique germline variants collapsed and filtered with useful information and epitopes)
 - overlap_final_discarded.txt (all the discarded somatic and germline variants collapsed with useful information and epitopes)
