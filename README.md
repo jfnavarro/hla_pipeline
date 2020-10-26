@@ -2,6 +2,11 @@
 The pipeline can process DNA/RNA data in somatic (tumor and normal) and germline (tumor) modes
 and generate a list of variants, HLAs and neo-antigens with affinity scores. 
 
+<p align="center">
+<img src="diagram.png" height="800">
+</p>
+
+
 The somatic and germline pipelines make use of the latest GATK4 best-practices.
 All the tools and pipelines are fully parametrised and optimized for speed. 
 
