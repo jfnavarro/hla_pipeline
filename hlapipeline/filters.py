@@ -119,8 +119,8 @@ def somaticSniper_filter(input, output):
             columns = line.strip().split('\t')
             format = columns[headers.index('FORMAT')]
             tumor = columns[headers.index('TUMOR')]
-            somatic_status_index = format.split(":").index('SS')
-            somatic_status = int(columns[tumor].split(":")[somatic_status_index])
+            somatic_status_index = format.split(':').index('SS')
+            somatic_status = int(columns[tumor].split(':')[somatic_status_index])
             if somatic_status == 2:
                 filtered_vcf.write(line)
         else:

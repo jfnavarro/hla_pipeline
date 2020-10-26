@@ -63,11 +63,11 @@ def main(R1_NORMAL,
 
         # ALIGNMENT
         print('Starting alignment')
-        if mode in ['DNA']:
-            # Normal (paired)
-            cmd = '{} -t {} {} normal_val_1.fq.gz normal_val_2.fq.gz | ' \
-                  '{} sort --threads {} > aligned_normal_merged.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
-            exec_command(cmd)
+
+        # Normal (paired)
+        cmd = '{} -t {} {} normal_val_1.fq.gz normal_val_2.fq.gz | ' \
+              '{} sort --threads {} > aligned_normal_merged.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
+        exec_command(cmd)
 
         if mode in ['RNA']:
             # Cancer (paired)
@@ -86,12 +86,12 @@ def main(R1_NORMAL,
 
         # Add headers
         print("Adding headers")
-        cmd = '{} AddOrReplaceReadGroups I=aligned_cancer_merged.bam O=sample1_header.bam RGID={} RGPL=Illumina ' \
-              'RGLB={} RGPU={} RGSM={} RGCN=VHIO'.format(PICARD, sample1_ID, mode, sample1_ID, sample1_ID)
+        cmd = '{} AddOrReplaceReadGroups -I aligned_cancer_merged.bam -O sample1_header.bam -RGID {} -RGPL Illumina ' \
+              '-RGLB {} -RGPU {} -RGSM {} -RGCN VHIO'.format(PICARD, sample1_ID, mode, sample1_ID, sample1_ID)
         exec_command(cmd)
 
-        cmd = '{} AddOrReplaceReadGroups I=aligned_normal_merged.bam O=sample2_header.bam RGID={} RGPL=Illumina ' \
-              'RGLB={} RGPU={} RGSM={} RGCN=VHIO'.format(PICARD, sample2_ID, mode, sample2_ID, sample2_ID)
+        cmd = '{} AddOrReplaceReadGroups -I aligned_normal_merged.bam -O sample2_header.bam -RGID {} -RGPL Illumina ' \
+              '-RGLB {} -RGPU {} -RGSM {} -RGCN VHIO'.format(PICARD, sample2_ID, mode, sample2_ID, sample2_ID)
         exec_command(cmd)
 
     if 'gatk' in steps:
