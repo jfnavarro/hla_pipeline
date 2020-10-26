@@ -69,7 +69,7 @@ def main(R1_NORMAL,
               '{} sort --threads {} > aligned_normal_merged.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
         exec_command(cmd)
 
-        if mode in ['RNA']:
+        if mode == 'RNA':
             # Cancer (paired)
             cmd = '{} --genomeDir {} --readFilesIn cancer_val_1.fq.gz cancer_val_2.fq.gz --outSAMorder Paired' \
                   ' --twopassMode None --outSAMunmapped None --outSAMtype BAM SortedByCoordinate' \
@@ -104,7 +104,7 @@ def main(R1_NORMAL,
         exec_command(cmd)
 
         # Split N and cigards for RNA data
-        if mode in ['RNA']:
+        if mode == 'RNA':
             cmd = '{} SplitNCigarReads --reference {} --input sample1_dedup.bam --output sample1_split.bam'.format(GATK,
                                                                                                                    genome)
             exec_command(cmd)
