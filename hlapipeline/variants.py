@@ -29,7 +29,7 @@ class Variant:
     def ensemblGene(self):
         gene = None
         for effect in self.effects:
-            if 'ensGene' in effect:
+            if 'knownGene' in effect or 'refGene' in effect:
                 gene = effect.split("_")[1]
                 break
         return gene
