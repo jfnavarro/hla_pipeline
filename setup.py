@@ -34,6 +34,7 @@ setup(
     'numpy',
     'pandas',
     'scikit-learn',
+    'pysam',
     'vcfpy'
   ],
   #test_suite = 'tests',
