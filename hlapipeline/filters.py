@@ -117,7 +117,10 @@ def somaticSniper_filter(input, output):
             filtered_vcf.write(line)
         elif not line.startswith('#'):
             columns = line.strip().split('\t')
-            somatic_status = int(columns[headers.index('SS')])
+            format = columns[headers.index('FORMAT')]
+            tumor = columns[headers.index('TUMOR')]
+            somatic_status_index = format.split(":").index('SS')
+            somatic_status = int(columns[tumor].split(":")[somatic_status_index])
             if somatic_status == 2:
                 filtered_vcf.write(line)
         else:
