@@ -128,7 +128,7 @@ def main(somatic,
     for key, value in variant_dict.items():
 
         # key = variant key
-        # value = list of (Variant, sample_name)
+        # value = list of (Variant, sample_name) tuples
 
         germline_name_pass = [name for variant, name in value if variant.type == 'germline' and variant.status]
         germline_name_fail = [name for variant, name in value if variant.type == 'germline' and not variant.status]
@@ -144,7 +144,7 @@ def main(somatic,
         # All variants share variant key so their epitopes/effects/gene must be the same (we take the first variant)
         epitopes, effects, gene = value[0][0].epitopes, value[0][0].effects, value[0][0].ensemblGene
 
-        # Get gene exp. if any (gene should be the same in all the effects)
+        # Get gene exp. if any (gene should be the same in all the effects)
         gene_locus = "-"
         if gene is not None and gene in counts_dict:
             gene_count = counts_dict[gene]

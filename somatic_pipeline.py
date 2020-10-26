@@ -103,7 +103,7 @@ def main(R1_NORMAL,
         cmd = '{} MarkDuplicatesSpark --input sample2_header.bam --output sample2_dedup.bam'.format(GATK)
         exec_command(cmd)
 
-        # Split N and cigards for RNA data
+        # Split N and cigards for RNA data
         if mode in ['RNA']:
             cmd = '{} SplitNCigarReads --reference {} --input sample1_dedup.bam --output sample1_split.bam'.format(GATK,
                                                                                                                    genome)
