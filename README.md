@@ -1,5 +1,5 @@
-# DNA and RNA NGS variant calling pipelines with HLA and MHC predictions
-The pipeline can process DNA/RNA data in somatic (tumor and normal) and germline (tumor) modes
+# DNA and RNA NGS variant calling toolset with HLA and MHC predictions
+This toolset can process DNA/RNA data in somatic (tumor and normal) and germline (tumor) modes
 and generate a list of variants, HLAs and neo-antigens with affinity scores. 
 
 <p align="center">
@@ -64,7 +64,7 @@ To build these dictionaries you can use as reference the Jupyter Notebooks locat
 **germline_pipeline.py** 
 - annotated.hgXX_multianno.vcf (annotated and combined germline variants)
 - gene.counts (all the counts of the genes found in the tumor sample if RNA mode is used)
-- HLA predictions
+- HLA predictions 
 
 **merge_results.py** 
 - overlap_final.txt (all the somatic and germline variants collapsed and filtered with useful information and epitopes)
