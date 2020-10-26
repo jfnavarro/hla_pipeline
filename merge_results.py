@@ -39,7 +39,7 @@ def main(somatic,
         sys.stderr.write("Error, no variants given as input (somatic or germline).\n")
         sys.exit(1)
 
-    #TODO add sanity check of paramters
+    # TODO add sanity check for parameterz
 
     AA_seq_dict = dict()
     with open(AA_DICT, "r") as handle:
@@ -110,8 +110,8 @@ def main(somatic,
                    'Germline samples (passing)\tNumber of Germline samples (passing)\t' \
                    'Germline samples (failing)\tGermline of Somatic samples (failing)\tEffects\t' \
                    'cDNA change\tAA change\tEpitope creation flags\tWt Epitope\t'\
-                   'Mut Epitope\tTranscript\tSomatic Callers(Name:NDP;NAD;NVAF;TDP;TAD;TVAF)\t'\
-                   'Germline Callers (Name:TDP;TAD;TVAF)\tGeneCount info (gene;exp;mean;percentile)\n'
+                   'Mut Epitope\tTranscript\tSomatic Callers Sample(Name:NDP;NAD;NVAF;TDP;TAD;TVAF)\t'\
+                   'Germline Callers Sample(Name:TDP;TAD;TVAF)\tGeneCount info (gene;exp;mean;percentile)\n'
 
     final_file = open('overlap_final.txt', 'w')
     final_file.write(header_final)
@@ -132,19 +132,19 @@ def main(somatic,
 
         germline_name_pass = [name for variant, name in value if variant.type == 'germline' and variant.status]
         germline_name_fail = [name for variant, name in value if variant.type == 'germline' and not variant.status]
-        germline_callers = ' '.join(['{}-{}'.format(name, variant.callers) for variant, name in value if variant.type == 'germline'])
+        germline_callers = ';'.join(['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'germline'])
         somatic_name_pass = [name for variant, name in value if variant.type == 'somatic' and variant.status]
         somatic_name_fail = [name for variant, name in value if variant.type == 'somatic' and not variant.status]
-        somatic_callers = ' '.join(['{}-{}'.format(name, variant.callers) for variant, name in value if variant.type == 'somatic'])
+        somatic_callers = ';'.join(['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'somatic'])
         num_germline_pass = len(germline_name_pass)
         num_gemline_fail = len(germline_name_fail)
         num_somatic_pass = len(somatic_name_pass)
         num_somatic_fail = len(somatic_name_fail)
 
-        # All variants shared variant key so their epitopes/effects/gene must be the same (we take the first variant then)
+        # All variants share variant key so their epitopes/effects/gene must be the same (we take the first variant)
         epitopes, effects, gene = value[0][0].epitopes, value[0][0].effects, value[0][0].ensemblGene
 
-        # Get gene exp. if a ny (gene should be the same in all the effects)
+        # Get gene exp. if any (gene should be the same in all the effects)
         gene_locus = "-"
         if gene is not None and gene in counts_dict:
             gene_count = counts_dict[gene]
@@ -172,18 +172,16 @@ def main(somatic,
     final_file_germline.close()
     final_file_discarded.close()
 
-
-
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('--somatic', nargs='+', default=None, required=False,
                         help='List of annotated vcf files with the variants obtained with the somatic pipeline')
     parser.add_argument('--somatic-names', nargs='+', default=None, required=False,
-                        help='List of names for each somatic file (to include in the report)')
+                        help='List of names for each somatic sample/file (to include in the report)')
     parser.add_argument('--germline', nargs='+', default=None, required=False,
                         help='List of annotated vcf files with the variants obtained with the germline pipeline')
     parser.add_argument('--germline-names', nargs='+', default=None, required=False,
-                        help='List of names for each germline file (to include in the report)')
+                        help='List of names for each germline sample/file (to include in the report)')
     parser.add_argument('--counts', type=str, default=None, required=False,
                         help='File with RNA gene counts from either the somatic or germline pipeline')
     parser.add_argument('--dictAA',
@@ -191,33 +189,33 @@ if __name__ == '__main__':
     parser.add_argument('--dictcDNA',
                         help='Path to a dictionary of transcript IDs to DNA sequences', required=True)
     parser.add_argument('--filter-somatic-tumor-cov', type=int, default=10, required=False, dest='tumor_coverage',
-                        help='Filter for somatic variants tumor number of reads (coverage) (DP)')
+                        help='Filter for somatic variants tumor number of reads (coverage) (DP). Default=10')
     parser.add_argument('--filter-somatic-tumor-depth', type=int, default=4, required=False, dest='tumor_var_depth',
-                        help='Filter for somatic variants tumor number of allelic reads (AD)')
+                        help='Filter for somatic variants tumor number of allelic reads (AD). Default=4')
     parser.add_argument('--filter-somatic-tumor-vaf', type=float, default=7, required=False, dest='tumor_var_freq',
-                        help='Filter for somatic variants tumor variant allele frecuency (VAF)')
+                        help='Filter for somatic variants tumor variant allele frequency (VAF). Default=7')
     parser.add_argument('--filter-somatic-normal-cov', type=int, default=10, required=False, dest='normal_coverage',
-                        help='Filter for somatic variants normal number of reads (coverage) (DP)')
-    parser.add_argument('--filter-somatic-tumor-normal-ratio', type=int, default=5, required=False, dest='t2n_ratio',
-                        help='Filter for somatic variants tumor-normal VAF ratio')
+                        help='Filter for somatic variants normal number of reads (coverage) (DP). Default=10')
+    parser.add_argument('--filter-somatic-tn-ratio', type=int, default=5, required=False, dest='t2n_ratio',
+                        help='Filter for somatic variants tumor-normal VAF ratio. Default=5')
     parser.add_argument('--filter-somatic-snv-callers', type=int, default=2, required=False,
                         choices=[1, 2, 3, 4], dest='num_callers',
-                        help='Filter for somatic snvs variants number of callers required')
+                        help='Filter for somatic SNPs variants number of callers required. Default=2')
     parser.add_argument('--filter-somatic-indel-callers', type=int, default=1, required=False,
                         choices=[1, 2], dest='num_callers_indel',
-                        help='Filter for somatic indels variants number of callers required')
+                        help='Filter for somatic indels variants number of callers required. Default=1')
     parser.add_argument('--filter-germline-tumor-cov', type=int, default=5, required=False,
                         dest='tumor_coverage_germline',
-                        help='Filter for germline variants tumor number of reads (coverage) (DP)')
+                        help='Filter for germline variants tumor number of reads (coverage) (DP). Default=5')
     parser.add_argument('--filter-germline-tumor-depth', type=int, default=2, required=False,
                         dest='tumor_var_depth_germline',
-                        help='Filter for germline variants tumor number of allelic reads (AD)')
+                        help='Filter for germline variants tumor number of allelic reads (AD). Default=2')
     parser.add_argument('--filter-germline-tumor-vaf', type=float, default=3, required=False,
                         dest='tumor_var_freq_germline',
-                        help='Filter for germline variants tumor variant allele frecuency (VAF)')
+                        help='Filter for germline variants tumor variant allele frequency (VAF). Default=3')
     parser.add_argument('--filter-germline-callers', type=int, default=1, required=False,
                         choices=[1, 2], dest='num_callers_germline',
-                        help='Filter for germline indels variants number of callers required')
+                        help='Filter for germline variants number of callers required. Default=1')
 
     args = parser.parse_args()
     main(args.somatic,
@@ -237,5 +235,4 @@ if __name__ == '__main__':
          args.tumor_coverage_germline,
          args.tumor_var_depth_germline,
          args.tumor_var_freq_germline,
-         args.num_callers_germline
-         )
+         args.num_callers_germline)

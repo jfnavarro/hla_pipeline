@@ -1,10 +1,19 @@
 #! /usr/bin/env python
 """
+This pipeline computes somatic variants from DNA or RNA tumor-normal paired data.
+
+The pipline trims with trimgalore, aligns with STAR or bwa-men,
+performs the GATK4 best practices and computes variants with
+Mutect2, Strelka2, SomaticSniper and Varscan.
+The variants are then combined into one file and annotated with Annovar.
+
+Multiple options are available. To see them type --help
+
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import *
 import shutil
-import argparse
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import os
 import sys
 from hlapipeline.filters import *
@@ -27,6 +36,12 @@ def main(R1_NORMAL,
          ANNOVAR_VERSION,
          steps,
          mode):
+
+    # TODO add sanity checks for the parameters
+    # TODO better log info
+    # TODO remove temp files
+    # TODO put output files somewhere else
+
     print("Somatic pipeline")
 
     # Sample 1 cancer, sample 2 normal
@@ -185,7 +200,7 @@ def main(R1_NORMAL,
         # Combine with GATK
         print('Combining variants')
         # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
-        #TODO replace this with jacquard merge
+        # TODO replace this with jacquard merge
         cmd = '{} -T CombineVariants -R {} -V:varscan_indel varscan_filtered_indel.vcf -V:varscan varscan_filtered.vcf ' \
               '-V:mutect mutect_filtered.vcf -V:strelka_indel strelka_indel_filtered.vcf -V:strelka strelka_filtered.vcf ' \
               '-V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf '\
@@ -202,10 +217,7 @@ def main(R1_NORMAL,
     print("COMPLETED!")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Somatic variant calling and HLA prediction pipeline\n'
-                                     'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
-                                     prog='somatic_pipeline.py',
-                                     usage='somatic_pipeline.py [options] R1(Normal) R2(Normal) R1(Cancer) R2(Cancer)')
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('R1_NORMAL', help='FASTQ file R1 (Normal)')
     parser.add_argument('R2_NORMAL', help='FASTQ file R2 (Normal)')
     parser.add_argument('R1_CANCER', help='FASTQ file R1 (Cancer)')

@@ -1,11 +1,20 @@
 #! /usr/bin/env python
 """
+This pipeline computes germline variants from DNA or RNA data.
+
+The pipline trims with trimgalore, aligns with STAR or bwa-men,
+performs the GATK4 best practices and computes variants with
+HaplotypeCaller and Varscan. The variants are then combined into
+one file and annotated with Annovar.
+
+Multiple options are available. To see them type --help
+
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import *
 from hlapipeline.tools import *
 import os
-import argparse
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 def main(sample1,
          sample2,
@@ -21,6 +30,12 @@ def main(sample1,
          ANNOVAR_VERSION,
          steps,
          mode):
+
+    # TODO add sanity checks for the parameters
+    # TODO better log info
+    # TODO remove temp files
+    # TODO put output files somewhere else
+
     print("Germline pipeline")
 
     # Create sub-folder to store all results
@@ -119,8 +134,7 @@ def main(sample1,
         # Filtering variants (HaplotypeCaller)
         print("Filtering HaplotypeCaller variants")
         cmd = '{} VariantFiltration --reference {} --variant haplotype_caller.vcf --window 35 --cluster 3 --filter-name "FS" ' \
-              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK,
-                                                                                                                          genome)
+              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK, genome)
         exec_command(cmd)
 
         cmd = 'sed -i \'s/{}/HaplotypeCaller/g\' haplotype_caller_filtered.vcf'.format(sampleID)
@@ -154,10 +168,7 @@ def main(sample1,
     print("COMPLETED!")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Germline variant calling and HLA prediction pipeline\n'
-                                                 'Created by Jose Fernandez <jc.fernandes.navarro@gmail.com>)',
-                                     prog='germline_pipeline.py',
-                                     usage='germline_pipeline.py [options] R1 R2')
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('R1', help='FASTQ file R1 (DNA or RNA)')
     parser.add_argument('R2', help='FASTQ file R2 (DNA or RNA)')
     parser.add_argument('--genome',

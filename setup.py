@@ -33,7 +33,8 @@ setup(
     'scipy',
     'numpy',
     'pandas',
-    'scikit-learn'
+    'scikit-learn',
+    'vcfpy'
   ],
   #test_suite = 'tests',
   scripts=glob.glob('*.py'),

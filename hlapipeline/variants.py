@@ -1,3 +1,6 @@
+"""
+@author: jfnavarro
+"""
 from hlapipeline.epitopes import create_epitope
 from collections import defaultdict, namedtuple
 import numpy as np

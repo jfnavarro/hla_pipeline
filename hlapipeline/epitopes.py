@@ -1,3 +1,6 @@
+"""
+@author: jfnavarro
+"""
 import re
 from Bio.Seq import translate
 

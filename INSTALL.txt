@@ -10,7 +10,7 @@ conda config --add channels conda-forge
 conda create -n hla python=3.6.1
 conda activate hla
 
-conda install -y pandas hla-la gatk4 bwa samtools picard trimmomatic varscan subread picard trim-galore star somatic-sniper bedtools biopython tensorflow==1.15.0 mhcflurry kallisto bcftools vcftools vcfpy
+conda install -y pandas hla-la gatk4 bwa samtools picard varscan picard trim-galore star somatic-sniper bedtools biopython tensorflow==1.15.0 mhcflurry
 pip install gsutil
 # You may need to create .boto config with gsutil config and then disable integrity check by setting this line check_hashes = if_fast_else_skip
 
