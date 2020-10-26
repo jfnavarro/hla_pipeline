@@ -172,7 +172,7 @@ def main(R1_NORMAL,
 
         # Variant calling Somatic Sniper
         print('Performing variant calling with SomaticSniper')
-        cmd = '{} -L -G -F vcf -f {} sample1_final.bam sample2_final.bam somaticsniper.vcf'.format(SSNIPER, genome)
+        cmd = '{} -L -G -F vcf -f {} sample1_final.bam sample2_final.bam SS.vcf'.format(SSNIPER, genome)
         exec_command(cmd)
 
         # Variant calling VarScan
