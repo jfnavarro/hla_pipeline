@@ -60,6 +60,7 @@ To build these dictionaries you can use as reference the Jupyter Notebooks locat
 - annotated.hgXX_multianno.vcf (annotated and combined somatic variants)
 - gene.counts (all the counts of the genes found in the tumor sample if RNA mode is used)
 - HLA predictions DNA (PRG-HLA-LA_Tumor_output.txt and PRG-HLA-LA_Normal_output.txt)
+
 Other files:
   - combined_calls.vcf
   - sample1_dedup.bam
@@ -69,6 +70,7 @@ Other files:
 - annotated.hgXX_multianno.vcf (annotated and combined germline variants)
 - gene.counts (all the counts of the genes found in the tumor sample if RNA mode is used)
 - HLA predictions (sample_final.genotype.json)
+
 Other files:
   - combined_calls.vcf
   - sample1_dedup.bam
@@ -83,6 +85,7 @@ Other files:
 **mhc_predict.py** 
 - predictions_mut.csv (all the mutated peptides predictions)
 - predictions_wt.csv (all the WT peptides predictions)
+
 Other files:
   - protein_sequences_mu.fasta
   - protein_sequences_wt.fasta
