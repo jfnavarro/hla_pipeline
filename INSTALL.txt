@@ -68,9 +68,8 @@ cd GRCh38
 gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta* .
 gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict .
 gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz* .
-gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.known_indels.vcf.gz* .
-gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf* .
 gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/1000G_phase1.snps.high_confidence.hg38.vcf.gz* .
+gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf* .
 gsutil -m cp -r gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz* .
 gsutil -m cp -r gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz* .
 wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.primary_assembly.annotation.gtf.gz
