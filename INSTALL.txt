@@ -10,7 +10,7 @@ conda config --add channels conda-forge
 conda create -n hla python=3.6.1
 conda activate hla
 
-conda install -y pandas hla-la gatk4 bwa samtools picard varscan picard trim-galore star somatic-sniper bedtools biopython tensorflow==1.15.0 mhcflurry
+conda install -y hla-la gatk4 bwa samtools picard varscan trim-galore star somatic-sniper bedtools tensorflow==1.15.0 mhcflurry
 pip install gsutil
 # You may need to create .boto config with gsutil config and then disable integrity check by setting this line check_hashes = if_fast_else_skip
 
@@ -74,7 +74,7 @@ gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/1000G_phase1.snps
 gsutil -m cp -r gs://gatk-best-practices/somatic-hg38/1000g_pon.hg38.vcf.gz* .
 gsutil -m cp -r gs://gatk-best-practices/somatic-hg38/af-only-gnomad.hg38.vcf.gz* .
 wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_34/gencode.v34.primary_assembly.annotation.gtf.gz
-gunzip gencode*
+gunzip gencode.v34.primary_assembly.annotation.gtf.gz
 mkdir -p STARIndex
 STAR --runMode genomeGenerate --runThreadN 20 --genomeDir STARIndex \
   --genomeFastaFiles Homo_sapiens_assembly38.fasta \
@@ -92,7 +92,6 @@ gsutil -m cp -r gs://gatk-best-practices/somatic-b37/af-only-gnomad.raw.sites.vc
 gsutil -m cp -r gs://gatk-best-practices/somatic-b37/Mutect2-exome-panel.vcf* .
 wget ftp://ftp.ensembl.org/pub/grch37/release-100/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz
 gunzip Homo_sapiens.GRCh37.87.gtf.gz
-gunzip gencode*
 mkdir -p STARIndex
 STAR --runMode genomeGenerate --runThreadN 20 --genomeDir STARIndex \
   --genomeFastaFiles Homo_sapiens_assembly19.fasta \

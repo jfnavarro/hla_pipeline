@@ -1,7 +1,9 @@
 """
-@author: jfnavarro
+@author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com
 """
 import os
+
+# TODO Some tools are epexcted to be in an Anaconda environment, make it more generic
 
 PICARD = 'picard'
 GATK = 'gatk'
@@ -12,17 +14,13 @@ SAMTOOLS = 'samtools'
 SSNIPER = 'bam-somaticsniper'
 HLALA = 'HLA-LA.pl'
 SAMTOOLS = 'samtools'
-BCFTOOLS = 'bcftools'
 STAR = 'STAR'
 TRIMGALORE = 'trim_galore'
-TRIPTOMATIC = 'trimmomatic'
 BWA = 'bwa mem'
 ARCASHLA = os.path.join(os.environ['ARCASHLA_PATH'], 'arcasHLA')
-VCFTOOLS = 'vcftools'
-BEDTOOLS = 'bedtools'
 FEATURECOUNTS = 'featureCounts'
 
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
-annovar_anno = 'refGene,knownGene,ensGene,avsnp150,ALL.sites.2015_08,EUR.sites.2015_08,'\
+ANNOVAR_ANNO = 'refGene,knownGene,ensGene,avsnp150,ALL.sites.2015_08,EUR.sites.2015_08,'\
     'AMR.sites.2015_08,EAS.sites.2015_08,AFR.sites.2015_08,cosmic70 -operation g,g,g,f,f,f,f,f,f,f -nastring .'

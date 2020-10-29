@@ -1,4 +1,8 @@
+"""
+@author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com
+"""
 import gzip
+
 
 def index_column_substring(your_list, substring):
     for i, s in enumerate(your_list):
@@ -6,13 +10,14 @@ def index_column_substring(your_list, substring):
             return i
     return -1
 
+
 def mutect2_filter(input, output, sample1_ID, sample2_ID):
     """
     Filters a Mutect2 VCF to only keep variants that PASS
     :param input:
     :param output:
-    :param sample1_ID:
-    :param sample2_ID:
+    :param sample1_ID: ID that identifies the tumor sample
+    :param sample2_ID: ID that identifies the normal sample
     :return:
     """
     filtered_vcf = open(output, 'w')
@@ -33,6 +38,7 @@ def mutect2_filter(input, output, sample1_ID, sample2_ID):
             filtered_vcf.write(line)
     filtered_vcf.close()
     vcf.close()
+
 
 def strelka2_filter(input, output):
     """
@@ -102,6 +108,7 @@ def strelka2_filter(input, output):
     vcf.close()
     filtered_vcf.close()
 
+
 def somaticSniper_filter(input, output):
     """
     Filters a SomaticSniper VCF to keep only somatic variants
@@ -127,6 +134,7 @@ def somaticSniper_filter(input, output):
             filtered_vcf.write(line)
     vcf.close()
     filtered_vcf.close()
+
 
 def strelka2_filter_indels(input, output):
     """
@@ -170,6 +178,7 @@ def strelka2_filter_indels(input, output):
             filtered_vcf.write(line)
     vcf.close()
     filtered_vcf.close()
+
 
 def varscan_filter(input, output):
     """

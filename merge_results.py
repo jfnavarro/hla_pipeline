@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 This tool combines one of several results of the somatic_pipeline.py and/or germline_pipeline.py
-to create an unified table with all the variants filtrated and their epitopes.
+to create an unified table with all the variants filtrated and their epitopes (for each effect).
 The table contains useful information for post-analysis.
 
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
@@ -39,7 +39,7 @@ def main(somatic,
         sys.stderr.write("Error, no variants given as input (somatic or germline).\n")
         sys.exit(1)
 
-    # TODO add sanity check for parameterz
+    # TODO add sanity check for parameters
 
     AA_seq_dict = dict()
     with open(AA_DICT, "r") as handle:

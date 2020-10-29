@@ -35,7 +35,8 @@ setup(
     'pandas',
     'scikit-learn',
     'pysam',
-    'vcfpy'
+    'vcfpy',
+    'biopython'
   ],
   #test_suite = 'tests',
   scripts=glob.glob('*.py'),

@@ -1,5 +1,5 @@
 """
-@author: jfnavarro
+@author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com
 """
 from hlapipeline.epitopes import create_epitope
 from collections import defaultdict, namedtuple
@@ -7,6 +7,7 @@ import numpy as np
 import vcfpy
 
 Epitope = namedtuple('Epitope', 'transcript dnamut aamut flags wtseq mutseq')
+
 
 class Variant:
     def __init__(self):
@@ -37,13 +38,14 @@ class Variant:
     def __str__(self):
         return '{}:{} {}>{} {} {}'.format(self.chrom, self.start, self.ref, self.alt, self.type, self.status)
 
+
 def effects(record, cDNA_seq_dict, AA_seq_dict):
     """
-    This function computes the effects of a variant (record from vcfpy) using
-    3 databases (Ensembl, NCBI and UCSC). The function will also compute the
+    This function computes the effects of an Annovar annotated variant (record from vcfpy)
+    using 3 databases (Ensembl, NCBI and UCSC). The function will also compute the
     mutated peptide of the variant for each effect/transcript.
     The function only considers nonsynonymous and framshift effects.
-    :param record: A vcfpy record containing the variant infomation from Annovar
+    :param record: A vcfpy record containing the variant information from Annovar
     :param cDNA_seq_dic: a dictionary of cDNA sequences of the transcripts
     :param AA_seq: a dictionary of AA sequences of the transcripts
     :return:
@@ -74,7 +76,7 @@ def effects(record, cDNA_seq_dict, AA_seq_dict):
     if has_func_known:
         for mutation in record.INFO['AAChange.knownGene']:
             if len(mutation.split(':')) == 5:
-                gene, transcript, exon ,mut_dna, mut_aa = mutation.split(':')
+                gene, transcript, exon, mut_dna, mut_aa = mutation.split(':')
                 cDNA_seq = cDNA_seq_dict.get(transcript, 'None').strip()
                 AA_seq = AA_seq_dict.get(transcript, 'None').strip()
                 pos, flags, wtmer, mutmer = create_epitope(record.REF, funcknownGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
@@ -103,9 +105,11 @@ def filter_variants_germline(file, tumor_coverage, tumor_var_depth,
                              tumor_var_freq, num_callers, cDNA_seq_dict, AA_seq_dict):
     """
     This function parses a list of annotated germline variants from Annovar.
-    It then apply some filters to the variants and computes the eptiopes of the variants effects.
+    It then applies some filters to the variants and computes the epitopes of each of
+    the variants nonsynonymous and frameshift effects.
+    The input is expected to contain HaplotypeCaller and Varscan germline variants.
     It returns a list of Variant() objects.
-    :param file: the annovar annotated germline variants
+    :param file: the Annovar annotated germline variants
     :param tumor_coverage: filter value for the number of total reads (DP)
     :param tumor_var_depth: filter value for the number of allelic reads (AD)
     :param tumor_var_freq: filter value for the Variant Allele Frequency (VAF)
@@ -162,14 +166,17 @@ def filter_variants_germline(file, tumor_coverage, tumor_var_depth,
 
     return variants
 
+
 def filter_variants_somatic(file, normal_coverage, tumor_coverage, tumor_var_depth,
                             tumor_var_freq, t2n_ratio, num_callers, num_callers_indel,
                             cDNA_seq, AA_seq):
     """
     This function parses a list of annotated somatic variants from Annovar.
-    It then apply some filters to the variants and computes the eptiopes of the variants effects.
+    It then applies some filters to the variants and computes the epitopes of each of
+    the variants nonsynonymous and frameshift effects.
+    The input is expected to contain Mutect2, Strelka, SomaticSniper and Varscan somatic variants.
     It returns a list of Variant() objects.
-    :param file: the annovar annotated somatic variants
+    :param file: the Annovar annotated somatic variants
     :param normal_coverage: filter value for the number of normal total reads (DP)
     :param normal_var_depth: filter value for the number normal allelic reads (AD)
     :param normal_var_freq: filter value for the normal Variant Allele Frequency (VAF)

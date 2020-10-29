@@ -2,7 +2,7 @@
 """
 This pipeline computes germline variants from DNA or RNA data.
 
-The pipline trims with trimgalore, aligns with STAR or bwa-men,
+The pipeline trims with trimgalore, aligns with STAR (RNA) or bwa-men (DNA),
 performs the GATK4 best practices and computes variants with
 HaplotypeCaller and Varscan. The variants are then combined into
 one file and annotated with Annovar.
@@ -16,20 +16,20 @@ from hlapipeline.tools import *
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
-def main(sample1,
-         sample2,
-         sampleID,
-         genome,
-         genome_star,
-         annotation,
+def main(R1,
+         R2,
+         SAMPLEID,
+         GENOME,
+         GENOME_STAR,
+         ANNOTATION,
          SNPSITES,
          KNOWN_SITE1,
          KNOWN_SITE2,
          THREADS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         steps,
-         mode):
+         STEPS,
+         MODE):
 
     # TODO add sanity checks for the parameters
     # TODO better log info
@@ -42,22 +42,22 @@ def main(sample1,
     os.makedirs('germline', exist_ok=True)
     os.chdir('germline')
 
-    if 'mapping' in steps:
+    if 'mapping' in STEPS:
         print('Trimming reads')
-        cmd = '{} --cores {} --paired --basename sample {} {}'.format(TRIMGALORE, THREADS, sample1, sample2)
+        cmd = '{} --cores {} --paired --basename sample {} {}'.format(TRIMGALORE, THREADS, R1, R2)
         exec_command(cmd)
 
         # ALIGNMENT
         print('Starting alignment')
-        if mode == 'DNA':
+        if MODE == 'DNA':
             cmd = '{} -t {} {} sample_val_1.fq.gz sample_val_2.fq.gz | ' \
-                  '{} sort --threads {} > trimmed_paired_aligned_sorted.bam'.format(BWA, THREADS, genome, SAMTOOLS, THREADS)
+                  '{} sort --threads {} > trimmed_paired_aligned_sorted.bam'.format(BWA, THREADS, GENOME, SAMTOOLS, THREADS)
             exec_command(cmd)
         else:
             cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
                   ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
                   ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
-                  ' --runThreadN {}'.format(STAR, genome_star, annotation, THREADS)
+                  ' --runThreadN {}'.format(STAR, GENOME_STAR, ANNOTATION, THREADS)
             exec_command(cmd)
 
             cmd = 'mv Aligned.sortedByCoord.out.bam trimmed_paired_aligned_sorted.bam'
@@ -66,19 +66,19 @@ def main(sample1,
         # Add headers
         print("Adding headers")
         cmd = '{} AddOrReplaceReadGroups -I trimmed_paired_aligned_sorted.bam -O sample_header.bam SO=coordinate -RGID {} -RGLB VHIO ' \
-              '-RGPL Illumina -RGPU VHIO -RGSM {} Create_Index=true Validation_Stringency=SILENT'.format(PICARD, mode, sampleID)
+              '-RGPL Illumina -RGPU VHIO -RGSM {} Create_Index=true Validation_Stringency=SILENT'.format(PICARD, MODE, SAMPLEID)
         exec_command(cmd)
 
-    if 'gatk' in steps:
+    if 'gatk' in STEPS:
         # Mark duplicates
         print('Marking duplicates')
         cmd = '{} MarkDuplicatesSpark --input sample_header.bam --output sample_dedup.bam'.format(GATK)
         exec_command(cmd)
 
-        if mode == 'RNA':
+        if MODE == 'RNA':
             # Split N and cigars
             print('Splitting NCigar Reads')
-            cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK, genome)
+            cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK, GENOME)
             exec_command(cmd)
 
             cmd = 'rm -rf sample_dedup* && mv sample_split.bam sample_dedup.bam && mv sample_split.bai sample_dedup.bai'
@@ -88,26 +88,26 @@ def main(sample1,
         print('Starting re-calibration')
         cmd = '{} BaseRecalibratorSpark --use-original-qualities --input sample_dedup.bam --reference {} --known-sites {} ' \
               '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK,
-                                                                                        genome,
+                                                                                        GENOME,
                                                                                         SNPSITES,
                                                                                         KNOWN_SITE1,
                                                                                         KNOWN_SITE2)
         exec_command(cmd)
         cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input sample_dedup.bam ' \
-              '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK, genome)
+              '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK, GENOME)
         exec_command(cmd)
 
-    if 'hla' in steps:
+    if 'hla' in STEPS:
         print('Predicting HLAs')
-        if mode == 'DNA':
-            HLA_predictionDNA('sample_final.bam', sampleID, 'PRG-HLA-LA_output.txt', THREADS)
+        if MODE == 'DNA':
+            HLA_predictionDNA('sample_final.bam', SAMPLEID, 'PRG-HLA-LA_output.txt', THREADS)
         else:
             HLA_predictionRNA('sample_final.bam', THREADS)
 
-    if 'variant' in steps:
+    if 'variant' in STEPS:
         # Variant calling (Samtools pile-ups)
         print('Computing pile-ups')
-        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, genome)
+        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, GENOME)
         exec_command(cmd)
 
         # Variant calling VarScan
@@ -120,24 +120,25 @@ def main(sample1,
         print('Variant calling with HaplotypeCaller')
         cmd = '{} HaplotypeCaller --reference {} --input sample_final.bam --output haplotypecaller.vcf ' \
               '--dont-use-soft-clipped-bases --standard-min-confidence-threshold-for-calling 20 ' \
-              '--dbsnp {}'.format(GATK, genome, SNPSITES)
+              '--dbsnp {}'.format(GATK, GENOME, SNPSITES)
         exec_command(cmd)
 
-        if mode == 'RNA':
+        if MODE == 'RNA':
             # Computing gene counts
             print('Computing gene counts with featureCounts')
             cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
-                  '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, annotation)
+                  '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, ANNOTATION)
             exec_command(cmd)
 
-    if 'filter' in steps:
+    if 'filter' in STEPS:
         # Filtering variants (HaplotypeCaller)
         print("Filtering HaplotypeCaller variants")
         cmd = '{} VariantFiltration --reference {} --variant haplotypecaller.vcf --window 35 --cluster 3 --filter-name "FS" ' \
-              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK, genome)
+              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK, GENOME)
         exec_command(cmd)
 
-        cmd = 'sed -i \'s/{}/HaplotypeCaller/g\' haplotype_caller_filtered.vcf'.format(sampleID)
+        #  Replace name of the caller in the VCF file
+        cmd = 'sed -i \'s/{}/HaplotypeCaller/g\' haplotype_caller_filtered.vcf'.format(SAMPLEID)
         exec_command(cmd)
 
         # NOTE replacing IUPAC codes from varscan output (TEMP HACK till the bug is fixed in VarScan)
@@ -146,7 +147,8 @@ def main(sample1,
               'varscan.vcf > varscan_filtered.vcf'
         exec_command(cmd)
 
-        cmd = 'sed -i \'s/Sample1.varscan/varscan/g\' varscan_filtered.vcf'.format(sampleID)
+        # Replace name of the caller in the VCF file
+        cmd = 'sed -i \'s/Sample1.varscan/varscan/g\' varscan_filtered.vcf'.format(SAMPLEID)
         exec_command(cmd)
 
         # Combine with GATK
@@ -155,15 +157,12 @@ def main(sample1,
         # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
         cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf ' \
               '-V:HaplotypeCaller haplotype_caller_filtered.vcf -o combined_calls.vcf '\
-              '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, genome, THREADS)
+              '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, GENOME, THREADS)
         exec_command(cmd)
 
         # Annotate with Annovar
-        annovardb = '{} -buildver {}'.format(os.path.join(ANNOVAR_PATH, ANNOVAR_DB), ANNOVAR_VERSION)
-        print('Running annovar (SNV)')
-        cmd = '{} combined_calls.vcf {} -thread {} -out annotated -vcfinput -remove -protocol {}'.format(
-            os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, THREADS,  annovar_anno)
-        exec_command(cmd)
+        print('Annotating variants')
+        annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
 
     print("COMPLETED!")
 
@@ -205,9 +204,9 @@ if __name__ == '__main__':
     # Parse arguments
     args = parser.parse_args()
     DIR = args.dir
-    R1_RNA = os.path.abspath(args.R1)
-    R2_RNA = os.path.abspath(args.R2)
-    sampleID = args.sample
+    R1 = os.path.abspath(args.R1)
+    R2 = os.path.abspath(args.R2)
+    SAMPLEID = args.sample
     GENOME_REF = os.path.abspath(args.genome)
     GENOME_REF_STAR = os.path.abspath(args.genome_star)
     GENOME_ANNOTATION = os.path.abspath(args.genome_ref)
@@ -227,9 +226,9 @@ if __name__ == '__main__':
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
     os.chdir(os.path.abspath(DIR))
 
-    main(R1_RNA,
-         R2_RNA,
-         sampleID,
+    main(R1,
+         R2,
+         SAMPLEID,
          GENOME_REF,
          GENOME_REF_STAR,
          GENOME_ANNOTATION,

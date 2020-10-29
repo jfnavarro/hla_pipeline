@@ -1,16 +1,18 @@
 """
-@author: jfnavarro
+@author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com
 """
 import re
 from Bio.Seq import translate
 
+
 def translate_dna(seq):
     return translate(seq, to_stop=True)
+
 
 def create_epitope(ref, exonic_func, cDNA_mut, protein_mut, cDNA_seq, protein_seq):
     """
     This function computes an epitope (mutated peptide) from a given mutation (variant)
-    :param ref: REF (reference) of the variant
+    :param ref: REF (reference allele) of the variant
     :param exonic_func: the Annovar exonic function of the variant
     :param cDNA_mut: the cDNA mutation of the variant
     :param protein_mut: the AA mutation of the variant
@@ -19,7 +21,7 @@ def create_epitope(ref, exonic_func, cDNA_mut, protein_mut, cDNA_seq, protein_se
     :return:
         The AA position
         Error creating flags if any
-        The WT peptide
+        The WT peptide (+12 -12 trimmed)
         The mutated peptide (+12 -12 trimmed)
     """
     errors = 'Flags:'
