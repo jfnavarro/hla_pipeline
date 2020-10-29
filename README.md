@@ -59,22 +59,34 @@ To build these dictionaries you can use as reference the Jupyter Notebooks locat
 **somatic_pipeline.py** 
 - annotated.hgXX_multianno.vcf (annotated and combined somatic variants)
 - gene.counts (all the counts of the genes found in the tumor sample if RNA mode is used)
-- HLA predictions (Tumor and normal)
+- HLA predictions DNA (PRG-HLA-LA_Tumor_output.txt and PRG-HLA-LA_Normal_output.txt)
+Other files:
+  - combined_calls.vcf
+  - sample1_dedup.bam
+  - sample2_dedup.bam
 
 **germline_pipeline.py** 
 - annotated.hgXX_multianno.vcf (annotated and combined germline variants)
 - gene.counts (all the counts of the genes found in the tumor sample if RNA mode is used)
-- HLA predictions 
-
+- HLA predictions (sample_final.genotype.json)
+Other files:
+  - combined_calls.vcf
+  - sample1_dedup.bam
+  - sample2_dedup.bam
+  
 **merge_results.py** 
 - overlap_final.txt (all the somatic and germline variants collapsed and filtered with useful information and epitopes)
 - overlap_final_unique_germline.txt (all the unique germline variants collapsed and filtered with useful information and epitopes)
-- overlap_final_discarded.txt (all the discarded somatic and germline variants collapsed with useful information and epitopes)
+- overlap_final_discarded.txt (all the discarded somatic variants collapsed with useful information and epitopes)
+- overlap_final_discarded_germline (all the discarded germline variants collapsed with useful information and epitopes)
 
 **mhc_predict.py** 
 - predictions_mut.csv (all the mutated peptides predictions)
 - predictions_wt.csv (all the WT peptides predictions)
-
+Other files:
+  - protein_sequences_mu.fasta
+  - protein_sequences_wt.fasta
+  
 ## Contact
 Contact: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 
