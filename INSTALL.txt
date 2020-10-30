@@ -10,13 +10,14 @@ conda config --add channels conda-forge
 conda create -n hla python=3.6.1
 conda activate hla
 
-conda install -y hla-la gatk4 bwa samtools picard varscan trim-galore star somatic-sniper bedtools tensorflow==1.15.0 mhcflurry
+conda install -y hla-la gatk4 bwa samtools picard varscan trim-galore star somatic-sniper bedtools tensorflow==1.15.0 mhcflurry kallisto
 pip install gsutil
 # You may need to create .boto config with gsutil config and then disable integrity check by setting this line check_hashes = if_fast_else_skip
 
 mhcflurry-downloads fetch models_class1_presentation
 
 wget https://github.com/git-lfs/git-lfs/releases/download/v2.10.0/git-lfs-linux-386-v2.10.0.tar.gz
+mkdir -p gitlfs
 tar -C gitlfs -xvf git-lfs-linux-386-v2.10.0.tar.gz
 export PATH="~/shared/gitlfs:$PATH"
 git-lfs install
