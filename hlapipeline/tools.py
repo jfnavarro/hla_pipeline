@@ -3,7 +3,7 @@
 """
 import os
 
-# TODO Some tools are epexcted to be in an Anaconda environment, make it more generic
+# TODO Some tools are expected to be in an Anaconda environment, make it more generic
 
 PICARD = 'picard'
 GATK = 'gatk'

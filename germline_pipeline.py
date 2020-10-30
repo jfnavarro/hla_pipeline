@@ -65,8 +65,9 @@ def main(R1,
 
         # Add headers
         print("Adding headers")
-        cmd = '{} AddOrReplaceReadGroups -I trimmed_paired_aligned_sorted.bam -O sample_header.bam SO=coordinate -RGID {} -RGLB VHIO ' \
-              '-RGPL Illumina -RGPU VHIO -RGSM {} Create_Index=true Validation_Stringency=SILENT'.format(PICARD, MODE, SAMPLEID)
+        cmd = '{} AddOrReplaceReadGroups --INPUT trimmed_paired_aligned_sorted.bam --OUTPUT sample_header.bam ' \
+              '--SORT_ORDER coordinate --RGID {} --RGLB VHIO --RGPL Illumina --RGPU VHIO --RGSM {} --CREATE_INDEX true ' \
+              '--VALIDATION_STRINGENCY SILENT'.format(PICARD, MODE, SAMPLEID)
         exec_command(cmd)
 
     if 'gatk' in STEPS:
