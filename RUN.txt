@@ -3,14 +3,13 @@ export STRELKA_PATH="~/shared/strelka"
 export ANNOVAR_PATH="~/shared/annovar"
 export GATK3_PATH="~/shared/gatk3.8.jar"
 export ARCASHLA_PATH="~/shared/arcasHLA"
-export PATH="~/shared/gitlfs:$PATH"
 
 conda activate hla
 
 somatic_pipeline.py \
   --genome ~/shared/GRCh38/Homo_sapiens_assembly38.fasta \
   --sample G001 \
-  --dir out \
+  --dir outtumor \
   --known1 ~/shared/GRCh38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
   --known2 ~/shared/GRCh38/1000G_phase1.snps.high_confidence.hg38.vcf.gz \
   --snpsites ~/shared/GRCh38/Homo_sapiens_assembly38.dbsnp138.vcf \
@@ -22,13 +21,29 @@ somatic_pipeline.py \
   --mode DNA \
   NormalR1.fastq.gz NormalR2.fastq.gz \
   TumorR1.fastq.gz TumorR2.fastq.gz
+  
+somatic_pipeline.py \
+  --genome ~/shared/GRCh38/Homo_sapiens_assembly38.fasta \
+  --sample G001 \
+  --dir outcfdna \
+  --known1 ~/shared/GRCh38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
+  --known2 ~/shared/GRCh38/1000G_phase1.snps.high_confidence.hg38.vcf.gz \
+  --snpsites ~/shared/GRCh38/Homo_sapiens_assembly38.dbsnp138.vcf \
+  --germline ~/shared/GRCh38/af-only-gnomad.hg38.vcf.gz \
+  --pon ~/shared/GRCh38/1000g_pon.hg38.vcf.gz \
+  --threads 20 \
+  --annovar-db humandb \
+  --annovar-version hg38 \
+  --mode DNA \
+  NormalR1.fastq.gz NormalR2.fastq.gz \
+  cfDNAR1.fastq.gz cfDNAR2.fastq.gz
 
 germline_pipeline.py \
   --genome ~/shared/GRCh38/Homo_sapiens_assembly38.fasta \
   --genome-star ~/shared/GRCh38/STARIndex \
   --genome-ref ~/shared/GRCh38/gencode.v34.primary_assembly.annotation.gtf \
   --sample G001 \
-  --dir out \
+  --dir outrna \
   --known1 ~/shared/GRCh38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
   --known2 ~/shared/GRCh38/1000G_phase1.snps.high_confidence.hg38.vcf.gz \
   --snpsites ~/shared/GRCh38/Homo_sapiens_assembly38.dbsnp138.vcf \
@@ -41,14 +56,14 @@ germline_pipeline.py \
 merge_results.py \
   --dictcDNA ~/shared/GRCh38/hg38_cDNA_DICT.dict \
   --dictAA ~/shared/GRCh38/hg38_AA_DICT.dict \
-  --somatic out/somatic/annotated.hg38_multianno.vcf\
-  --somatic-names Tumor
-  --germline out/germline/annotated.hg38_multianno.vcf \
+  --somatic outtumor/somatic/annotated.hg38_multianno.vcf outcfdna/somatic/annotated.hg38_multianno.vcf\
+  --somatic-names Tumor cfDNA
+  --germline outrna/germline/annotated.hg38_multianno.vcf \
   --germline-names RNA
   --counts out/germline/gene.counts'
 
 mhc_predict.py \
-  --hla-dna PRG-HLA-LA_Tumor_output.txt \
-  --hla-rna sample_header.genotype.json \
+  --hla-dna outtumor/somatic/PRG-HLA-LA_Tumor_output.txt outcfdna/somatic/PRG-HLA-LA_Tumor_output.txt \
+  --hla-rna outrna/germline/sample_header.genotype.json \
   --variants overlap_final.txt \
   --alleles ~/shared/alleles.txt
