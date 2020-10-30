@@ -67,6 +67,11 @@ mv kgXref.txt.gz humandb/hg19_kgXref.txt.gz
 gunzip humandb/hg19_kgXref.txt.gz
 
 cd ~/shared
+gsutil cp gs://gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2 .
+tar xjf GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2
+mv GenomeAnalysisTK-3.8-1-0-gf15c1c3ef/GenomeAnalysisTK.jar gatk3.8.jar
+
+cd ~/shared
 mkdir -p GRCh38
 cd GRCh38
 gsutil -m cp -r gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta* .
