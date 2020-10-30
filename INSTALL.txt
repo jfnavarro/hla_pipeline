@@ -43,6 +43,7 @@ mv strelka-2.9.10.centos6_x86_64 ~/shared/strelka
 cd ~/shared
 wget http://www.openbioinformatics.org/annovar/download/0wgxR2rIVP/annovar.latest.tar.gz
 tar -xvf annovar.latest.tar.gz
+# Download GRCh38 references 
 cd annovar
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar knownGene humandb/
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar ensGene humandb/
@@ -52,6 +53,8 @@ cd annovar
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar cosmic70 humandb/
 wget http://hgdownload.cse.ucsc.edu/goldenpath/hg38/database/kgXref.txt.gz
 mv kgXref.txt.gz humandb/hg38_kgXref.txt.gz
+
+# Download hg19 references 
 gunzip humandb/hg38_kgXref.txt.gz
 ./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar knownGene humandb/
 ./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar ensGene humandb/
