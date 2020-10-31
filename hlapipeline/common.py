@@ -30,14 +30,16 @@ def HLA_predictionDNA(inputbam, sampleID, outfile, threads):
     :param outfile: the name of the reformatted output file
     :param threads: the number of threads to use
     """
+    # HLA-LA only supports alphanumeric
+    sampleID_clean = ''.join(ch for ch in sampleID if ch.isalnum())
     OUT_DIR = os.path.abspath(os.path.join('out_hla_', os.path.splitext(outfile)[0]))
     os.makedirs(OUT_DIR, exist_ok=True)
     cmd = '{} --BAM {} --workingDir {} --graph {} --sampleID {}' \
-          ' --maxTHREADS {}'.format(HLALA, inputbam, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID, threads)
+          ' --maxTHREADS {}'.format(HLALA, inputbam, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID_clean, threads)
     exec_command(cmd)
 
     # create a dictionary to store the output for each allele
-    hla = pd.read_table(os.path.join(OUT_DIR, sampleID, 'hla', 'R1_bestguess_G.txt'), sep='\t')
+    hla = pd.read_table(os.path.join(OUT_DIR, sampleID_clean, 'hla', 'R1_bestguess_G.txt'), sep='\t')
     allele_dict = {}
     hla = hla.groupby('Locus')
     for k, g in hla:
