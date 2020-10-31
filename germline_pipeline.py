@@ -138,7 +138,7 @@ def main(R1,
               '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK, GENOME)
         exec_command(cmd)
 
-        #  Replace name of the caller in the VCF file
+        # Replace name of the caller in the VCF file
         cmd = 'sed -i \'s/{}/HaplotypeCaller/g\' haplotype_caller_filtered.vcf'.format(SAMPLEID)
         exec_command(cmd)
 
@@ -148,7 +148,7 @@ def main(R1,
               'varscan.vcf > varscan_filtered.vcf'
         exec_command(cmd)
 
-        # Replace name of the caller in the VCF file
+        # Replace name of the caller in the VCF file
         cmd = 'sed -i \'s/Sample1.varscan/varscan/g\' varscan_filtered.vcf'.format(SAMPLEID)
         exec_command(cmd)
 
