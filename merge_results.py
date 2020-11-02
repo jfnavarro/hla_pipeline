@@ -54,7 +54,7 @@ def main(dna_variants,
 
     variant_dict = defaultdict(list)
 
-    if len(dna_variants) > 0 and len(dna_variants) == len(dna_names):
+    if dna_variants and len(dna_variants) > 0 and len(dna_variants) == len(dna_names):
         print('Loading DNA variants..')
         for file, name in zip(dna_variants, dna_names):
             variants = filter_variants_dna(file,
@@ -70,7 +70,7 @@ def main(dna_variants,
             for variant in variants:
                 variant_dict[variant.key].append((variant, name))
 
-    if len(rna_variants) > 0 and len(rna_variants) == len(rna_names):
+    if rna_variants and len(rna_variants) > 0 and len(rna_variants) == len(rna_names):
         print('Loading RNA variants..')
         for file, name in zip(rna_variants, rna_names):
             variants = filter_variants_rna(file,
@@ -86,7 +86,7 @@ def main(dna_variants,
     # TODO this could be done more elegantly and efficiently
     counts_dict = defaultdict(lambda: defaultdict(float))
     counts_stats = defaultdict(list)
-    if len(rna_counts) > 0 and len(rna_counts) == len(rna_names):
+    if rna_counts and len(rna_counts) > 0 and len(rna_counts) == len(rna_names):
         print('Loading Gene counts..')
         for file, name in zip(rna_counts, rna_names):
             counts_file = open(file)
