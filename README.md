@@ -39,10 +39,6 @@ are used.
 Each tool/pipeline uses a command line interface with parameters which
 can be shown and described with --help.
 
-See INSTALL.txt for installation instructions. 
-
-See RUN.txt for running instructions.
-
 ## cDNA and Peptides dictionaries
 merge_results.py requires two dictionaries, one mapping transcript ids to DNA sequences and another
 one mapping transcript ids to peptide sequences. The format is the following for both files:
@@ -50,6 +46,15 @@ one mapping transcript ids to peptide sequences. The format is the following for
 TRANSCRIPT_ID:SEQUENCE 
 
 To build these dictionaries you can use as reference the Jupyter Notebooks located in dictionaries
+
+## Install
+See INSTALL.txt for installation instructions. 
+
+A Docker container with everything that is needed to process
+data is available at <>
+
+## How to run
+See RUN.txt for a running example.
 
 ## Output (important files)
 
