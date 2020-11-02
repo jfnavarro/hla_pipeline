@@ -97,7 +97,7 @@ def main(dna_variants,
                 columns = line.strip().split('\t')
                 gene_id = columns[header_counts.index('Geneid')]
                 value = float(columns[-1])
-                counts_dict[name][gene_id] = value
+                counts_dict[name][gene_id.split('.')[0]] = value
             counts_file.close()
 
         if len(counts_dict) > 0:
@@ -147,7 +147,9 @@ def main(dna_variants,
         num_dna_fail = len(dna_name_fail)
 
         # All variants share variant key so their epitopes/effects/gene must be the same (we take the first variant)
-        epitopes, effects, gene = value[0][0].epitopes, value[0][0].effects, value[0][0].knownGene
+        epitopes = value[0][0].epitopes
+        effects = value[0][0].effects
+        gene = value[0][0].knownGene.split('.')[0]
 
         # Get gene exp. if any (gene should be the same in all the effects)
         gene_locus = []
