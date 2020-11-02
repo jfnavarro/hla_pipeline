@@ -36,7 +36,8 @@ setup(
     'scikit-learn',
     'pysam',
     'vcfpy',
-    'biopython'
+    'biopython',
+    'mhcflurry'
   ],
   #test_suite = 'tests',
   scripts=glob.glob('*.py'),

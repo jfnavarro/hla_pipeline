@@ -76,10 +76,10 @@ def main(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_f
                 added_proteins_wt = set()
                 for line in lines:
                     columns = line.strip().split('\t')
-                    pass_somatic = int(columns[header.index('Number of Somatic samples (passing)')]) > 0
-                    pass_germline = int(columns[header.index('Number of Germline samples (passing)')]) > 0
-                    if (mode == "both" and pass_somatic and pass_germline) or (mode == "somatic" and pass_somatic)\
-                        or (mode == "germline" and pass_germline) or (mode == "either" and (pass_somatic or pass_germline)):
+                    pass_somatic = int(columns[header.index('Number of DNA samples (passing)')]) > 0
+                    pass_germline = int(columns[header.index('Number of RNA samples (passing)')]) > 0
+                    if (mode == "both" and pass_somatic and pass_germline) or (mode == "dna" and pass_somatic)\
+                        or (mode == "rna" and pass_germline) or (mode == "either" and (pass_somatic or pass_germline)):
                         protein_name = '{}_{}_{}'.format(''.join(columns[header.index('Variant key')].split()),
                                                          columns[header.index('cDNA change')],
                                                          columns[header.index('AA change')])
@@ -122,8 +122,8 @@ if __name__ == '__main__':
     parser.add_argument('--alleles', default=None, required=True,
                         help='A file containing the allowed alleles in MHCflurry')
     parser.add_argument('--mode', default='either',
-                        help='Mode to use to extract peptides from the variants (both, somatic (default), germline, either)',
-                        choices=['both', 'somatic', 'germline', 'either'])
+                        help='Mode to use to extract peptides from the variants (both, dna (default), rna, either)',
+                        choices=['both', 'dna', 'rna', 'either'])
     parser.add_argument('--results', default='all',
                         help='Whether to include all results for each peptide or only the best one (default=all)',
                         choices=['all', 'best'])
