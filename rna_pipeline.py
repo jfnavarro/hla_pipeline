@@ -160,11 +160,11 @@ def main(R1,
         annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
 
         # Moving result files to output
-        shutil.move('combined_calls.vcf', '../')
-        shutil.move('annotated.hg38_multianno.vcf', '../')
+        shutil.move('combined_calls.vcf', '../combined_calls.vcf')
+        shutil.move('annotated.hg38_multianno.vcf', '../annotated.hg38_multianno.vcf')
         shutil.move('sample_final.genotype.json', '../hla_genotype.json')
-        shutil.move('gene.counts', '../')
-        shutil.move('sample_final.bam', '../')
+        shutil.move('gene.counts', '../gene.counts')
+        shutil.move('sample_final.bam', '../sample_final.bam')
 
     print("COMPLETED!")
 

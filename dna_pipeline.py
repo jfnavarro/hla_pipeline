@@ -221,10 +221,10 @@ def main(R1_NORMAL,
             p2_hla.join()
 
         # Moving result files to output
-        shutil.move('combined_calls.vcf', '../')
-        shutil.move('annotated.hg38_multianno.vcf', '../')
-        shutil.move('PRG-HLA-LA_Normal_output.txt', '../')
-        shutil.move('PRG-HLA-LA_Tumor_output.txt', '../')
+        shutil.move('combined_calls.vcf', '../combined_calls.vcf')
+        shutil.move('annotated.hg38_multianno.vcf', '../annotated.hg38_multianno.vcf')
+        shutil.move('PRG-HLA-LA_Normal_output.txt', '../PRG-HLA-LA_Normal_output.txt')
+        shutil.move('PRG-HLA-LA_Tumor_output.txt', '../PRG-HLA-LA_Tumor_output.txt')
         shutil.move('sample1_final.bam', '../tumor_dedup.bam')
         shutil.move('sample2_final.bam', '../normal_dedup.bam')
 
