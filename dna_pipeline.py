@@ -269,8 +269,6 @@ if __name__ == '__main__':
     R2_CANCER = os.path.abspath(args.R2_CANCER)
     SAMPLEID = args.sample
     GENOME_REF = os.path.abspath(args.genome)
-    GENOME_REF_STAR = os.path.abspath(args.genome_star) if args.genome_star else None
-    GENOME_ANNOTATION = os.path.abspath(args.genome_ref) if args.genome_ref else None
     THREADS = int(args.threads)
     KNOWN_SITE1 = os.path.abspath(args.known1)
     KNOWN_SITE2 = os.path.abspath(args.known2)
@@ -290,8 +288,6 @@ if __name__ == '__main__':
          R1_CANCER,
          R2_CANCER,
          GENOME_REF,
-         GENOME_REF_STAR,
-         GENOME_ANNOTATION,
          SAMPLEID,
          THREADS,
          KNOWN_SITE1,
