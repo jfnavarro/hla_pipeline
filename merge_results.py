@@ -103,8 +103,8 @@ def main(dna_variants,
         if len(counts_dict) > 0:
             for name, gene_counts in counts_dict.items():
                 counts = list(gene_counts.values())
-                mean = statistics.mean(counts)
-                percentile = np.around(stats.percentileofscore(counts, 3))
+                mean = np.around(statistics.mean(counts), 3)
+                percentile = np.around(stats.percentileofscore(counts, 3), 3)
                 counts_stats[name] = [mean, percentile]
 
     print('Creating merged variants..')
