@@ -139,7 +139,7 @@ def main(R1_NORMAL,
         p2_hla = multiprocessing.Process(target=HLA_predictionDNA,
                                          args=('sample1_final.bam', SAMPLEID, 'PRG-HLA-LA_Tumor_output.txt', THREADS))
         p2_hla.start()
-        
+
     if 'variant' in STEPS:
         print('Performing variant calling Mutect2')
         # Variant calling Mutect2

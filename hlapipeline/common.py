@@ -84,5 +84,5 @@ def annotate_variants(input, output, db, version, threads):
     """
     annovardb = '{} -buildver {}'.format(os.path.join(ANNOVAR_PATH, db), version)
     cmd = '{} {} {} -thread {} -out {} -vcfinput -remove -protocol {}'.format(
-        os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, input, threads, output, ANNOVAR_ANNO)
+        os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), input, annovardb, threads, output, ANNOVAR_ANNO)
     exec_command(cmd)
