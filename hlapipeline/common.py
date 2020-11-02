@@ -81,6 +81,6 @@ def annotate_variants(input, output, db, version, threads):
     :param threads: the number of threads to use
     """
     annovardb = '{} -buildver {}'.format(os.path.join(ANNOVAR_PATH, db), version)
-    cmd = '{} {} {} -thread {} -out output -vcfinput -remove -protocol {}'.format(
+    cmd = '{} {} {} -thread {} -out {} -vcfinput -remove -protocol {}'.format(
         os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), annovardb, input, threads, output, ANNOVAR_ANNO)
     exec_command(cmd)
