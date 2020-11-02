@@ -1,6 +1,6 @@
-# DNA and RNA NGS variant calling toolset with HLA and MHC predictions
-This toolset can process DNA (tumor and normal) and RNA (tumor) dada in somatic modes
-and generate a list of variants, HLAs and neo-antigens with affinity scores. 
+# DNA and RNA NGS variant calling toolset with HLA typing and Neoantigen predictions
+This toolset can process DNA (tumor and normal) and RNA (tumor) dada in somatic mode
+and generate a list of variants, HLAs and neoantigens with affinity scores. 
 
 <p align="center">
 <img src="diagram.png" height="800">
