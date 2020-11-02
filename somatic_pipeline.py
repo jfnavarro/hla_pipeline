@@ -100,6 +100,7 @@ def main(R1_NORMAL,
         # NOTE setting reducers to it works in system that do not allow many files open
         cmd = '{} MarkDuplicatesSpark --input sample1_header.bam --output sample1_dedup.bam'.format(GATK)
         exec_command(cmd)
+
         cmd = '{} MarkDuplicatesSpark --input sample2_header.bam --output sample2_dedup.bam'.format(GATK)
         exec_command(cmd)
 

@@ -10,7 +10,7 @@ conda config --add channels conda-forge
 conda create -n hla python=3.6.1
 conda activate hla
 
-conda install -y hla-la gatk4 bwa samtools picard varscan trim-galore star somatic-sniper bedtools tensorflow==1.15.0 mhcflurry kallisto biopython
+conda install -y hla-la gatk4 bwa samtools picard varscan trim-galore star somatic-sniper bedtools tensorflow==1.15.0 mhcflurry kallisto biopython subread
 pip install gsutil
 # You may need to create .boto config with gsutil config and then disable integrity check by setting this line check_hashes = if_fast_else_skip
 
@@ -49,9 +49,9 @@ cd annovar
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar cosmic70 humandb/
 wget http://hgdownload.cse.ucsc.edu/goldenpath/hg38/database/kgXref.txt.gz
 mv kgXref.txt.gz humandb/hg38_kgXref.txt.gz
-
-# Download hg19 references 
 gunzip humandb/hg38_kgXref.txt.gz
+
+# Download hg19 references
 ./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar knownGene humandb/
 ./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar ensGene humandb/
 ./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar refGene humandb/

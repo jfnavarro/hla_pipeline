@@ -70,13 +70,6 @@ def HLA_predictionRNA(inputbam, threads):
                                                                                       clean_name)
     exec_command(cmd)
 
-    cmd = '{} partial --threads {} -G {}.genotype.json {}.extracted.1.fq.gz {}.extracted.2.fq.gz'.format(ARCASHLA,
-                                                                                                         threads,
-                                                                                                         clean_name,
-                                                                                                         clean_name,
-                                                                                                         clean_name)
-    exec_command(cmd)
-
 
 def annotate_variants(input, output, db, version, threads):
     """
