@@ -195,7 +195,7 @@ if __name__ == '__main__':
                         help='List of names for each DNA sample/file (to include in the report)')
     parser.add_argument('--rna', nargs='+', default=None, required=False,
                         help='List of annotated vcf files with the variants obtained with the RNA pipeline')
-    parser.add_argument('--germline-names', nargs='+', default=None, required=False,
+    parser.add_argument('--rna-names', nargs='+', default=None, required=False,
                         help='List of names for each RNA sample/file (to include in the report)')
     parser.add_argument('--rna-counts', type=str, default=None, required=False,
                         help='List of gene counts files obtained with the RNA pipeline')
