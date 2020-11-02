@@ -30,7 +30,25 @@ class Variant:
     def ensemblGene(self):
         gene = None
         for effect in self.effects:
-            if 'knownGene' in effect or 'refGene' in effect:
+            if 'ensGene' in effect:
+                gene = effect.split("_")[1]
+                break
+        return gene
+
+    @property
+    def knownGene(self):
+        gene = None
+        for effect in self.effects:
+            if 'knownGene' in effect:
+                gene = effect.split("_")[1]
+                break
+        return gene
+
+    @property
+    def refGene(self):
+        gene = None
+        for effect in self.effects:
+            if 'refGene' in effect:
                 gene = effect.split("_")[1]
                 break
         return gene
@@ -107,9 +125,9 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
     This function parses a list of annotated RNA variants from Annovar.
     It then applies some filters to the variants and computes the epitopes of each of
     the variants nonsynonymous and frameshift effects.
-    The input is expected to contain HaplotypeCaller and Varscan germline variants.
+    The input is expected to contain HaplotypeCaller and Varscan RNA variants.
     It returns a list of Variant() objects.
-    :param file: the Annovar annotated germline variants
+    :param file: the Annovar annotated RNA variants
     :param tumor_coverage: filter value for the number of total reads (DP)
     :param tumor_var_depth: filter value for the number of allelic reads (AD)
     :param tumor_var_freq: filter value for the Variant Allele Frequency (VAF)
@@ -174,7 +192,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
     This function parses a list of annotated DNA variants from Annovar.
     It then applies some filters to the variants and computes the epitopes of each of
     the variants nonsynonymous and frameshift effects.
-    The input is expected to contain Mutect2, Strelka, SomaticSniper and Varscan somatic variants.
+    The input is expected to contain Mutect2, Strelka, SomaticSniper and Varscan DNA variants.
     It returns a list of Variant() objects.
     :param file: the Annovar annotated somatic variants
     :param normal_coverage: filter value for the number of normal total reads (DP)
