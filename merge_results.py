@@ -154,7 +154,7 @@ def main(dna_variants,
         if gene is not None:
             for name, gene_counts in counts_dict.items():
                 try:
-                    gene_count = counts_dict[name][gene]
+                    gene_count = gene_counts[gene]
                     gene_mean, gene_percentile = counts_stats[name]
                     gene_locus.append('{}:({})'.format(name,
                                                        ';'.join([gene,
@@ -163,6 +163,8 @@ def main(dna_variants,
                                                                  str(gene_percentile)])))
                 except KeyError:
                     gene_locus.append("{}:-".format(name))
+        else:
+            gene_locus = ["-"]
 
         for epitope, effect in zip(epitopes, effects):
             to_write = '\t'.join(str(x) for x in [key,

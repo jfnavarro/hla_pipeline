@@ -162,7 +162,7 @@ def main(R1,
         # Moving result files to output
         shutil.move('combined_calls.vcf', '../')
         shutil.move('annotated.hg38_multianno.vcf', '../')
-        shutil.move('sample_header.genotype.json', '../hla_genotype.json')
+        shutil.move('sample_final.genotype.json', '../hla_genotype.json')
         shutil.move('gene.counts', '../')
         shutil.move('sample_final.bam', '../')
 
