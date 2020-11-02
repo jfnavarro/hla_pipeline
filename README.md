@@ -1,4 +1,4 @@
-# DNA and RNA NGS variant calling toolset with HLA typing and Neoantigen predictions
+# DNA and RNA variant calling toolset with HLA typing and Neoantigen predictions
 This toolset can process DNA (tumor and normal) and RNA (tumor) dada in somatic mode
 and generate a list of variants, HLAs and neoantigens with affinity scores. 
 
@@ -19,7 +19,7 @@ reported. Annotation is performed using Annovar.
 The pipeline uses trim-galore to trim, bwa-men to align and follows GATK4 best practices. 
 The pipeline also performs HLA predictions with HLA-LA (tumor and normal).
 
-**rnapipeline.py** processes RNA data and generates a list of unified
+**rna_pipeline.py** processes RNA data and generates a list of unified
 annotated somatic variants (weak filtered) and also a list of gene counts values. 
 The variant callers used are Varscan and HaplotypeCaller. Annotation is performed with Annovar.
 The pipeline uses trim-galore to trim, STAR to align and follows GATK4 best practices. 
