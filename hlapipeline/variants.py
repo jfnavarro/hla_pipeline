@@ -36,19 +36,10 @@ class Variant:
         return gene
 
     @property
-    def knownGene(self):
+    def geneName(self):
         gene = None
         for effect in self.effects:
-            if 'knownGene' in effect:
-                gene = effect.split("_")[1]
-                break
-        return gene
-
-    @property
-    def refGene(self):
-        gene = None
-        for effect in self.effects:
-            if 'refGene' in effect:
+            if 'knownGene' in effect or 'refGene' in effect:
                 gene = effect.split("_")[1]
                 break
         return gene

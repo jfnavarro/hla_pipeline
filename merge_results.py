@@ -149,7 +149,7 @@ def main(dna_variants,
         # All variants share variant key so their epitopes/effects/gene must be the same (we take the first variant)
         epitopes = value[0][0].epitopes
         effects = value[0][0].effects
-        gene = value[0][0].knownGene
+        gene = value[0][0].geneName
 
         # Get gene exp. if any (gene should be the same in all the effects)
         gene_locus = []
