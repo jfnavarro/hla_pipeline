@@ -133,14 +133,13 @@ def main(R1_NORMAL,
     if 'hla' in STEPS:
         # HLA-LA predictions
         print('Performing HLA-LA predictions')
-        p1 = multiprocessing.Process(target=HLA_predictionDNA,
-                                     args=('sample2_final.bam', SAMPLEID, 'PRG-HLA-LA_Normal_output.txt', THREADS)).start()
-        p2 = multiprocessing.Process(target=HLA_predictionDNA,
-                                     args=('sample1_final.bam', SAMPLEID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)).start()
-        # Wait for the processes to finish in parallel
-        p1.join()
-        p2.join()
-
+        p1_hla = multiprocessing.Process(target=HLA_predictionDNA,
+                                         args=('sample2_final.bam', SAMPLEID, 'PRG-HLA-LA_Normal_output.txt', THREADS))
+        p1_hla.start()
+        p2_hla = multiprocessing.Process(target=HLA_predictionDNA,
+                                         args=('sample1_final.bam', SAMPLEID, 'PRG-HLA-LA_Tumor_output.txt', THREADS))
+        p2_hla.start()
+        
     if 'variant' in STEPS:
         print('Performing variant calling Mutect2')
         # Variant calling Mutect2
@@ -215,6 +214,11 @@ def main(R1_NORMAL,
         # Annotate with Annovar
         print('Annotating variants')
         annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
+
+        if 'hla' in STEPS:
+            # Wait for the processes to finish in parallel
+            p1_hla.join()
+            p2_hla.join()
 
         # Moving result files to output
         shutil.move('combined_calls.vcf', '../')
