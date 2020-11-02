@@ -83,7 +83,7 @@ def main(dna_variants,
             for variant in variants:
                 variant_dict[variant.key].append((variant, name))
 
-    # TODO this could be done more elegantly and efficiently
+    # TODO this could be done more elegantly and efficiently
     counts_dict = defaultdict(lambda: defaultdict(float))
     counts_stats = defaultdict(list)
     if len(rna_counts) > 0 and len(rna_counts) == len(rna_names):
