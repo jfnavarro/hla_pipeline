@@ -101,10 +101,10 @@ def effects(record, cDNA_seq_dict, AA_seq_dict):
     return epitopes, effects_seen_in
 
 
-def filter_variants_germline(file, tumor_coverage, tumor_var_depth,
-                             tumor_var_freq, num_callers, cDNA_seq_dict, AA_seq_dict):
+def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
+                        tumor_var_freq, num_callers, cDNA_seq_dict, AA_seq_dict):
     """
-    This function parses a list of annotated germline variants from Annovar.
+    This function parses a list of annotated RNA variants from Annovar.
     It then applies some filters to the variants and computes the epitopes of each of
     the variants nonsynonymous and frameshift effects.
     The input is expected to contain HaplotypeCaller and Varscan germline variants.
@@ -161,17 +161,17 @@ def filter_variants_germline(file, tumor_coverage, tumor_var_depth,
             variant.status = is_valid
             variant.effects = [';'.join(dbs_seen_in[r[-1]]) for r in variant_effects]
             variant.epitopes = variant_effects
-            variant.type = 'germline'
+            variant.type = 'rna'
             variants.append(variant)
 
     return variants
 
 
-def filter_variants_somatic(file, normal_coverage, tumor_coverage, tumor_var_depth,
-                            tumor_var_freq, t2n_ratio, num_callers, num_callers_indel,
-                            cDNA_seq, AA_seq):
+def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
+                        tumor_var_freq, t2n_ratio, num_callers, num_callers_indel,
+                        cDNA_seq, AA_seq):
     """
-    This function parses a list of annotated somatic variants from Annovar.
+    This function parses a list of annotated DNA variants from Annovar.
     It then applies some filters to the variants and computes the epitopes of each of
     the variants nonsynonymous and frameshift effects.
     The input is expected to contain Mutect2, Strelka, SomaticSniper and Varscan somatic variants.
@@ -321,7 +321,7 @@ def filter_variants_somatic(file, normal_coverage, tumor_coverage, tumor_var_dep
             variant.status = is_valid
             variant.effects = [';'.join(dbs_seen_in[r[-1]]) for r in variant_effects]
             variant.epitopes = variant_effects
-            variant.type = 'somatic'
+            variant.type = 'dna'
             variants.append(variant)
 
     return variants

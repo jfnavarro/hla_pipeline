@@ -9,8 +9,10 @@ import re
 import os
 
 
-def exec_command(cmd):
+def exec_command(cmd, detach=False):
     print(cmd)
+    if detach:
+        return subprocess.Popen(cmd, shell=True)
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output, error = p.communicate()
     if p.returncode != 0:

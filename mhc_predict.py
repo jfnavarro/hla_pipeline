@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 """
-This tools uses the ouput of merge_results.py and HLAs predicted with either
-the somatic_pipeline.py and/or the germline_pipeline.py. The tool extracts the WT and MUT peptides
-and makes affinity binding predictions for the HLAs (class I).
-The tools uses MHC-flurry for the predictions.
+This tools uses the output of merge_results.py and HLAs predicted with either
+the dna_pipeline.py and/or the rna_pipeline.py to predict neoantigens.
+The tool extracts the WT and MUT peptides and makes affinity binding
+predictions for the HLAs (class I). The tools uses MHC-flurry for the predictions.
 
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """

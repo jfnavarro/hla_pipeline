@@ -17,7 +17,7 @@ with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
   name='hlapipeline',
-  version="0.3.0",
+  version="0.3.1",
   description=__doc__.split("\n", 1)[0],
   long_description=long_description,
   keywords='rna-seq analysis dna WES WGS HLA MHC variant',

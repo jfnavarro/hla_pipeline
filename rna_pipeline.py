@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 """
-This pipeline computes germline variants from DNA or RNA data.
+This pipeline computes somatic variants from RNA data.
 
-The pipeline trims with trimgalore, aligns with STAR (RNA) or bwa-men (DNA),
+The pipeline trims with trimgalore, aligns with STAR,
 performs the GATK4 best practices and computes variants with
 HaplotypeCaller and Varscan. The variants are then combined into
-one file and annotated with Annovar.
+one file and annotated with Annovar. Gene counts are also
+computed with featureCounts.
 
 Multiple options are available. To see them type --help
 
@@ -14,6 +15,7 @@ Multiple options are available. To see them type --help
 from hlapipeline.common import *
 from hlapipeline.tools import *
 import os
+import shutil
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 def main(R1,
@@ -28,19 +30,18 @@ def main(R1,
          THREADS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         STEPS,
-         MODE):
+         STEPS):
 
     # TODO add sanity checks for the parameters
     # TODO better log info
     # TODO remove temp files
     # TODO put output files somewhere else
 
-    print("Germline pipeline")
+    print("RNA somatic pipeline")
 
     # Create sub-folder to store all results
-    os.makedirs('germline', exist_ok=True)
-    os.chdir('germline')
+    os.makedirs('workdir', exist_ok=True)
+    os.chdir('workdir')
 
     if 'mapping' in STEPS:
         print('Trimming reads')
@@ -49,25 +50,20 @@ def main(R1,
 
         # ALIGNMENT
         print('Starting alignment')
-        if MODE == 'DNA':
-            cmd = '{} -t {} {} sample_val_1.fq.gz sample_val_2.fq.gz | ' \
-                  '{} sort --threads {} > trimmed_paired_aligned_sorted.bam'.format(BWA, THREADS, GENOME, SAMTOOLS, THREADS)
-            exec_command(cmd)
-        else:
-            cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
-                  ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
-                  ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
-                  ' --runThreadN {}'.format(STAR, GENOME_STAR, ANNOTATION, THREADS)
-            exec_command(cmd)
+        cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
+              ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
+              ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
+              ' --runThreadN {}'.format(STAR, GENOME_STAR, ANNOTATION, THREADS)
+        exec_command(cmd)
 
-            cmd = 'mv Aligned.sortedByCoord.out.bam trimmed_paired_aligned_sorted.bam'
-            exec_command(cmd)
+        cmd = 'mv Aligned.sortedByCoord.out.bam trimmed_paired_aligned_sorted.bam'
+        exec_command(cmd)
 
         # Add headers
         print("Adding headers")
         cmd = '{} AddOrReplaceReadGroups --INPUT trimmed_paired_aligned_sorted.bam --OUTPUT sample_header.bam ' \
-              '--SORT_ORDER coordinate --RGID {} --RGLB VHIO --RGPL Illumina --RGPU VHIO --RGSM {} --CREATE_INDEX true ' \
-              '--VALIDATION_STRINGENCY SILENT'.format(PICARD, MODE, SAMPLEID)
+              '--SORT_ORDER coordinate --RGID DNA --RGLB {} --RGPL Illumina --RGPU {} --RGSM {} --CREATE_INDEX true ' \
+              '--VALIDATION_STRINGENCY SILENT'.format(PICARD, SAMPLEID, SAMPLEID, SAMPLEID)
         exec_command(cmd)
 
     if 'gatk' in STEPS:
@@ -76,60 +72,58 @@ def main(R1,
         cmd = '{} MarkDuplicatesSpark --input sample_header.bam --output sample_dedup.bam'.format(GATK)
         exec_command(cmd)
 
-        if MODE == 'RNA':
-            # Split N and cigars
-            print('Splitting NCigar Reads')
-            cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK, GENOME)
-            exec_command(cmd)
-
-            cmd = 'rm -rf sample_dedup* && mv sample_split.bam sample_dedup.bam && mv sample_split.bai sample_dedup.bai'
-            exec_command(cmd)
+        # Split N and cigars
+        print('Splitting NCigar Reads')
+        cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK, GENOME)
+        exec_command(cmd)
 
         # GATK base re-calibration
         print('Starting re-calibration')
-        cmd = '{} BaseRecalibratorSpark --use-original-qualities --input sample_dedup.bam --reference {} --known-sites {} ' \
+        cmd = '{} BaseRecalibratorSpark --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
               '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK,
                                                                                         GENOME,
                                                                                         SNPSITES,
                                                                                         KNOWN_SITE1,
                                                                                         KNOWN_SITE2)
         exec_command(cmd)
-        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input sample_dedup.bam ' \
+        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input sample_split.bam ' \
               '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK, GENOME)
         exec_command(cmd)
 
     if 'hla' in STEPS:
         print('Predicting HLAs')
-        if MODE == 'DNA':
-            HLA_predictionDNA('sample_final.bam', SAMPLEID, 'PRG-HLA-LA_output.txt', THREADS)
-        else:
-            HLA_predictionRNA('sample_final.bam', THREADS)
+        HLA_predictionRNA('sample_final.bam', THREADS)
 
     if 'variant' in STEPS:
         # Variant calling (Samtools pile-ups)
         print('Computing pile-ups')
         cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, GENOME)
-        exec_command(cmd)
-
-        # Variant calling VarScan
-        print('Variant calling with VarScan2')
-        cmd = '{} mpileup2cns sample.pileup --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
-              '--min-var-freq 0.01 --min-avg-qual 15 --p-value 0.99 --strand-filter 1 > varscan.vcf'.format(VARSCAN)
-        exec_command(cmd)
+        p1 = exec_command(cmd, detach=True)
 
         # Variant calling (HaplotypeCaller)
         print('Variant calling with HaplotypeCaller')
         cmd = '{} HaplotypeCaller --reference {} --input sample_final.bam --output haplotypecaller.vcf ' \
               '--dont-use-soft-clipped-bases --standard-min-confidence-threshold-for-calling 20 ' \
               '--dbsnp {}'.format(GATK, GENOME, SNPSITES)
-        exec_command(cmd)
+        p2 = exec_command(cmd, detach=True)
 
-        if MODE == 'RNA':
-            # Computing gene counts
-            print('Computing gene counts with featureCounts')
-            cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
-                  '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, ANNOTATION)
-            exec_command(cmd)
+        # Computing gene counts
+        print('Computing gene counts with featureCounts')
+        cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
+              '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, ANNOTATION)
+        p3 = exec_command(cmd, detach=True)
+
+        # Variant calling VarScan
+        p1.wait()
+        print('Variant calling with VarScan2')
+        cmd = '{} mpileup2cns sample.pileup --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
+              '--min-var-freq 0.01 --min-avg-qual 15 --p-value 0.99 --strand-filter 1 > varscan.vcf'.format(VARSCAN)
+        p4 = exec_command(cmd, detach=True)
+
+        # Wait for processes to finish
+        p2.wait()
+        p3.wait()
+        p4.wait()
 
     if 'filter' in STEPS:
         # Filtering variants (HaplotypeCaller)
@@ -165,6 +159,13 @@ def main(R1,
         print('Annotating variants')
         annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
 
+        # Moving result files to output
+        shutil.move('combined_calls.vcf', '../')
+        shutil.move('annotated.hg38_multianno.vcf', '../')
+        shutil.move('sample_header.genotype.json', '../hla_genotype.json')
+        shutil.move('gene.counts', '../')
+        shutil.move('sample_final.bam', '../')
+
     print("COMPLETED!")
 
 if __name__ == '__main__':
@@ -179,7 +180,7 @@ if __name__ == '__main__':
                         help='Path to the reference genome GTF file (when in RNA mode)', required=False)
     parser.add_argument('--sample',
                         help='Name of the sample/experiment. Default is sample', default='sample')
-    parser.add_argument('--dir',
+    parser.add_argument('--outdir',
                         help='Path to the folder where to put output files', required=True)
     parser.add_argument('--known1',
                         help='Path to the file with Mill and 1000G gold standards (GATK bundle)', required=True)
@@ -197,14 +198,11 @@ if __name__ == '__main__':
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                         help='Steps to perform in the pipeline',
-                        choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
-    parser.add_argument('--mode', default='RNA',
-                        help='Mode to use (RNA (default) or DNA)',
-                        choices=['DNA', 'RNA'])
+                        choices=['mapping', 'gatk', 'hla', 'variant', 'filter'])
 
     # Parse arguments
     args = parser.parse_args()
-    DIR = args.dir
+    DIR = args.outdir
     R1 = os.path.abspath(args.R1)
     R2 = os.path.abspath(args.R2)
     SAMPLEID = args.sample
@@ -218,10 +216,6 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
-    MODE = args.mode
-    if MODE == "RNA" and (not GENOME_REF_STAR or not GENOME_ANNOTATION):
-        sys.stderr.write("Error, RNA mode but STAR reference or annotation files are missing\n")
-        sys.exit(1)
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -239,5 +233,4 @@ if __name__ == '__main__':
          THREADS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         STEPS,
-         MODE)
+         STEPS)

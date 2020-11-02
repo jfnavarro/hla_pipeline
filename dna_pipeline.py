@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 """
-This pipeline computes somatic variants from DNA or RNA tumor-normal paired data.
+This pipeline computes somatic variants from DNA tumor-normal paired data.
 
-The pipeline trims with trimgalore, aligns with STAR (RNA) or bwa-men (DNA),
+The pipeline trims with trimgalore, aligns with bwa-men,
 performs the GATK4 best practices and computes variants with
 Mutect2, Strelka2, SomaticSniper and Varscan.
 The variants are then combined into one file and annotated with Annovar.
@@ -16,6 +16,8 @@ import shutil
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import os
 import sys
+import shutil
+import multiprocessing
 from hlapipeline.filters import *
 
 def main(R1_NORMAL,
@@ -23,8 +25,6 @@ def main(R1_NORMAL,
          R1_CANCER,
          R2_CANCER,
          GENOME,
-         GENOME_STAR,
-         ANNOTATION,
          SAMPLEID,
          THREADS,
          KNOWN_SITE1,
@@ -34,32 +34,35 @@ def main(R1_NORMAL,
          PON,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         STEPS,
-         MODE):
+         STEPS):
 
     # TODO add sanity checks for the parameters
     # TODO better log info
     # TODO remove temp files
     # TODO put output files somewhere else
 
-    print("Somatic pipeline")
+    print("DNA somatic pipeline")
 
     # Sample 1 cancer, sample 2 normal
     sample1_ID = SAMPLEID + "_Tumor"
     sample2_ID = SAMPLEID + "_Normal"
 
     # Create sub-folder to store all results
-    os.makedirs('somatic', exist_ok=True)
-    os.chdir('somatic')
+    os.makedirs('workdir', exist_ok=True)
+    os.chdir('workdir')
 
     if 'mapping' in STEPS:
         # TRIMMING
         print('Starting trimming')
         cmd = '{} --cores {} --paired --basename normal {} {}'.format(TRIMGALORE, THREADS, R1_NORMAL, R2_NORMAL)
-        exec_command(cmd)
+        p1 = exec_command(cmd, detach=True)
 
         cmd = '{} --cores {} --paired --basename cancer {} {}'.format(TRIMGALORE, THREADS, R1_CANCER, R2_CANCER)
-        exec_command(cmd)
+        p2 = exec_command(cmd, detach=True)
+
+        # Wait for the processes to finish in parallel
+        p1.wait()
+        p2.wait()
 
         # ALIGNMENT
         print('Starting alignment')
@@ -67,66 +70,62 @@ def main(R1_NORMAL,
         # Normal (paired)
         cmd = '{} -t {} {} normal_val_1.fq.gz normal_val_2.fq.gz | ' \
               '{} sort --threads {} > aligned_normal_merged.bam'.format(BWA, THREADS, GENOME, SAMTOOLS, THREADS)
-        exec_command(cmd)
+        p1 = exec_command(cmd, detach=True)
 
-        if MODE == 'RNA':
-            # Cancer (paired)
-            cmd = '{} --genomeDir {} --readFilesIn cancer_val_1.fq.gz cancer_val_2.fq.gz --outSAMorder Paired' \
-                  ' --twopassMode None --outSAMunmapped None --outSAMtype BAM SortedByCoordinate' \
-                  ' --readFilesCommand gunzip -c --runThreadN {}'.format(STAR, GENOME_STAR, THREADS)
-            exec_command(cmd)
+        # Cancer (paired)
+        cmd = '{} -t {} {} cancer_val_1.fq.gz cancer_val_2.fq.gz | ' \
+              '{} sort --threads {} > aligned_cancer_merged.bam'.format(BWA, THREADS, GENOME, SAMTOOLS, THREADS)
+        p2 = exec_command(cmd, detach=True)
 
-            cmd = 'mv Aligned.sortedByCoord.out.bam aligned_cancer_merged.bam'
-            exec_command(cmd)
-        else:
-            # Cancer (paired)
-            cmd = '{} -t {} {} cancer_val_1.fq.gz cancer_val_2.fq.gz | ' \
-                  '{} sort --threads {} > aligned_cancer_merged.bam'.format(BWA, THREADS, GENOME, SAMTOOLS, THREADS)
-            exec_command(cmd)
+        # Wait for the processes to finish in parallel
+        p1.wait()
+        p2.wait()
 
         # Add headers
         print("Adding headers")
         cmd = '{} AddOrReplaceReadGroups -I aligned_cancer_merged.bam -O sample1_header.bam -RGID {} -RGPL Illumina ' \
-              '-RGLB {} -RGPU {} -RGSM {} -RGCN VHIO'.format(PICARD, sample1_ID, MODE, sample1_ID, sample1_ID)
-        exec_command(cmd)
+              '-RGLB DNA -RGPU {} -RGSM {} -RGCN VHIO'.format(PICARD, sample1_ID, sample1_ID, sample1_ID)
+        p1 = exec_command(cmd, detach=True)
 
         cmd = '{} AddOrReplaceReadGroups -I aligned_normal_merged.bam -O sample2_header.bam -RGID {} -RGPL Illumina ' \
-              '-RGLB {} -RGPU {} -RGSM {} -RGCN VHIO'.format(PICARD, sample2_ID, MODE, sample2_ID, sample2_ID)
-        exec_command(cmd)
+              '-RGLB DNA -RGPU {} -RGSM {} -RGCN VHIO'.format(PICARD, sample2_ID, sample2_ID, sample2_ID)
+        p2 = exec_command(cmd, detach=True)
+
+        # Wait for the processes to finish in parallel
+        p1.wait()
+        p2.wait()
 
     if 'gatk' in STEPS:
         # Mark duplicates
         print('Marking duplicates')
         # NOTE setting reducers to it works in system that do not allow many files open
+
         cmd = '{} MarkDuplicatesSpark --input sample1_header.bam --output sample1_dedup.bam'.format(GATK)
-        exec_command(cmd)
+        p1 = exec_command(cmd, detach=True)
 
         cmd = '{} MarkDuplicatesSpark --input sample2_header.bam --output sample2_dedup.bam'.format(GATK)
-        exec_command(cmd)
+        p2 = exec_command(cmd, detach=True)
 
-        # Split N and cigards for RNA data
-        if MODE == 'RNA':
-            cmd = '{} SplitNCigarReads --reference {} --input sample1_dedup.bam --output sample1_split.bam'.format(GATK,
-                                                                                                                   GENOME)
-            exec_command(cmd)
-
-            cmd = 'rm -rf sample1_dedup* && mv sample1_split.bam sample1_dedup.bam && mv sample1_split.bai sample1_dedup.bai'
-            exec_command(cmd)
+        # Wait for the processes to finish in parallel
+        p1.wait()
+        p2.wait()
 
         # GATK base re-calibration
         print('Starting re-calibration')
         cmd = '{} BaseRecalibratorSpark --input sample1_dedup.bam --reference {} --known-sites {} --known-sites {}' \
               ' --known-sites {} --output sample1_recal_data.txt'.format(GATK, GENOME, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
-        exec_command(cmd)
+        p1 = exec_command(cmd, detach=True)
 
         cmd = '{} BaseRecalibratorSpark --input sample2_dedup.bam --reference {} --known-sites {} --known-sites {}' \
               ' --known-sites {} --output sample2_recal_data.txt'.format(GATK, GENOME, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
-        exec_command(cmd)
+        p2 = exec_command(cmd, detach=True)
 
+        p1.wait()
         cmd = '{} ApplyBQSR --reference {} --input sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt ' \
               '--output sample1_final.bam'.format(GATK, GENOME)
         exec_command(cmd)
 
+        p2.wait()
         cmd = '{} ApplyBQSR --reference {} --input sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt ' \
               '--output sample2_final.bam'.format(GATK, GENOME)
         exec_command(cmd)
@@ -134,20 +133,15 @@ def main(R1_NORMAL,
     if 'hla' in STEPS:
         # HLA-LA predictions
         print('Performing HLA-LA predictions')
-        HLA_predictionDNA('sample2_final.bam', SAMPLEID, 'PRG-HLA-LA_Normal_output.txt', THREADS)
-        if MODE == 'DNA':
-            HLA_predictionDNA('sample1_final.bam', SAMPLEID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)
-        else:
-            HLA_predictionRNA('sample1_final.bam', THREADS)
-            
-    if 'variant' in STEPS:
-        # Variant calling (Samtools pile-ups)
-        print('Computing pile-ups')
-        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample1_final.bam > sample1.pileup'.format(SAMTOOLS, GENOME)
-        exec_command(cmd)
-        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample2_final.bam > sample2.pileup'.format(SAMTOOLS, GENOME)
-        exec_command(cmd)
+        p1 = multiprocessing.Process(target=HLA_predictionDNA,
+                                     args=('sample2_final.bam', SAMPLEID, 'PRG-HLA-LA_Normal_output.txt', THREADS)).start()
+        p2 = multiprocessing.Process(target=HLA_predictionDNA,
+                                     args=('sample1_final.bam', SAMPLEID, 'PRG-HLA-LA_Tumor_output.txt', THREADS)).start()
+        # Wait for the processes to finish in parallel
+        p1.join()
+        p2.join()
 
+    if 'variant' in STEPS:
         print('Performing variant calling Mutect2')
         # Variant calling Mutect2
         cmd = '{} Mutect2 --reference {} --input sample1_final.bam --input sample2_final.bam --normal-sample {} ' \
@@ -156,10 +150,7 @@ def main(R1_NORMAL,
                                                                                                    sample2_ID,
                                                                                                    GERMLINE,
                                                                                                    PON)
-        exec_command(cmd)
-        cmd = '{} FilterMutectCalls --variant Mutect_unfiltered.vcf --output Mutect.vcf --reference {}'.format(GATK,
-                                                                                                               GENOME)
-        exec_command(cmd)
+        p1 = exec_command(cmd, detach=True)
 
         # Variant calling Strelka2
         print('Performing variant calling with Strelka2')
@@ -168,29 +159,42 @@ def main(R1_NORMAL,
         cmd = '{} --exome --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta {}' \
               ' --runDir Strelka_output'.format(STRELKA, GENOME)
         exec_command(cmd)
+
         cmd = 'Strelka_output/runWorkflow.py -m local -j {}'.format(THREADS)
-        exec_command(cmd)
+        p2 = exec_command(cmd, detach=True)
 
         # Variant calling Somatic Sniper
         print('Performing variant calling with SomaticSniper')
         cmd = '{} -L -G -F vcf -f {} sample1_final.bam sample2_final.bam SS.vcf'.format(SSNIPER, GENOME)
-        exec_command(cmd)
+        p3 = exec_command(cmd, detach=True)
+
+        # Variant calling (Samtools pile-ups)
+        print('Computing pile-ups')
+        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample1_final.bam > sample1.pileup'.format(SAMTOOLS, GENOME)
+        p4 = exec_command(cmd, detach=True)
+
+        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample2_final.bam > sample2.pileup'.format(SAMTOOLS, GENOME)
+        p5 = exec_command(cmd, detach=True)
 
         # Variant calling VarScan
+        p4.wait()
+        p5.wait()
         print('Performing variant calling with VarScan2')
         cmd = '{} somatic sample2.pileup sample1.pileup varscan --tumor-purity .5 --output-vcf 1 ' \
               '--min-coverage 4 --min-var-freq .05 --min-reads 2 --strand-filter 1'.format(VARSCAN)
-        exec_command(cmd)
+        p6 = exec_command(cmd, detach=True)
 
-        if MODE == 'RNA':
-            # Computing gene counts
-            print('Computing gene counts with featureCounts for tumor sample')
-            cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
-                  '-g gene_name -a {} -o tumor-gene.counts sample1_dedup.bam'.format(FEATURECOUNTS, THREADS, ANNOTATION)
-            exec_command(cmd)
+        # Wait for the processes to finish in parallel
+        p1.wait()
+        p2.wait()
+        p3.wait()
+        p6.wait()
 
     if 'filter' in STEPS:
         print('Filtering variants')
+        cmd = '{} FilterMutectCalls --variant Mutect_unfiltered.vcf --output Mutect.vcf --reference {}'.format(GATK,
+                                                                                                               GENOME)
+        exec_command(cmd)
         mutect2_filter('Mutect.vcf', 'mutect_filtered.vcf', sample1_ID, sample2_ID)
         strelka2_filter('Strelka_output/results/variants/somatic.snvs.vcf.gz', 'strelka_filtered.vcf')
         somaticSniper_filter('SS.vcf', 'somaticsniper_filtered.vcf')
@@ -212,7 +216,15 @@ def main(R1_NORMAL,
         print('Annotating variants')
         annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
 
-    print("COMPLETED!")
+        # Moving result files to output
+        shutil.move('combined_calls.vcf', '../')
+        shutil.move('annotated.hg38_multianno.vcf', '../')
+        shutil.move('PRG-HLA-LA_Normal_output.txt', '../')
+        shutil.move('PRG-HLA-LA_Tumor_output.txt', '../')
+        shutil.move('sample1_final.bam', '../tumor_dedup.bam')
+        shutil.move('sample2_final.bam', '../normal_dedup.bam')
+
+    print('COMPLETED!')
 
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
@@ -222,13 +234,9 @@ if __name__ == '__main__':
     parser.add_argument('R2_CANCER', help='FASTQ file R2 (Cancer)')
     parser.add_argument('--genome',
                         help='Path to the reference genome FASTA file (must contain BWA index)', required=True)
-    parser.add_argument('--genome-star',
-                        help='Path to the reference genome STAR index folder (RNA mode)', required=False)
-    parser.add_argument('--genome-ref',
-                        help='Path to the reference genome GTF file (RNA mode)', required=False)
     parser.add_argument('--sample',
                         help='Name of the sample/experiment. Default is sample', default='sample')
-    parser.add_argument('--dir',
+    parser.add_argument('--outdir',
                         help='Path to the output folder where output files will be placed', required=True)
     parser.add_argument('--known1',
                         help='Path to the file with Mill and 1000G gold standards (GATK bundle)', required=True)
@@ -250,14 +258,11 @@ if __name__ == '__main__':
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                         help='Steps to perform in the pipeline',
-                        choices=['mapping', 'gatk', 'hla', 'variant', 'filter', "none"])
-    parser.add_argument('--mode', default='DNA',
-                        help='DNA if tumor sample is from DNA or else RNA if tumor sample is from RNA [DNA].',
-                        choices=['DNA', 'RNA'])
+                        choices=['mapping', 'gatk', 'hla', 'variant', 'filter'])
 
     # Parse arguments
     args = parser.parse_args()
-    DIR = args.dir
+    DIR = args.outdir
     R1_NORMAL = os.path.abspath(args.R1_NORMAL)
     R2_NORMAL = os.path.abspath(args.R2_NORMAL)
     R1_CANCER = os.path.abspath(args.R1_CANCER)
@@ -275,10 +280,6 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
-    MODE = args.mode
-    if 'RNA' in MODE and (not GENOME_REF_STAR or not GENOME_ANNOTATION):
-        sys.stderr.write("Error, RNA mode but STAR reference or annotation files are missing\n")
-        sys.exit(1)
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -300,5 +301,4 @@ if __name__ == '__main__':
          PON,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         STEPS,
-         MODE)
+         STEPS)
