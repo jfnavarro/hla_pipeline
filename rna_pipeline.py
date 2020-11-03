@@ -136,8 +136,8 @@ def main(R1,
         cmd = 'sed -i \'s/{}/HaplotypeCaller/g\' haplotype_caller_filtered.vcf'.format(SAMPLEID)
         exec_command(cmd)
 
-        # NOTE replacing IUPAC codes from varscan output (TEMP HACK till the bug is fixed in VarScan)
-        # NOTE this will also skip variants whose REF and ALT fields are identical (another bug in VarScan)
+        # NOTE replacing IUPAC codes from VCF
+        # NOTE this will also skip variants whose REF and ALT fields are identical
         cmd = 'awk \'{if ($1 ~ /#/) {print} else if ($4 != $5) {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS="\t"; print}}\' ' \
               'varscan.vcf > varscan_filtered.vcf'
         exec_command(cmd)

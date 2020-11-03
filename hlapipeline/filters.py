@@ -2,6 +2,7 @@
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com
 """
 import gzip
+from hlapipeline.common import exec_command
 
 
 def index_column_substring(your_list, substring):
@@ -116,7 +117,7 @@ def somaticSniper_filter(input, output):
     :param output:
     :return:
     """
-    filtered_vcf = open(output, 'w')
+    filtered_vcf = open('tmp_ss.vcf', 'w')
     vcf = open(input)
     for line in vcf:
         if line.startswith('#CHROM'):
@@ -134,6 +135,12 @@ def somaticSniper_filter(input, output):
             filtered_vcf.write(line)
     vcf.close()
     filtered_vcf.close()
+
+    # NOTE replacing IUPAC codes from VCF
+    # NOTE this will also skip variants whose REF and ALT fields are identical
+    cmd = 'awk \'{if ($1 ~ /#/) {print} else if ($4 != $5) {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS="\t"; print}}\' ' \
+          'tmp_ss.vcf > {}'.format(output)
+    exec_command(cmd)
 
 
 def strelka2_filter_indels(input, output):
@@ -187,7 +194,7 @@ def varscan_filter(input, output):
     :param output:
     :return:
     """
-    filtered_vcf = open(output, 'w')
+    filtered_vcf = open('tmp_varscan.vcf', 'w')
     vcf = open(input)
     for line in vcf:
         if line.startswith('#') and 'DP4' in line:
@@ -208,3 +215,9 @@ def varscan_filter(input, output):
             filtered_vcf.write(line)
     vcf.close()
     filtered_vcf.close()
+
+    # NOTE replacing IUPAC codes from VCF
+    # NOTE this will also skip variants whose REF and ALT fields are identical
+    cmd = 'awk \'{if ($1 ~ /#/) {print} else if ($4 != $5) {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS="\t"; print}}\' ' \
+          'tmp_varscan.vcf > {}'.format(output)
+    exec_command(cmd)
