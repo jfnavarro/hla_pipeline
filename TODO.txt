@@ -1,1 +1,1 @@
-* Add better logging and error handling (general)* Create docker container* Use snpEff for annotation instead of Annovar* Add QC steps (bamQC, fastQC, vcftools)* Use jacquard merge instead of GATK3 to merge variants* Add tests
+* Add better logging and error handling (general)* Create docker container* Use snpEff for annotation instead of Annovar* Add QC steps (bamQC, fastQC, vcftools)* Use jacquard merge instead of GATK3 to merge variants (with this the awk hacks to replace IUPA REF can be removed)* Add tests

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-DNA and RNA-Seq variant calling pipeline with HLA and MHC predictions
+DNA and RNA variant calling pipeline with HLA and neoantigen predictions
 
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
@@ -20,7 +20,7 @@ setup(
   version="0.3.1",
   description=__doc__.split("\n", 1)[0],
   long_description=long_description,
-  keywords='rna-seq analysis dna WES WGS HLA MHC variant',
+  keywords='rna-seq analysis dna WES WGS HLA MHC neoantigen variant',
   author='Jose Fernandez Navarro',
   author_email='jc.fernandez.navarro@gmail.com',
   license='MIT',
