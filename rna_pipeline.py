@@ -132,18 +132,10 @@ def main(R1,
               '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK, GENOME)
         exec_command(cmd)
 
-        # Replace name of the caller in the VCF file
-        cmd = 'sed -i \'s/{}/HaplotypeCaller/g\' haplotype_caller_filtered.vcf'.format(SAMPLEID)
-        exec_command(cmd)
-
         # NOTE replacing IUPAC codes from VCF
         # NOTE this will also skip variants whose REF and ALT fields are identical
         cmd = 'awk \'{if ($1 ~ /#/) {print} else if ($4 != $5) {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS="\t"; print}}\' ' \
               'varscan.vcf > varscan_filtered.vcf'
-        exec_command(cmd)
-
-        # Replace name of the caller in the VCF file
-        cmd = 'sed -i \'s/Sample1.varscan/varscan/g\' varscan_filtered.vcf'.format(SAMPLEID)
         exec_command(cmd)
 
         # Combine with GATK
@@ -153,6 +145,14 @@ def main(R1,
         cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf ' \
               '-V:HaplotypeCaller haplotype_caller_filtered.vcf -o combined_calls.vcf '\
               '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, GENOME, THREADS)
+        exec_command(cmd)
+
+        # Replace name of the caller in the VCF file
+        cmd = 'sed -i \'s/{}.HaplotypeCaller/HaplotypeCaller/g\' combined_calls.vcf'.format(SAMPLEID)
+        exec_command(cmd)
+
+        # Replace name of the caller in the VCF file
+        cmd = 'sed -i \'s/Sample1.varscan/varscan/g\' combined_calls.vcf'
         exec_command(cmd)
 
         # Annotate with Annovar
