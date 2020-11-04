@@ -1,6 +1,6 @@
-# DNA and RNA variant calling toolset with HLA typing and Neoantigen predictions
-This toolset can process DNA (tumor and normal) and RNA (tumor) dada in somatic mode
-and generate a list of variants, HLAs and neoantigens with affinity scores. 
+# DNA and RNA variant calling pipelines with HLA typing and Neoantigen predictions
+This toolset can process DNA (tumor and normal) and RNA (tumor) sequencing data 
+and generate a list of somatic variants, HLAs and neoantigens with affinity scores. 
 
 <p align="center">
 <img src="diagram.png" height="800">
@@ -28,11 +28,11 @@ The gene counts values are computed with featureCounts.
 
 **merge_resuls.py** combines results from 1 or several runs of the DNA and RNA
 pipelines in order to generate an unified table with useful information where
-variants are filtered by certain criteria and epitopes are created for each of the variants
-effects. 
+variants are filtered by certain criterias (defined by the user) and epitopes 
+are created for each of the variants somatic effects. 
 
 **mhc_predict.py** can take the file generated with merge_results.py and the HLA files
-generated in the DNA and/or RNA pipelines and then output a list of predicted neo-antigens.
+generated in the DNA and/or RNA pipelines and then generate a list of predicted neo-antigens.
 Variants are filtered by certain criterias and only the most common alleles for each HLA class 1
 are used. 
 
@@ -69,7 +69,7 @@ Other files:
 
 **rna_pipeline.py** 
 - annotated.hgXX_multianno.vcf (annotated and combined germline variants)
-- gene.counts
+- gene.counts (gene counts from featureCounts)
 - HLA predictions (hla_genotype.json)
 
 Other files:
