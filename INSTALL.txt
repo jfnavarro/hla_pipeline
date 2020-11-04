@@ -46,17 +46,11 @@ cd annovar
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar knownGene humandb/
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar ensGene humandb/
 ./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar refGene humandb/
-./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar avsnp150 humandb/
-./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar 1000g2015aug humandb/
-./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar cosmic70 humandb/
 
 # Download hg19 references for Annovar
 ./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar knownGene humandb/
 ./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar ensGene humandb/
 ./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar refGene humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar avsnp150 humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar 1000g2015aug humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar cosmic70 humandb/
 
 cd ~/shared
 gsutil cp gs://gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2 .

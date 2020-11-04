@@ -22,5 +22,4 @@ FEATURECOUNTS = 'featureCounts'
 
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
-ANNOVAR_ANNO = 'refGene,knownGene,ensGene,avsnp150,ALL.sites.2015_08,EUR.sites.2015_08,'\
-    'AMR.sites.2015_08,EAS.sites.2015_08,AFR.sites.2015_08,cosmic70 -operation g,g,g,f,f,f,f,f,f,f -nastring .'
+ANNOVAR_ANNO = 'refGene,knownGene,ensGene -operation g,g,g -nastring .'
