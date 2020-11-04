@@ -56,6 +56,9 @@ data is available at <>
 ## How to run
 See RUN.txt for a running example.
 
+It is recommended to use a Linux machine with at least 40 cores, 64GB of RAM
+and 500GB of disk space. 
+
 ## Output (important files)
 
 **dna_pipeline.py** 
