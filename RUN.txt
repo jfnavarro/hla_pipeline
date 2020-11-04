@@ -60,7 +60,7 @@ merge_results.py \
   --rna-counts outrna/gene.counts'
 
 mhc_predict.py \
-  --hla-dna outtumor/somatic/PRG-HLA-LA_Tumor_output.txt outcfdna/somatic/PRG-HLA-LA_Tumor_output.txt \
-  --hla-rna outrna/germline/sample_header.genotype.json \
+  --hla-dna outtumor/PRG-HLA-LA_Tumor_output.txt outcfdna/PRG-HLA-LA_Tumor_output.txt \
+  --hla-rna outrna/hla_genotype.json \
   --variants overlap_final.txt \
   --alleles ~/shared/alleles.txt
