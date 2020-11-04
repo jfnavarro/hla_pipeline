@@ -59,8 +59,8 @@ def main(R1,
         # Add headers
         print("Adding headers")
         cmd = '{} AddOrReplaceReadGroups --INPUT Aligned.sortedByCoord.out.bam --OUTPUT sample_header.bam ' \
-              '--SORT_ORDER coordinate --RGID RNA --RGLB {} --RGPL Illumina --RGPU {} --RGSM {} --CREATE_INDEX true ' \
-              '--VALIDATION_STRINGENCY SILENT'.format(PICARD, SAMPLEID, SAMPLEID, SAMPLEID)
+              '--SORT_ORDER coordinate --RGID {} --RGPL Illumina --RGLB DNA --RGPU {} --RGSM {} --RGCN {} ' \
+              '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, SAMPLEID, SAMPLEID, SAMPLEID, SAMPLEID)
         exec_command(cmd)
 
     if 'gatk' in STEPS:

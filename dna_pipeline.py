@@ -83,12 +83,16 @@ def main(R1_NORMAL,
 
         # Add headers
         print("Adding headers")
-        cmd = '{} AddOrReplaceReadGroups -I aligned_cancer_merged.bam -O sample1_header.bam -RGID {} -RGPL Illumina ' \
-              '-RGLB DNA -RGPU {} -RGSM {} -RGCN VHIO'.format(PICARD, sample1_ID, sample1_ID, sample1_ID)
+        cmd = '{} AddOrReplaceReadGroups --INPUT aligned_cancer_merged.bam --OUTPUT sample1_header.bam ' \
+              '--SORT_ORDER coordinate --RGID {} --RGPL Illumina --RGLB DNA --RGPU {} --RGSM {} --RGCN {} ' \
+              '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, sample1_ID,
+                                                                          sample1_ID, sample1_ID, sample1_ID)
         p1 = exec_command(cmd, detach=True)
 
-        cmd = '{} AddOrReplaceReadGroups -I aligned_normal_merged.bam -O sample2_header.bam -RGID {} -RGPL Illumina ' \
-              '-RGLB DNA -RGPU {} -RGSM {} -RGCN VHIO'.format(PICARD, sample2_ID, sample2_ID, sample2_ID)
+        cmd = '{} AddOrReplaceReadGroups --INPUT aligned_normal_merged.bam --OUTPUT sample2_header.bam ' \
+              '--SORT_ORDER coordinate --RGID {} --RGPL Illumina --RGLB DNA --RGPU {} --RGSM {} --RGCN {} ' \
+              '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, sample2_ID,
+                                                                          sample2_ID, sample2_ID, sample2_ID)
         p2 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel
@@ -98,8 +102,6 @@ def main(R1_NORMAL,
     if 'gatk' in STEPS:
         # Mark duplicates
         print('Marking duplicates')
-        # NOTE setting reducers to it works in system that do not allow many files open
-
         cmd = '{} MarkDuplicatesSpark --input sample1_header.bam --output sample1_dedup.bam'.format(GATK)
         p1 = exec_command(cmd, detach=True)
 
