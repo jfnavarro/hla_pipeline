@@ -56,13 +56,10 @@ def main(R1,
               ' --runThreadN {}'.format(STAR, GENOME_STAR, ANNOTATION, THREADS)
         exec_command(cmd)
 
-        cmd = 'mv Aligned.sortedByCoord.out.bam trimmed_paired_aligned_sorted.bam'
-        exec_command(cmd)
-
         # Add headers
         print("Adding headers")
-        cmd = '{} AddOrReplaceReadGroups --INPUT trimmed_paired_aligned_sorted.bam --OUTPUT sample_header.bam ' \
-              '--SORT_ORDER coordinate --RGID DNA --RGLB {} --RGPL Illumina --RGPU {} --RGSM {} --CREATE_INDEX true ' \
+        cmd = '{} AddOrReplaceReadGroups --INPUT Aligned.sortedByCoord.out.bam --OUTPUT sample_header.bam ' \
+              '--SORT_ORDER coordinate --RGID RNA --RGLB {} --RGPL Illumina --RGPU {} --RGSM {} --CREATE_INDEX true ' \
               '--VALIDATION_STRINGENCY SILENT'.format(PICARD, SAMPLEID, SAMPLEID, SAMPLEID)
         exec_command(cmd)
 
