@@ -32,6 +32,7 @@ def main(R1_NORMAL,
          SNPSITES,
          GERMLINE,
          PON,
+         INTERVALS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
          STEPS):
@@ -112,14 +113,18 @@ def main(R1_NORMAL,
         p1.wait()
         p2.wait()
 
+        intervals_cmd = '--intervals {}'.format(INTERVALS) if INTERVALS else ''
+
         # GATK base re-calibration
         print('Starting re-calibration')
         cmd = '{} BaseRecalibratorSpark --input sample1_dedup.bam --reference {} --known-sites {} --known-sites {}' \
-              ' --known-sites {} --output sample1_recal_data.txt'.format(GATK, GENOME, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+              ' --known-sites {} --output sample1_recal_data.txt {}'.format(GATK, GENOME, SNPSITES,
+                                                                            KNOWN_SITE1, KNOWN_SITE2, intervals_cmd)
         p1 = exec_command(cmd, detach=True)
 
         cmd = '{} BaseRecalibratorSpark --input sample2_dedup.bam --reference {} --known-sites {} --known-sites {}' \
-              ' --known-sites {} --output sample2_recal_data.txt'.format(GATK, GENOME, SNPSITES, KNOWN_SITE1, KNOWN_SITE2)
+              ' --known-sites {} --output sample2_recal_data.txt {}'.format(GATK, GENOME, SNPSITES,
+                                                                            KNOWN_SITE1, KNOWN_SITE2, intervals_cmd)
         p2 = exec_command(cmd, detach=True)
 
         p1.wait()
@@ -146,11 +151,12 @@ def main(R1_NORMAL,
         print('Performing variant calling Mutect2')
         # Variant calling Mutect2
         cmd = '{} Mutect2 --reference {} --input sample1_final.bam --input sample2_final.bam --normal-sample {} ' \
-              '--output Mutect_unfiltered.vcf --germline-resource {} --panel-of-normals {}'.format(GATK,
-                                                                                                   GENOME,
-                                                                                                   sample2_ID,
-                                                                                                   GERMLINE,
-                                                                                                   PON)
+              '--output Mutect_unfiltered.vcf --germline-resource {} --panel-of-normals {} {}'.format(GATK,
+                                                                                                      GENOME,
+                                                                                                      sample2_ID,
+                                                                                                      GERMLINE,
+                                                                                                      PON,
+                                                                                                      intervals_cmd)
         p1 = exec_command(cmd, detach=True)
 
         # Variant calling Strelka2
@@ -238,28 +244,28 @@ if __name__ == '__main__':
     parser.add_argument('R2_NORMAL', help='FASTQ file R2 (Normal)')
     parser.add_argument('R1_CANCER', help='FASTQ file R1 (Cancer)')
     parser.add_argument('R2_CANCER', help='FASTQ file R2 (Cancer)')
-    parser.add_argument('--genome',
-                        help='Path to the reference genome FASTA file (must contain BWA index)', required=True)
-    parser.add_argument('--sample',
+    parser.add_argument('--genome', type=str, required=True,
+                        help='Path to the reference genome FASTA file (must contain BWA index)')
+    parser.add_argument('--sample', type=str,
                         help='Name of the sample/experiment. Default is sample', default='sample')
-    parser.add_argument('--outdir',
-                        help='Path to the output folder where output files will be placed', required=True)
-    parser.add_argument('--known1',
-                        help='Path to the file with Mill and 1000G gold standards (GATK bundle)', required=True)
-    parser.add_argument('--known2',
-                        help='Path to the file with 1000G phase indels (GATK bundle)', required=True)
-    parser.add_argument('--snpsites',
-                        help='Path to the file with the SNPs (GATK bundle dbSNP)', required=True)
-    parser.add_argument('--germline',
-                        help='Path to the file with the germline resources Nomad for Mutect2 (GATK bundle)', required=True)
-    parser.add_argument('--pon',
-                        help='Path to the file with the panel of normals for Mutect2 (GATK bundle)', required=True)
-    parser.add_argument('--annovar-db',
-                        help='String indicated which Annovar database to use (default: humandb)',
-                        default='humandb', required=False)
-    parser.add_argument('--annovar-version',
-                        help='String indicated which version of the Annovar database to use (default: hg38)',
-                        default='hg38', required=False)
+    parser.add_argument('--outdir', type=str, required=True,
+                        help='Path to the output folder where output files will be placed')
+    parser.add_argument('--known1', type=str, required=True,
+                        help='Path to the file with Mill and 1000G gold standards (GATK bundle)')
+    parser.add_argument('--known2', type=str, required=True,
+                        help='Path to the file with 1000G phase indels (GATK bundle)')
+    parser.add_argument('--snpsites', type=str, required=True,
+                        help='Path to the file with the SNPs (GATK bundle dbSNP)')
+    parser.add_argument('--germline', type=str, required=True,
+                        help='Path to the file with the germline resources Nomad for Mutect2 (GATK bundle)')
+    parser.add_argument('--pon', type=str, required=True,
+                        help='Path to the file with the panel of normals for Mutect2 (GATK bundle)')
+    parser.add_argument('--intervals', type=str, default=None, required=False,
+                        help='Path to the file with the intervals to operate in BaseRecalibrator and Mutect2 (BED)')
+    parser.add_argument('--annovar-db', type=str, default='humandb', required=False,
+                        help='String indicated which Annovar database to use (default: humandb)')
+    parser.add_argument('--annovar-version', type=str, default='hg38', required=False,
+                        help='String indicated which version of the Annovar database to use (default: hg38)')
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
@@ -281,6 +287,7 @@ if __name__ == '__main__':
     SNPSITES = os.path.abspath(args.snpsites)
     GERMLINE = os.path.abspath(args.germline)
     PON = os.path.abspath(args.pon)
+    INTERVALS = os.path.abspath(args.intervals) if args.intervals else None
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
@@ -301,6 +308,7 @@ if __name__ == '__main__':
          SNPSITES,
          GERMLINE,
          PON,
+         INTERVALS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
          STEPS)
