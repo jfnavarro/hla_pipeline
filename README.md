@@ -80,10 +80,10 @@ Other files:
   - sample_dedup.bam
   
 **merge_results.py** 
-- overlap_final.txt (all the somatic variants collapsed and filtered with useful information and epitopes)
+- overlap_final.txt (all the DNA and RNA variants collapsed and filtered with useful information and epitopes)
 - overlap_final_unique_rna.txt (all the unique RNA variants collapsed and filtered with useful information and epitopes)
-- overlap_final_discarded.txt (all the discarded somatic variants collapsed with useful information and epitopes)
-- overlap_final_discarded_rna (all the discarded RNA variants collapsed with useful information and epitopes)
+- overlap_final_discarded.txt (all the discarded DNA and RNA variants collapsed with useful information and epitopes)
+- overlap_final_discarded_rna.txt (all the discarded uniquely RNA variants collapsed with useful information and epitopes)
 
 **mhc_predict.py** 
 - predictions_mut.csv (all the mutated peptides predictions)
