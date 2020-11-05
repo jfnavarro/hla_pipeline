@@ -6,5 +6,4 @@
 * Add tests
 * Replace HLA-LA and arcasHLA by OptiType
 * Add a dispatcher to better control creation and destruction of processes
-* Replace the peptides/cdna dictionaries in merge_results for a web based tool like bioMart or pyemsembl
-  - Al alternative is to use varcode
+* Replace the epitopes generation function by Varcode
