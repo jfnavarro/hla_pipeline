@@ -116,7 +116,7 @@ def main(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_f
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('--hla-dna', nargs='+', default=None, required=False,
-                        help='A file or files containing predicted HLAs from normal DNA (HLA-LA table format)')
+                        help='A file or files containing predicted HLAs from DNA (HLA-LA table format)')
     parser.add_argument('--hla-rna', nargs='+', default=None, required=False,
                         help='A file or files containing predicted HLAs from RNA (arcasHLA JSON format)')
     parser.add_argument('--variants', default=None, required=True,
