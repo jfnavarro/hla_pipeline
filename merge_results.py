@@ -125,7 +125,7 @@ def main(dna_variants,
     final_file_discarded = open('overlap_final_discarded.txt', 'w')
     final_file_discarded.write(header_final)
 
-    final_file_discarded_rna = open('overlap_final_discarded_rnatxt', 'w')
+    final_file_discarded_rna = open('overlap_final_discarded_rna.txt', 'w')
     final_file_discarded_rna.write(header_final)
 
     for key, value in variant_dict.items():
@@ -189,7 +189,7 @@ def main(dna_variants,
     final_file.close()
     final_file_rna.close()
     final_file_discarded.close()
-
+    final_file_discarded_rna.close()
 
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
