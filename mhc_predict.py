@@ -96,6 +96,8 @@ def main(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_f
                 del added_proteins_mu
                 del added_proteins_wt
 
+    results_filter = '' if results == 'all' else results_filter
+
     # Run predictions
     print('Predicting MHCs with MUT peptides..')
     cmd = 'mhcflurry-predict-scan protein_sequences_mu.fasta --alleles {} ' \
@@ -124,8 +126,8 @@ if __name__ == '__main__':
     parser.add_argument('--mode', default='either',
                         help='Mode to use to extract peptides from the variants (both, dna (default), rna, either)',
                         choices=['both', 'dna', 'rna', 'either'])
-    parser.add_argument('--results', default='all',
-                        help='Whether to include all results for each peptide or only the best one (default=all)',
+    parser.add_argument('--results', default='best',
+                        help='Whether to include all results for each peptide or only the best one (default=best)',
                         choices=['all', 'best'])
     parser.add_argument('--results-filter', default='affinity',
                         help='What filtering criteria to use when using --results best (default=affinity)',
