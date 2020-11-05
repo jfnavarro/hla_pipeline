@@ -6,4 +6,6 @@
 * Add tests
 * Replace HLA-LA and arcasHLA by OptiType
 * Add a dispatcher to better control creation and destruction of processes
-* Replace the peptides/cdna dictionaries in merge_results for a web based tool like bioMart or pyemsembl
+* Replace the epitopes generation function by Varcode
+* Add mer epitope distance as parameter in merge_results.py
+* Add number of DNA/RNA callers required as parameters in mhc_predict.py
