@@ -18,6 +18,7 @@ The variant callers are Mutect2, Strelka, Varscan and SomaticSniper and both ind
 reported. Annotation is performed using Annovar. 
 The pipeline uses trim-galore to trim, bwa-men to align and follows GATK4 best practices. 
 The pipeline also performs HLA predictions with HLA-LA (tumor and normal).
+QC is performed with FastQC and BamQC.
 
 **rna_pipeline.py** processes RNA data and generates a list of unified
 annotated somatic variants (weak filtered) and also a list of gene counts values. 
@@ -25,6 +26,7 @@ The variant callers used are Varscan and HaplotypeCaller. Annotation is performe
 The pipeline uses trim-galore to trim, STAR to align and follows GATK4 best practices. 
 The pipeline also performs HLA predictions with arcasHLA.
 The gene counts values are computed with featureCounts.
+QC is performed with FastQC and BamQC.
 
 **merge_resuls.py** combines results from 1 or several runs of the DNA and RNA
 pipelines in order to generate an unified table with useful information where
@@ -69,7 +71,10 @@ Other files:
   - combined_calls.vcf
   - tumor_dedup.bam
   - normal_dedup.bam
-
+  - *fastqc* 
+  - bamQC_Normal
+  - bamQC_Tumor
+  
 **rna_pipeline.py** 
 - annotated.hgXX_multianno.vcf (annotated and combined germline variants)
 - gene.counts (gene counts from featureCounts)
@@ -78,6 +83,8 @@ Other files:
 Other files:
   - combined_calls.vcf
   - sample_dedup.bam
+  - *fastqc* 
+  - bamQC
   
 **merge_results.py** 
 - overlap_final.txt (all the DNA and RNA variants collapsed and filtered with useful information and epitopes)
