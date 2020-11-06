@@ -9,3 +9,4 @@
 * Replace the epitopes generation function by Varcode
 * Add mer epitope distance as parameter in merge_results.py
 * Add number of DNA/RNA callers required as parameters in mhc_predict.py
+* Replace bwa-mem by bwa-mem2
