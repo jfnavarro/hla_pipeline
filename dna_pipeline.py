@@ -151,12 +151,8 @@ def main(R1_NORMAL,
         print('Performing variant calling Mutect2')
         # Variant calling Mutect2
         cmd = '{} Mutect2 --reference {} --input sample1_final.bam --input sample2_final.bam --normal-sample {} ' \
-              '--output Mutect_unfiltered.vcf --germline-resource {} --panel-of-normals {} {}'.format(GATK,
-                                                                                                      GENOME,
-                                                                                                      sample2_ID,
-                                                                                                      GERMLINE,
-                                                                                                      PON,
-                                                                                                      intervals_cmd)
+              '--output Mutect_unfiltered.vcf --germline-resource {} --dont-use-soft-clipped-bases ' \
+              '--panel-of-normals {} {}'.format(GATK, GENOME, sample2_ID, GERMLINE, PON, intervals_cmd)
         p1 = exec_command(cmd, detach=True)
 
         # Variant calling Strelka2
