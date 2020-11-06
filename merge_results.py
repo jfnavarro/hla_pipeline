@@ -223,12 +223,12 @@ if __name__ == '__main__':
     parser.add_argument('--filter-dna-indel-callers', type=int, default=1, required=False,
                         choices=[1, 2], dest='num_callers_indel',
                         help='Filter for DNA indels variants number of callers required. Default=1')
-    parser.add_argument('--filter-rna-tumor-cov', type=int, default=5, required=False,
+    parser.add_argument('--filter-rna-tumor-cov', type=int, default=10, required=False,
                         dest='tumor_coverage_rna',
-                        help='Filter for RNA variants tumor number of reads (coverage) (DP). Default=5')
-    parser.add_argument('--filter-rna-tumor-depth', type=int, default=2, required=False,
+                        help='Filter for RNA variants tumor number of reads (coverage) (DP). Default=10')
+    parser.add_argument('--filter-rna-tumor-depth', type=int, default=5, required=False,
                         dest='tumor_var_depth_rna',
-                        help='Filter for RNA variants tumor number of allelic reads (AD). Default=2')
+                        help='Filter for RNA variants tumor number of allelic reads (AD). Default=5')
     parser.add_argument('--filter-rna-tumor-vaf', type=float, default=3, required=False,
                         dest='tumor_var_freq_rna',
                         help='Filter for RNA variants tumor variant allele frequency (VAF). Default=3')

@@ -172,9 +172,9 @@ if __name__ == '__main__':
     parser.add_argument('--genome',
                         help='Path to the reference genome FASTA file', required=True)
     parser.add_argument('--genome-star',
-                        help='Path to the reference genome STAR index folder (when in RNA mode)', required=False)
+                        help='Path to the reference genome STAR index folder', required=False)
     parser.add_argument('--genome-ref',
-                        help='Path to the reference genome GTF file (when in RNA mode)', required=False)
+                        help='Path to the reference genome GTF file', required=False)
     parser.add_argument('--sample',
                         help='Name of the sample/experiment. Default is sample', default='sample')
     parser.add_argument('--outdir',
