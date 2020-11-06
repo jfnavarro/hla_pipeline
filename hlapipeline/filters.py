@@ -139,7 +139,7 @@ def somaticSniper_filter(input, output):
     # NOTE replacing IUPAC codes from VCF
     # NOTE this will also skip variants whose REF and ALT fields are identical
     cmd = 'awk \'{if ($1 ~ /#/) {print} else if ($4 != $5) {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS="\t"; print}}\' ' \
-          'tmp_ss.vcf > {}'.format(output)
+          'tmp_ss.vcf > ' + output
     exec_command(cmd)
 
 
@@ -219,5 +219,5 @@ def varscan_filter(input, output):
     # NOTE replacing IUPAC codes from VCF
     # NOTE this will also skip variants whose REF and ALT fields are identical
     cmd = 'awk \'{if ($1 ~ /#/) {print} else if ($4 != $5) {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS="\t"; print}}\' ' \
-          'tmp_varscan.vcf > {}'.format(output)
+          'tmp_varscan.vcf > ' + output
     exec_command(cmd)
