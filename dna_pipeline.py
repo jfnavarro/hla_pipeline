@@ -153,10 +153,10 @@ def main(R1_NORMAL,
         # HLA-LA predictions
         print('Performing HLA-LA predictions')
         p1 = multiprocessing.Process(target=HLA_predictionDNA,
-                                         args=('sample2_final.bam', SAMPLEID, 'PRG-HLA-LA_Normal_output.txt', THREADS))
+                                     args=('sample2_final.bam', SAMPLEID, 'PRG-HLA-LA_Normal_output.txt', THREADS))
         p1.start()
         p2 = multiprocessing.Process(target=HLA_predictionDNA,
-                                         args=('sample1_final.bam', SAMPLEID, 'PRG-HLA-LA_Tumor_output.txt', THREADS))
+                                     args=('sample1_final.bam', SAMPLEID, 'PRG-HLA-LA_Tumor_output.txt', THREADS))
         p2.start()
 
         # Wait for the processes to finish in parallel
