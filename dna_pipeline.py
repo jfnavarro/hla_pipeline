@@ -138,7 +138,7 @@ def main(R1_NORMAL,
               '--output sample2_final.bam'.format(GATK, GENOME)
         exec_command(cmd)
 
-        # BamQC
+        # BamQC
         cmd = '{} -bam sample2_final.bam --genome-gc-distr HUMAN -nt {} -outdir bamQC_Normal -outformat HTML'.format(BAMQC, THREADS)
         p1 = exec_command(cmd, detach=True)
 

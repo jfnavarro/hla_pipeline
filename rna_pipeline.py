@@ -88,7 +88,7 @@ def main(R1,
               '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK, GENOME)
         exec_command(cmd)
 
-        # BamQC
+        # BamQC
         cmd = '{} -bam sample_final.bam --genome-gc-distr HUMAN -nt {} -outdir bamQC -outformat HTML'.format(BAMQC, THREADS)
         exec_command(cmd)
 
