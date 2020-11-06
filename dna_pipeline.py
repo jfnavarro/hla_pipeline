@@ -17,6 +17,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import os
 import sys
 import shutil
+import glob
 import multiprocessing
 from hlapipeline.filters import *
 
@@ -55,10 +56,10 @@ def main(R1_NORMAL,
     if 'mapping' in STEPS:
         # TRIMMING
         print('Starting trimming')
-        cmd = '{} --cores {} --paired --basename normal {} {}'.format(TRIMGALORE, THREADS, R1_NORMAL, R2_NORMAL)
+        cmd = '{} --cores {} --fastqc --paired --basename normal {} {}'.format(TRIMGALORE, THREADS, R1_NORMAL, R2_NORMAL)
         p1 = exec_command(cmd, detach=True)
 
-        cmd = '{} --cores {} --paired --basename cancer {} {}'.format(TRIMGALORE, THREADS, R1_CANCER, R2_CANCER)
+        cmd = '{} --cores {} --fastqc --paired --basename cancer {} {}'.format(TRIMGALORE, THREADS, R1_CANCER, R2_CANCER)
         p2 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel
@@ -136,6 +137,17 @@ def main(R1_NORMAL,
         cmd = '{} ApplyBQSR --reference {} --input sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt ' \
               '--output sample2_final.bam'.format(GATK, GENOME)
         exec_command(cmd)
+
+        # BamQC
+        cmd = '{} -bam sample2_final.bam --genome-gc-distr HUMAN -nt {} -outdir bamQC_Normal -outformat HTML'.format(BAMQC, THREADS)
+        p1 = exec_command(cmd, detach=True)
+
+        cmd = '{} -bam sample1_final.bam --genome-gc-distr HUMAN -nt {} -outdir bamQC_Tumor -outformat HTML'.format(BAMQC, THREADS)
+        p2 = exec_command(cmd, detach=True)
+
+        # Wait for the processes to finish in parallel
+        p1.wait()
+        p2.wait()
 
     if 'hla' in STEPS:
         # HLA-LA predictions
@@ -231,6 +243,10 @@ def main(R1_NORMAL,
         shutil.move('PRG-HLA-LA_Tumor_output.txt', '../PRG-HLA-LA_Tumor_output.txt')
         shutil.move('sample1_final.bam', '../tumor_dedup.bam')
         shutil.move('sample2_final.bam', '../normal_dedup.bam')
+        shutil.move('bamQC_Normal', '../bamQC_Normal')
+        shutil.move('bamQC_Tumor', '../bamQC_Tumor')
+        for file in glob.glob('*_fastqc*'):
+            shutil.move(file, '../{}'.format(file))
 
     print('COMPLETED!')
 

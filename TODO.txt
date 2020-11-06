@@ -1,7 +1,7 @@
 * Add better logging and error handling (general)
 * Create docker container
 * Use snpEff for annotation instead of Annovar (this may make it possible to remove hacks to make the VCFs compatible with Annovar)
-* Add QC steps (bamQC, fastQC, vcftools)
+* Add QC step for combined VCF (bcftools)
 * Use jacquard merge instead of GATK3 to merge variants (with this the awk hacks to replace IUPA REF can be removed)
 * Add tests
 * Replace HLA-LA and arcasHLA by OptiType

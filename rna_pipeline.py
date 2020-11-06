@@ -16,6 +16,7 @@ from hlapipeline.common import *
 from hlapipeline.tools import *
 import os
 import shutil
+import glob
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 def main(R1,
@@ -45,7 +46,7 @@ def main(R1,
 
     if 'mapping' in STEPS:
         print('Trimming reads')
-        cmd = '{} --cores {} --paired --basename sample {} {}'.format(TRIMGALORE, THREADS, R1, R2)
+        cmd = '{} --cores {} --fastqc --paired --basename sample {} {}'.format(TRIMGALORE, THREADS, R1, R2)
         exec_command(cmd)
 
         # ALIGNMENT
@@ -85,6 +86,10 @@ def main(R1,
         exec_command(cmd)
         cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input sample_split.bam ' \
               '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK, GENOME)
+        exec_command(cmd)
+
+        # BamQC
+        cmd = '{} -bam sample_final.bam --genome-gc-distr HUMAN -nt {} -outdir bamQC -outformat HTML'.format(BAMQC, THREADS)
         exec_command(cmd)
 
     if 'hla' in STEPS:
@@ -162,6 +167,9 @@ def main(R1,
         shutil.move('sample_final.genotype.json', '../hla_genotype.json')
         shutil.move('gene.counts', '../gene.counts')
         shutil.move('sample_final.bam', '../sample_final.bam')
+        shutil.move('bamQC', '../bamQC')
+        for file in glob.glob('*_fastqc*'):
+            shutil.move(file, '../{}'.format(file))
 
     print("COMPLETED!")
 
