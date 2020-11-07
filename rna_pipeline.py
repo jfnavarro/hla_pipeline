@@ -35,8 +35,6 @@ def main(R1,
 
     # TODO add sanity checks for the parameters
     # TODO better log info
-    # TODO remove temp files
-    # TODO put output files somewhere else
 
     print("RNA somatic pipeline")
 
