@@ -14,7 +14,7 @@ There are 2 pipelines and 2 tools:
 
 **dna_pipeline.py** processes DNA data and generates a list of unified
 filtered and annotated somatic variants. 
-The variant callers are Mutect2, Strelka, Varscan and SomaticSniper and both indels and SNPs are
+The variant callers are Mutect2, Strelka2, Varscan and SomaticSniper and both indels and SNPs are
 reported. Annotation is performed using Annovar. 
 The pipeline uses trim-galore to trim, bwa-men to align and follows GATK4 best practices. 
 The pipeline also performs HLA predictions with HLA-LA (tumor and normal).
@@ -71,9 +71,9 @@ Other files:
   - combined_calls.vcf
   - tumor_dedup.bam
   - normal_dedup.bam
-  - *fastqc* 
-  - bamQC_Normal
-  - bamQC_Tumor
+  - fastqc files
+  - bamQC_Normal folder
+  - bamQC_Tumor folder
   
 **rna_pipeline.py** 
 - annotated.hgXX_multianno.vcf (annotated and combined germline variants)
@@ -83,8 +83,8 @@ Other files:
 Other files:
   - combined_calls.vcf
   - sample_dedup.bam
-  - *fastqc* 
-  - bamQC
+  - fastqc files
+  - bamQC folder
   
 **merge_results.py** 
 - overlap_final.txt (all the DNA and RNA variants collapsed and filtered with useful information and epitopes)
