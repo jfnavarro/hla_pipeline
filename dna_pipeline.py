@@ -40,8 +40,6 @@ def main(R1_NORMAL,
 
     # TODO add sanity checks for the parameters
     # TODO better log info
-    # TODO remove temp files
-    # TODO put output files somewhere else
 
     print("DNA somatic pipeline")
 
