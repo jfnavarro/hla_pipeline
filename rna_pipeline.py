@@ -164,7 +164,7 @@ def main(R1,
         shutil.move('annotated.hg38_multianno.vcf', '../annotated.hg38_multianno.vcf')
         shutil.move('sample_final.genotype.json', '../hla_genotype.json')
         shutil.move('gene.counts', '../gene.counts')
-        shutil.move('sample_final.bam', '../sample_final.bam')
+        shutil.move('sample_dedup.bam', '../sample_final.bam')
         shutil.move('bamQC', '../bamQC')
         for file in glob.glob('*_fastqc*'):
             shutil.move(file, '../{}'.format(file))
