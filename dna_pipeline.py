@@ -175,24 +175,29 @@ def main(R1_NORMAL,
         print('Performing variant calling with Strelka2')
         if os.path.isdir('Strelka_output'):
             shutil.rmtree(os.path.abspath('Strelka_output'))
-        cmd = '{} --exome --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta {}' \
-              ' --runDir Strelka_output'.format(STRELKA, GENOME)
+        intervals_cmd = '--exome --callRegions {}'.format(INTERVALS) if INTERVALS else ''
+        cmd = '{} {} --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta {}' \
+              ' --runDir Strelka_output'.format(STRELKA, intervals_cmd, GENOME)
         exec_command(cmd)
-
         cmd = 'Strelka_output/runWorkflow.py -m local -j {}'.format(THREADS)
         p2 = exec_command(cmd, detach=True)
 
         # Variant calling Somatic Sniper
         print('Performing variant calling with SomaticSniper')
-        cmd = '{} -L -G -F vcf -f {} sample1_final.bam sample2_final.bam SS.vcf'.format(SSNIPER, GENOME)
+        cmd = '{} -Q 15 -L -G -F vcf -f {} sample1_final.bam sample2_final.bam SS.vcf'.format(SSNIPER, GENOME)
         p3 = exec_command(cmd, detach=True)
 
         # Variant calling (Samtools pile-ups)
         print('Computing pile-ups')
-        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample1_final.bam > sample1.pileup'.format(SAMTOOLS, GENOME)
+        intervals_cmd = '--positions {}'.format(INTERVALS) if INTERVALS else ''
+        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 {} -f {} sample1_final.bam > sample1.pileup'.format(SAMTOOLS,
+                                                                                                  intervals_cmd,
+                                                                                                  GENOME)
         p4 = exec_command(cmd, detach=True)
 
-        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample2_final.bam > sample2.pileup'.format(SAMTOOLS, GENOME)
+        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 {} -f {} sample2_final.bam > sample2.pileup'.format(SAMTOOLS,
+                                                                                                  intervals_cmd,
+                                                                                                  GENOME)
         p5 = exec_command(cmd, detach=True)
 
         # Variant calling VarScan
