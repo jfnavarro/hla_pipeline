@@ -173,7 +173,12 @@ def main(R1_NORMAL,
         print('Performing variant calling with Strelka2')
         if os.path.isdir('Strelka_output'):
             shutil.rmtree(os.path.abspath('Strelka_output'))
-        intervals_cmd = '--exome --callRegions {}'.format(INTERVALS) if INTERVALS else ''
+        if INTERVALS:
+            cmd = 'bgzip {} && tabix {}.gz'.format(INTERVALS, INTERVALS)
+            exec_command(cmd)
+            intervals_cmd = '--exome --callRegions {}.gz'.format(INTERVALS)
+        else:
+            intervals_cmd = ''
         cmd = '{} {} --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta {}' \
               ' --runDir Strelka_output'.format(STRELKA, intervals_cmd, GENOME)
         exec_command(cmd)
