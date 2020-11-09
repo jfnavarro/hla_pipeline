@@ -174,9 +174,9 @@ def main(R1_NORMAL,
         if os.path.isdir('Strelka_output'):
             shutil.rmtree(os.path.abspath('Strelka_output'))
         if INTERVALS:
-            cmd = 'bgzip {} && tabix {}.gz'.format(INTERVALS, INTERVALS)
+            cmd = 'cp {} intervals.bed && bgzip intervals.bed && tabix intervals.bed.gz'.format(INTERVALS)
             exec_command(cmd)
-            intervals_cmd = '--exome --callRegions {}.gz'.format(INTERVALS)
+            intervals_cmd = '--exome --callRegions intervals.bed.gz'
         else:
             intervals_cmd = ''
         cmd = '{} {} --normalBam sample2_final.bam --tumorBam sample1_final.bam --referenceFasta {}' \

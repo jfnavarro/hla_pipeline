@@ -14,4 +14,3 @@
 * Add a tool to compute clonality
 * Add Strelka2 to rna_pipeline
 * Remove SomaticSniper (needed to use jacquard merge for merging)
-* Add MultiQC as final step
