@@ -250,7 +250,11 @@ def main(R1_NORMAL,
         shutil.move('PRG-HLA-LA_Tumor_output.txt', '../PRG-HLA-LA_Tumor_output.txt')
         shutil.move('sample1_dedup.bam', '../tumor_dedup.bam')
         shutil.move('sample2_dedup.bam', '../normal_dedup.bam')
+        if os.path.isdir('../bamQC_Normal'):
+            shutil.rmtree(os.path.abspath('../bamQC_Normal'))
         shutil.move('bamQC_Normal', '../bamQC_Normal')
+        if os.path.isdir('../bamQC_Tumor'):
+            shutil.rmtree(os.path.abspath('../bamQC_Tumor'))
         shutil.move('bamQC_Tumor', '../bamQC_Tumor')
         for file in glob.glob('*_fastqc*'):
             shutil.move(file, '../{}'.format(file))
