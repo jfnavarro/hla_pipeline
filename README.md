@@ -49,6 +49,36 @@ TRANSCRIPT_ID:SEQUENCE
 
 To build these dictionaries you can use as reference the Jupyter Notebooks located in dictionaries
 
+## Requirements
+We strongly recommend to use Anaconda or Miniconda, otherwise you may need to create aliases
+for some tools as expected in the file hlapipeline/tools.py. 
+
+These following tools are required:
+
+* hla-la
+* gatk4 
+* bwa 
+* samtools 
+* picard 
+* varscan 
+* trim-galore 
+* star 
+* somatic-sniper 
+* bedtools
+* tensorflow>=1.15.0
+* mhcflurry
+* kallisto
+* biopython
+* subread
+* qualimap
+* numpy
+* scipy
+* numpy
+* pandas
+* scikit-learn
+* pysam
+* vcfpy
+
 ## Install
 See INSTALL.txt for installation instructions. 
 
