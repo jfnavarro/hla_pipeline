@@ -125,7 +125,7 @@ def main(dna_variants,
     final_file_discarded = open('overlap_final_discarded.txt', 'w')
     final_file_discarded.write(header_final)
 
-    final_file_discarded_rna = open('overlap_final_discarded_rna.txt', 'w')
+    final_file_discarded_rna = open('overlap_final_rna_unique_discarded.txt', 'w')
     final_file_discarded_rna.write(header_final)
 
     for key, value in variant_dict.items():
@@ -179,10 +179,10 @@ def main(dna_variants,
                                                   dna_callers, rna_callers, ';'.join(gene_locus)])
             if num_dna_pass >= 1:
                 final_file.write(to_write + '\n')
-            elif num_rna_pass >= 1:
-                final_file_rna.write(to_write + '\n')
             elif num_dna_fail >= 1:
                 final_file_discarded.write(to_write + '\n')
+            elif num_rna_pass >= 1:
+                final_file_rna.write(to_write + '\n')
             else:
                 final_file_discarded_rna.write(to_write + '\n')
 
