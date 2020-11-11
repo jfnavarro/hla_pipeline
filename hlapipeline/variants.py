@@ -177,8 +177,8 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
 
 
 def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
-                        tumor_var_freq, t2n_ratio, num_callers, num_callers_indel,
-                        cDNA_seq, AA_seq):
+                        tumor_var_freq, normal_var_freq, t2n_ratio, num_callers,
+                        num_callers_indel, cDNA_seq, AA_seq):
     """
     This function parses a list of annotated DNA variants from Annovar.
     It then applies some filters to the variants and computes the epitopes of each of
@@ -187,11 +187,10 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
     It returns a list of Variant() objects.
     :param file: the Annovar annotated somatic variants
     :param normal_coverage: filter value for the number of normal total reads (DP)
-    :param normal_var_depth: filter value for the number normal allelic reads (AD)
-    :param normal_var_freq: filter value for the normal Variant Allele Frequency (VAF)
     :param tumor_coverage: filter value for the number of tumor total reads (DP)
     :param tumor_var_depth: filter value for the number tumor alleic reads (AD)
     :param tumor_var_freq: filter value for the tumor Variant Allele Frequency (VAF)
+    :param normal_var_freq: filter value for the normal Variant Allele Frequency (VAF)
     :param t2n_ratio: filter value for the ratio between tumor and normal VAFs
     :param num_callers: filter value for the number of variant callers
     :param num_callers_indel: filter value for the number of variant callers (indels)
@@ -223,7 +222,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     tumor_normal_ratio = tumor_VAF / normal_VAF if normal_VAF != 0 else t2n_ratio
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth \
-                            and tumor_normal_ratio >= t2n_ratio:
+                            and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
                         filtered['mutect'] = '{};{};{};{};{};{}'.format(normal_DP,
                                                                         normal_AD,
                                                                         normal_VAF,
@@ -241,7 +240,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     is_somatic = int(called['TUMOR.somaticsniper']['SS']) == 2
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth \
-                            and tumor_normal_ratio >= t2n_ratio and is_somatic:
+                            and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio and is_somatic:
                         filtered['somaticsniper'] = '{};{};{};{};{};{}'.format(normal_DP,
                                                                                normal_AD,
                                                                                normal_VAF,
@@ -262,7 +261,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     tumor_normal_ratio = tumor_VAF / normal_VAF if normal_VAF != 0 else t2n_ratio
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth \
-                            and tumor_normal_ratio >= t2n_ratio:
+                            and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
                         filtered[label_index] = '{};{};{};{};{};{}'.format(normal_DP,
                                                                            normal_AD,
                                                                            normal_VAF,
@@ -285,7 +284,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     tumor_normal_ratio = tumor_VAF / normal_VAF if normal_VAF != 0 else t2n_ratio
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD2 >= tumor_var_depth \
-                            and tumor_normal_ratio >= t2n_ratio:
+                            and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
                         filtered['strelka'] = '{};{};{};{};{};{}'.format(normal_DP,
                                                                          normal_AD,
                                                                          normal_VAF,
@@ -306,7 +305,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     tumor_normal_ratio = tumor_VAF / normal_VAF if normal_VAF != 0 else t2n_ratio
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD2 >= tumor_var_depth \
-                            and tumor_normal_ratio >= t2n_ratio:
+                            and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
                         filtered['strelka'] = '{};{};{};{};{};{}'.format(normal_DP,
                                                                          normal_AD,
                                                                          normal_VAF,

@@ -26,6 +26,7 @@ def main(dna_variants,
          tumor_coverage,
          tumor_var_depth,
          tumor_var_freq,
+         normal_var_freq,
          normal_coverage,
          t2n_ratio,
          num_callers,
@@ -62,6 +63,7 @@ def main(dna_variants,
                                            tumor_coverage,
                                            tumor_var_depth,
                                            tumor_var_freq,
+                                           normal_var_freq,
                                            t2n_ratio,
                                            num_callers,
                                            num_callers_indel,
@@ -212,9 +214,11 @@ if __name__ == '__main__':
     parser.add_argument('--filter-dna-tumor-depth', type=int, default=4, required=False, dest='tumor_var_depth',
                         help='Filter for DNA variants tumor number of allelic reads (AD). Default=4')
     parser.add_argument('--filter-dna-tumor-vaf', type=float, default=7, required=False, dest='tumor_var_freq',
-                        help='Filter for DNA variants tumor variant allele frequency (VAF). Default=7')
+                        help='Filter for DNA variants tumor variant allele frequency (VAF) (minimum value). Default=7')
+    parser.add_argument('--filter-dna-normal-vaf', type=float, default=5, required=False, dest='normal_var_freq',
+                        help='Filter for DNA variants normal variant allele frequency (VAF) (maximum value). Default=5')
     parser.add_argument('--filter-dna-normal-cov', type=int, default=10, required=False, dest='normal_coverage',
-                        help='Filter for DNA variants normal number of reads (coverage) (DP). Default=10')
+                        help='Filter for DNA variants normal number of reads (coverage) (DP) (minimum value). Default=10')
     parser.add_argument('--filter-dna-tn-ratio', type=int, default=5, required=False, dest='t2n_ratio',
                         help='Filter for DNA variants tumor-normal VAF ratio. Default=5')
     parser.add_argument('--filter-dna-snv-callers', type=int, default=2, required=False,
@@ -225,13 +229,13 @@ if __name__ == '__main__':
                         help='Filter for DNA indels variants number of callers required. Default=1')
     parser.add_argument('--filter-rna-tumor-cov', type=int, default=10, required=False,
                         dest='tumor_coverage_rna',
-                        help='Filter for RNA variants tumor number of reads (coverage) (DP). Default=10')
+                        help='Filter for RNA variants tumor number of reads (coverage) (minimum value) (DP). Default=10')
     parser.add_argument('--filter-rna-tumor-depth', type=int, default=5, required=False,
                         dest='tumor_var_depth_rna',
-                        help='Filter for RNA variants tumor number of allelic reads (AD). Default=5')
+                        help='Filter for RNA variants tumor number of allelic reads (AD) (minimum value). Default=5')
     parser.add_argument('--filter-rna-tumor-vaf', type=float, default=3, required=False,
                         dest='tumor_var_freq_rna',
-                        help='Filter for RNA variants tumor variant allele frequency (VAF). Default=3')
+                        help='Filter for RNA variants tumor variant allele frequency (VAF) (minimum value). Default=3')
     parser.add_argument('--filter-rna-callers', type=int, default=1, required=False,
                         choices=[1, 2], dest='num_callers_rna',
                         help='Filter for RNA variants number of callers required. Default=1')
@@ -247,6 +251,7 @@ if __name__ == '__main__':
          args.tumor_coverage,
          args.tumor_var_depth,
          args.tumor_var_freq,
+         args.normal_var_freq,
          args.normal_coverage,
          args.t2n_ratio,
          args.num_callers,
