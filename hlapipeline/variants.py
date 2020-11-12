@@ -142,23 +142,26 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
         if has_func_ens or has_func_known or has_func_ref:
             called = {x.sample: x.data for x in record.calls if x.called}
             filtered = dict()
+            pass_variants = 0
             try:
                 if 'HaplotypeCaller' in called and 'PASS' in record.FILTER:
                     tumor_DP = int(called['HaplotypeCaller']['DP'])
                     tumor_AD = int(called['HaplotypeCaller']['AD'][1])
                     tumor_VAF = np.around(tumor_AD / float(tumor_DP) * 100, 3) if tumor_DP > 0.0 else 0.0
                     if tumor_DP >= tumor_coverage and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth:
-                        filtered['HaplotypeCaller'] = '{};{};{}'.format(tumor_DP, tumor_AD, tumor_VAF)
+                        pass_variants += 1
+                    filtered['HaplotypeCaller'] = '{};{};{}'.format(tumor_DP, tumor_AD, tumor_VAF)
                 if 'varscan' in called and 'PASS' in record.FILTER:
                     tumor_DP = int(called['varscan']['DP'])
                     tumor_AD = int(called['varscan']['AD'][0])
                     tumor_VAF = float(called['varscan']['FREQ'][0].replace('%', '')) if tumor_DP > 0.0 else 0.0
                     if tumor_DP >= tumor_coverage and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth:
-                        filtered['varscan'] = '{};{};{}'.format(tumor_DP, tumor_AD, tumor_VAF)
+                        pass_variants += 1
+                    filtered['varscan'] = '{};{};{}'.format(tumor_DP, tumor_AD, tumor_VAF)
             except KeyError:
                 continue
 
-            is_valid = len(filtered.keys()) >= num_callers
+            is_valid = pass_variants >= num_callers
             variant_effects, dbs_seen_in = effects(record, cDNA_seq_dict, AA_seq_dict)
             variant = Variant()
             variant.chrom = record.CHROM
@@ -211,6 +214,8 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
         if has_func_ens or has_func_known or has_func_ref:
             called = {x.sample: x.data for x in record.calls if x.called}
             filtered = dict()
+            pass_snp = 0
+            pass_indel = 0
             try:
                 if 'NORMAL.mutect' in called and 'TUMOR.mutect' in called and 'PASS' in record.FILTER:
                     normal_DP = int(called['NORMAL.mutect']['DP'])
@@ -223,12 +228,13 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth \
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
-                        filtered['mutect'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                        normal_AD,
-                                                                        normal_VAF,
-                                                                        tumor_DP,
-                                                                        tumor_AD,
-                                                                        tumor_VAF)
+                        pass_snp += 1
+                    filtered['mutect'] = '{};{};{};{};{};{}'.format(normal_DP,
+                                                                    normal_AD,
+                                                                    normal_VAF,
+                                                                    tumor_DP,
+                                                                    tumor_AD,
+                                                                    tumor_VAF)
                 if 'NORMAL.somaticsniper' in called and 'TUMOR.somaticsniper' in called:
                     normal_DP = int(called['NORMAL.somaticsniper']['DP'])
                     normal_AD = sum(called['NORMAL.somaticsniper']['DP4'][2:])
@@ -241,12 +247,13 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth \
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio and is_somatic:
-                        filtered['somaticsniper'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                               normal_AD,
-                                                                               normal_VAF,
-                                                                               tumor_DP,
-                                                                               tumor_AD,
-                                                                               tumor_VAF)
+                        pass_snp += 1
+                    filtered['somaticsniper'] = '{};{};{};{};{};{}'.format(normal_DP,
+                                                                           normal_AD,
+                                                                           normal_VAF,
+                                                                           tumor_DP,
+                                                                           tumor_AD,
+                                                                           tumor_VAF)
 
                 if ('NORMAL.varscan' in called and 'TUMOR.varscan' in called) \
                         or ('NORMAL.varscan_indel' in called and 'TUMOR.varscan_indel' in called) \
@@ -262,12 +269,16 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth \
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
-                        filtered[label_index] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                           normal_AD,
-                                                                           normal_VAF,
-                                                                           tumor_DP,
-                                                                           tumor_AD,
-                                                                           tumor_VAF)
+                        if 'indel' in called:
+                            pass_indel += 1
+                        else:
+                            pass_snp += 1
+                    filtered[label_index] = '{};{};{};{};{};{}'.format(normal_DP,
+                                                                       normal_AD,
+                                                                       normal_VAF,
+                                                                       tumor_DP,
+                                                                       tumor_AD,
+                                                                       tumor_VAF)
                 if 'NORMAL.strelka' in called and 'TUMOR.strelka' in called and 'PASS' in record.FILTER:
                     ref_index = record.REF + 'U'
                     alt_index = str(record.ALT[0].serialize()) + 'U'
@@ -285,12 +296,13 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD2 >= tumor_var_depth \
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
-                        filtered['strelka'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                         normal_AD,
-                                                                         normal_VAF,
-                                                                         tumor_DP,
-                                                                         tumor_AD,
-                                                                         tumor_VAF)
+                        pass_snp += 1
+                    filtered['strelka'] = '{};{};{};{};{};{}'.format(normal_DP,
+                                                                     normal_AD,
+                                                                     normal_VAF,
+                                                                     tumor_DP,
+                                                                     tumor_AD,
+                                                                     tumor_VAF)
                 if 'NORMAL.strelka_indel' in called and 'TUMOR.strelka_indel' in called and 'PASS' in record.FILTER:
                     # normal_DP = int(called['NORMAL.strelka_indel']['DP'])
                     normal_AD1 = int(called['NORMAL.strelka_indel']['TAR'][0])
@@ -306,18 +318,17 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD2 >= tumor_var_depth \
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
-                        filtered['strelka'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                         normal_AD,
-                                                                         normal_VAF,
-                                                                         tumor_DP,
-                                                                         tumor_AD,
-                                                                         tumor_VAF)
+                        pass_indel += 1
+                    filtered['strelka'] = '{};{};{};{};{};{}'.format(normal_DP,
+                                                                     normal_AD,
+                                                                     normal_VAF,
+                                                                     tumor_DP,
+                                                                     tumor_AD,
+                                                                     tumor_VAF)
             except KeyError:
                 continue
 
-            is_valid = len([x for x in filtered.keys() if 'indel' not in x]) >= num_callers \
-                       or len([x for x in filtered.keys() if 'indel' in x]) >= num_callers_indel
-
+            is_valid = pass_snp >= num_callers or pass_indel >= num_callers_indel
             variant_effects, dbs_seen_in = effects(record, cDNA_seq, AA_seq)
             variant = Variant()
             variant.chrom = record.CHROM
