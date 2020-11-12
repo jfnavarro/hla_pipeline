@@ -215,8 +215,8 @@ if __name__ == '__main__':
                         help='Filter for DNA variants tumor number of allelic reads (AD). Default=4')
     parser.add_argument('--filter-dna-tumor-vaf', type=float, default=7, required=False, dest='tumor_var_freq',
                         help='Filter for DNA variants tumor variant allele frequency (VAF) (minimum value). Default=7')
-    parser.add_argument('--filter-dna-normal-vaf', type=float, default=10, required=False, dest='normal_var_freq',
-                        help='Filter for DNA variants normal variant allele frequency (VAF) (maximum value). Default=10')
+    parser.add_argument('--filter-dna-normal-vaf', type=float, default=100, required=False, dest='normal_var_freq',
+                        help='Filter for DNA variants normal variant allele frequency (VAF) (maximum value). Default=100')
     parser.add_argument('--filter-dna-normal-cov', type=int, default=10, required=False, dest='normal_coverage',
                         help='Filter for DNA variants normal number of reads (coverage) (DP) (minimum value). Default=10')
     parser.add_argument('--filter-dna-tn-ratio', type=int, default=5, required=False, dest='t2n_ratio',
