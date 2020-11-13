@@ -248,12 +248,13 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                             and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth \
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio and is_somatic:
                         pass_snp += 1
-                    filtered['somaticsniper'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                           normal_AD,
-                                                                           normal_VAF,
-                                                                           tumor_DP,
-                                                                           tumor_AD,
-                                                                           tumor_VAF)
+                    if is_somatic:
+                        filtered['somaticsniper'] = '{};{};{};{};{};{}'.format(normal_DP,
+                                                                               normal_AD,
+                                                                               normal_VAF,
+                                                                               tumor_DP,
+                                                                               tumor_AD,
+                                                                               tumor_VAF)
 
                 if ('NORMAL.varscan' in called and 'TUMOR.varscan' in called) \
                         or ('NORMAL.varscan_indel' in called and 'TUMOR.varscan_indel' in called) \
@@ -298,10 +299,10 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
                         pass_snp += 1
                     filtered['strelka'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                     normal_AD,
+                                                                     normal_AD2,
                                                                      normal_VAF,
                                                                      tumor_DP,
-                                                                     tumor_AD,
+                                                                     tumor_AD2,
                                                                      tumor_VAF)
                 if 'NORMAL.strelka_indel' in called and 'TUMOR.strelka_indel' in called and 'PASS' in record.FILTER:
                     # normal_DP = int(called['NORMAL.strelka_indel']['DP'])
@@ -320,10 +321,10 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
                         pass_indel += 1
                     filtered['strelka'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                     normal_AD,
+                                                                     normal_AD2,
                                                                      normal_VAF,
                                                                      tumor_DP,
-                                                                     tumor_AD,
+                                                                     tumor_AD2,
                                                                      tumor_VAF)
             except KeyError:
                 continue
