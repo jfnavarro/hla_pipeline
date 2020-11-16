@@ -270,7 +270,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth \
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
-                        if 'indel' in called:
+                        if 'indel' in label_index:
                             pass_indel += 1
                         else:
                             pass_snp += 1
@@ -320,12 +320,12 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                             and tumor_VAF >= tumor_var_freq and tumor_AD2 >= tumor_var_depth \
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
                         pass_indel += 1
-                    filtered['strelka'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                     normal_AD2,
-                                                                     normal_VAF,
-                                                                     tumor_DP,
-                                                                     tumor_AD2,
-                                                                     tumor_VAF)
+                    filtered['strelka_indel'] = '{};{};{};{};{};{}'.format(normal_DP,
+                                                                           normal_AD2,
+                                                                           normal_VAF,
+                                                                           tumor_DP,
+                                                                           tumor_AD2,
+                                                                           tumor_VAF)
             except KeyError:
                 continue
 
