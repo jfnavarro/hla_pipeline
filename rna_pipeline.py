@@ -129,7 +129,7 @@ def main(R1,
         # Filtering variants (HaplotypeCaller)
         print("Filtering HaplotypeCaller variants")
         cmd = '{} VariantFiltration --reference {} --variant haplotypecaller.vcf --window 35 --cluster 3 --filter-name "FS" ' \
-              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK, GENOME)
+              '--filter "FS > 60.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK, GENOME)
         exec_command(cmd)
 
         # NOTE replacing IUPAC codes from VCF

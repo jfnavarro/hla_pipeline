@@ -236,9 +236,9 @@ if __name__ == '__main__':
     parser.add_argument('--filter-rna-tumor-vaf', type=float, default=3, required=False,
                         dest='tumor_var_freq_rna',
                         help='Filter for RNA variants tumor variant allele frequency (VAF) (minimum value). Default=3')
-    parser.add_argument('--filter-rna-callers', type=int, default=1, required=False,
+    parser.add_argument('--filter-rna-callers', type=int, default=2, required=False,
                         choices=[1, 2], dest='num_callers_rna',
-                        help='Filter for RNA variants number of callers required. Default=1')
+                        help='Filter for RNA variants number of callers required. Default=2')
 
     args = parser.parse_args()
     main(args.dna,
