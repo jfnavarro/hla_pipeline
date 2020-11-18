@@ -141,8 +141,8 @@ def main(R1_NORMAL,
               '-outdir bamQC_Normal -outformat HTML'.format(BAMQC, THREADS)
         p1 = exec_command(cmd, detach=True)
 
-        cmd = '{} -bam sample1_final.bam {} --genome-gc-distr HUMAN -nt {} ' \
-              '-outdir bamQC_Tumor -outformat HTML'.format(BAMQC, intervals_cmd, THREADS)
+        cmd = '{} -bam sample1_final.bam --genome-gc-distr HUMAN -nt {} ' \
+              '-outdir bamQC_Tumor -outformat HTML'.format(BAMQC, THREADS)
         p2 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel
