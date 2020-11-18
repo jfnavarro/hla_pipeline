@@ -87,8 +87,17 @@ def main(R1,
         exec_command(cmd)
 
         # BamQC
-        cmd = '{} -bam sample_final.bam -gtf {} --paired -outdir bamQC -outformat HTML'.format(BAMQCRNA, ANNOTATION)
-        exec_command(cmd)
+        cmd = '{} -bam sample_final.bam -gtf {} --paired -outdir bamQCRNA ' \
+              '--java-mem-size=16000M -outformat HTML'.format(BAMQCRNA, ANNOTATION)
+        p1 = exec_command(cmd, detach=True)
+
+        cmd = '{} -bam sample_final.bam --genome-gc-distr HUMAN -nt {} ' \
+              '-outdir bamQC -outformat HTML'.format(BAMQC, THREADS)
+        p2 = exec_command(cmd, detach=True)
+
+        # Wait for the processes to finish in parallel
+        p1.wait()
+        p2.wait()
 
     if 'hla' in STEPS:
         print('Predicting HLAs')
@@ -168,6 +177,9 @@ def main(R1,
         if os.path.isdir('../bamQC'):
             shutil.rmtree(os.path.abspath('../bamQC'))
         shutil.move('bamQC', '../bamQC')
+        if os.path.isdir('../bamQCRNA'):
+            shutil.rmtree(os.path.abspath('../bamQCRNA'))
+        shutil.move('bamQCRNA', '../bamQCRNA')
         for file in glob.glob('*_fastqc*'):
             shutil.move(file, '../{}'.format(file))
 
