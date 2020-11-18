@@ -137,10 +137,13 @@ def main(R1_NORMAL,
         exec_command(cmd)
 
         # BamQC
-        cmd = '{} -bam sample2_final.bam --genome-gc-distr HUMAN -nt {} -outdir bamQC_Normal -outformat HTML'.format(BAMQC, THREADS)
+        intervals_cmd = '--feature-file {}'.format(INTERVALS) if INTERVALS else ''
+        cmd = '{} -bam sample2_final.bam {} --genome-gc-distr HUMAN -nt {} ' \
+              '-outdir bamQC_Normal -outformat HTML'.format(BAMQC, intervals_cmd, THREADS)
         p1 = exec_command(cmd, detach=True)
 
-        cmd = '{} -bam sample1_final.bam --genome-gc-distr HUMAN -nt {} -outdir bamQC_Tumor -outformat HTML'.format(BAMQC, THREADS)
+        cmd = '{} -bam sample1_final.bam {} --genome-gc-distr HUMAN -nt {} ' \
+              '-outdir bamQC_Tumor -outformat HTML'.format(BAMQC, intervals_cmd, THREADS)
         p2 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel
@@ -163,6 +166,7 @@ def main(R1_NORMAL,
 
     if 'variant' in STEPS:
         print('Performing variant calling Mutect2')
+        intervals_cmd = '--intervals {}'.format(INTERVALS) if INTERVALS else ''
         # Variant calling Mutect2
         cmd = '{} Mutect2 --reference {} --input sample1_final.bam --input sample2_final.bam --normal-sample {} ' \
               '--output Mutect_unfiltered.vcf --germline-resource {} --dont-use-soft-clipped-bases ' \

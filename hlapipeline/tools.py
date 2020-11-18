@@ -20,7 +20,7 @@ BWA = 'bwa mem'
 ARCASHLA = os.path.join(os.environ['ARCASHLA_PATH'], 'arcasHLA')
 FEATURECOUNTS = 'featureCounts'
 BAMQC = 'qualimap bamqc'
-
+BAMQCRNA = 'qualimap rnaseq'
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
 ANNOVAR_ANNO = 'refGene,knownGene,ensGene -operation g,g,g -nastring .'

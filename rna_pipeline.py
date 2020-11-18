@@ -87,7 +87,8 @@ def main(R1,
         exec_command(cmd)
 
         # BamQC
-        cmd = '{} -bam sample_final.bam --genome-gc-distr HUMAN -nt {} -outdir bamQC -outformat HTML'.format(BAMQC, THREADS)
+        cmd = '{} -bam sample_final.bam -gtf {} --paired --genome-gc-distr HUMAN ' \
+              '-nt {} -outdir bamQC -outformat HTML'.format(BAMQCRNA, ANNOTATION, THREADS)
         exec_command(cmd)
 
     if 'hla' in STEPS:
