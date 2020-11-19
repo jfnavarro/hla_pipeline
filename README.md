@@ -30,12 +30,13 @@ QC is performed with FastQC and BamQC.
 
 **merge_resuls.py** combines results from 1 or several runs of the DNA and RNA
 pipelines in order to generate an unified table with useful information where
-variants are filtered by certain criterias (defined by the user) and epitopes 
-are created for each of the variants somatic effects. 
+variants are filtered by certain criteria (defined by the user) and epitopes 
+are created for each of the variants somatic effects. The user can define
+the values of the filters for both dna and rna variants. 
 
 **mhc_predict.py** can take the file generated with merge_results.py and the HLA files
 generated in the DNA and/or RNA pipelines and then generate a list of predicted neo-antigens.
-Variants are filtered by certain criterias and only the most common alleles for each HLA class 1
+Variants are filtered by certain criteria and only the most common alleles for each HLA class 1
 are used. 
 
 Each tool/pipeline uses a command line interface with parameters which
@@ -56,7 +57,8 @@ for some tools as expected in the file hlapipeline/tools.py.
 These following tools are required:
 
 * hla-la
-* gatk4 
+* gatk4
+* gatk3
 * bwa 
 * samtools 
 * picard 
@@ -70,6 +72,9 @@ These following tools are required:
 * kallisto
 * biopython
 * subread
+* strelka
+* annovar
+* arcashla
 * qualimap
 * numpy
 * scipy
@@ -82,8 +87,8 @@ These following tools are required:
 ## Install
 See INSTALL.txt for installation instructions. 
 
-A Docker container with everything that is needed to process
-data is available at <>
+See REFERENCES.txt for instructions to download the references needed
+to run the pipelines. 
 
 ## How to run
 See RUN.txt for a running example.
@@ -99,9 +104,10 @@ and 500GB of disk space.
 
 Other files:
   - combined_calls.vcf
-  - tumor_dedup.bam
-  - normal_dedup.bam
+  - tumor_final.bam
+  - normal_final.bam
   - fastqc files
+  - cutadapt stats
   - bamQC_Normal folder
   - bamQC_Tumor folder
   
@@ -112,9 +118,11 @@ Other files:
 
 Other files:
   - combined_calls.vcf
-  - sample_dedup.bam
+  - sample_final.bam
   - fastqc files
+  - cutadapt stats
   - bamQC folder
+  - bamQCRNA folder
   
 **merge_results.py** 
 - overlap_final.txt (all the DNA and RNA variants collapsed and filtered with useful information and epitopes)
