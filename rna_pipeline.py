@@ -193,8 +193,8 @@ def main(R1,
 
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
-    parser.add_argument('R1', help='FASTQ file R1 (DNA or RNA)')
-    parser.add_argument('R2', help='FASTQ file R2 (DNA or RNA)')
+    parser.add_argument('R1', help='FASTQ file R1 (RNA)')
+    parser.add_argument('R2', help='FASTQ file R2 (RNA)')
     parser.add_argument('--genome',
                         help='Path to the reference genome FASTA file', required=True)
     parser.add_argument('--genome-star',
