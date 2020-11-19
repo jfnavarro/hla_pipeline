@@ -175,10 +175,6 @@ def main(R1,
         shutil.move('gene.counts', '../gene.counts')
         shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
         shutil.move('Log.final.out', '../{}_Log.final.out'.format(SAMPLEID))
-        shutil.move('{}_1.fastq.gz_trimming_report.txt'.format(SAMPLEID),
-                    '../{}_1.fastq.gz_trimming_report.txt'.format(SAMPLEID))
-        shutil.move('{}_2.fastq.gz_trimming_report.txt'.format(SAMPLEID),
-                    '../{}_2.fastq.gz_trimming_report.txt'.format(SAMPLEID))
         shutil.move('sample_final.bam', '../sample_final.bam')
         if os.path.isdir('../bamQC'):
             shutil.rmtree(os.path.abspath('../bamQC'))
@@ -187,6 +183,8 @@ def main(R1,
             shutil.rmtree(os.path.abspath('../bamQCRNA'))
         shutil.move('bamQCRNA', '../bamQCRNA')
         for file in glob.glob('*_fastqc*'):
+            shutil.move(file, '../{}'.format(file))
+        for file in glob.glob('*_trimming_report*'):
             shutil.move(file, '../{}'.format(file))
 
     print("COMPLETED!")
