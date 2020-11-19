@@ -23,8 +23,8 @@ from hlapipeline.filters import *
 
 def main(R1_NORMAL,
          R2_NORMAL,
-         R1_CANCER,
-         R2_CANCER,
+         R1_TUMOR,
+         R2_TUMOR,
          GENOME,
          SAMPLEID,
          THREADS,
@@ -43,7 +43,7 @@ def main(R1_NORMAL,
 
     print("DNA somatic pipeline")
 
-    # Sample 1 cancer, sample 2 normal
+    # Sample 1 tumor, sample 2 normal
     sample1_ID = SAMPLEID + "_Tumor"
     sample2_ID = SAMPLEID + "_Normal"
 
@@ -57,7 +57,7 @@ def main(R1_NORMAL,
         cmd = '{} --cores {} --fastqc --paired --basename normal {} {}'.format(TRIMGALORE, THREADS, R1_NORMAL, R2_NORMAL)
         p1 = exec_command(cmd, detach=True)
 
-        cmd = '{} --cores {} --fastqc --paired --basename cancer {} {}'.format(TRIMGALORE, THREADS, R1_CANCER, R2_CANCER)
+        cmd = '{} --cores {} --fastqc --paired --basename tumor {} {}'.format(TRIMGALORE, THREADS, R1_TUMOR, R2_TUMOR)
         p2 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel
@@ -72,9 +72,9 @@ def main(R1_NORMAL,
               '{} sort --threads {} > aligned_normal_merged.bam'.format(BWA, THREADS, GENOME, SAMTOOLS, THREADS)
         p1 = exec_command(cmd, detach=True)
 
-        # Cancer (paired)
-        cmd = '{} -t {} {} cancer_val_1.fq.gz cancer_val_2.fq.gz | ' \
-              '{} sort --threads {} > aligned_cancer_merged.bam'.format(BWA, THREADS, GENOME, SAMTOOLS, THREADS)
+        # Tumor (paired)
+        cmd = '{} -t {} {} tumor_val_1.fq.gz tumor_val_2.fq.gz | ' \
+              '{} sort --threads {} > aligned_tumor_merged.bam'.format(BWA, THREADS, GENOME, SAMTOOLS, THREADS)
         p2 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel
@@ -83,7 +83,7 @@ def main(R1_NORMAL,
 
         # Add headers
         print("Adding headers")
-        cmd = '{} AddOrReplaceReadGroups --INPUT aligned_cancer_merged.bam --OUTPUT sample1_header.bam ' \
+        cmd = '{} AddOrReplaceReadGroups --INPUT aligned_tumor_merged.bam --OUTPUT sample1_header.bam ' \
               '--SORT_ORDER coordinate --RGID {} --RGPL Illumina --RGLB DNA --RGPU {} --RGSM {} --RGCN {} ' \
               '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, sample1_ID,
                                                                           sample1_ID, sample1_ID, sample1_ID)
@@ -251,8 +251,12 @@ def main(R1_NORMAL,
         shutil.move('annotated.hg38_multianno.vcf', '../annotated.hg38_multianno.vcf')
         shutil.move('PRG-HLA-LA_Normal_output.txt', '../PRG-HLA-LA_Normal_output.txt')
         shutil.move('PRG-HLA-LA_Tumor_output.txt', '../PRG-HLA-LA_Tumor_output.txt')
-        shutil.move('sample1_dedup.bam', '../tumor_dedup.bam')
-        shutil.move('sample2_dedup.bam', '../normal_dedup.bam')
+        shutil.move('sample1_final.bam', '../tumor_final.bam')
+        shutil.move('sample2_final.bam', '../normal_final.bam')
+        shutil.move('R1_tumor.fastq.gz_trimming_report.txt', '../R1_tumor.fastq.gz_trimming_report.txt')
+        shutil.move('R2_tumor.fastq.gz_trimming_report.txt', '../R2_tumor.fastq.gz_trimming_report.txt')
+        shutil.move('R1_normal.fastq.gz_trimming_report.txt', '../R1_normal.fastq.gz_trimming_report.txt')
+        shutil.move('R2_normal.fastq.gz_trimming_report.txt', '../R2_normal.fastq.gz_trimming_report.txt')
         if os.path.isdir('../bamQC_Normal'):
             shutil.rmtree(os.path.abspath('../bamQC_Normal'))
         shutil.move('bamQC_Normal', '../bamQC_Normal')
@@ -268,8 +272,8 @@ if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('R1_NORMAL', help='FASTQ file R1 (Normal)')
     parser.add_argument('R2_NORMAL', help='FASTQ file R2 (Normal)')
-    parser.add_argument('R1_CANCER', help='FASTQ file R1 (Cancer)')
-    parser.add_argument('R2_CANCER', help='FASTQ file R2 (Cancer)')
+    parser.add_argument('R1_TUMOR', help='FASTQ file R1 (Tumor)')
+    parser.add_argument('R2_TUMOR', help='FASTQ file R2 (Tumor)')
     parser.add_argument('--genome', type=str, required=True,
                         help='Path to the reference genome FASTA file (must contain BWA index)')
     parser.add_argument('--sample', type=str,
@@ -303,8 +307,8 @@ if __name__ == '__main__':
     DIR = args.outdir
     R1_NORMAL = os.path.abspath(args.R1_NORMAL)
     R2_NORMAL = os.path.abspath(args.R2_NORMAL)
-    R1_CANCER = os.path.abspath(args.R1_CANCER)
-    R2_CANCER = os.path.abspath(args.R2_CANCER)
+    R1_TUMOR = os.path.abspath(args.R1_TUMOR)
+    R2_TUMOR = os.path.abspath(args.R2_TUMOR)
     SAMPLEID = args.sample
     GENOME_REF = os.path.abspath(args.genome)
     THREADS = int(args.threads)
@@ -324,8 +328,8 @@ if __name__ == '__main__':
 
     main(R1_NORMAL,
          R2_NORMAL,
-         R1_CANCER,
-         R2_CANCER,
+         R1_TUMOR,
+         R2_TUMOR,
          GENOME_REF,
          SAMPLEID,
          THREADS,

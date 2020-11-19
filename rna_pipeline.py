@@ -173,7 +173,13 @@ def main(R1,
         shutil.move('annotated.hg38_multianno.vcf', '../annotated.hg38_multianno.vcf')
         shutil.move('sample_final.genotype.json', '../hla_genotype.json')
         shutil.move('gene.counts', '../gene.counts')
-        shutil.move('sample_dedup.bam', '../sample_dedup.bam')
+        shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
+        shutil.move('Log.final.out', '../{}_Log.final.out'.format(SAMPLEID))
+        shutil.move('{}_1.fastq.gz_trimming_report.txt'.format(SAMPLEID),
+                    '../{}_1.fastq.gz_trimming_report.txt'.format(SAMPLEID))
+        shutil.move('{}_2.fastq.gz_trimming_report.txt'.format(SAMPLEID),
+                    '../{}_2.fastq.gz_trimming_report.txt'.format(SAMPLEID))
+        shutil.move('sample_final.bam', '../sample_final.bam')
         if os.path.isdir('../bamQC'):
             shutil.rmtree(os.path.abspath('../bamQC'))
         shutil.move('bamQC', '../bamQC')
