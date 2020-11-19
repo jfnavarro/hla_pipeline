@@ -1,0 +1,26 @@
+# You can use this file to create a conda environment for this pipeline:
+#   conda env create -f environment.yml
+name: hla
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.6.1
+  - tensorflow=1.15.0
+  - biopython
+  - bioconda::hla-la
+  - bioconda::gatk4-spark
+  - bioconda::samtools
+  - bioconda::bwa
+  - bioconda::picard
+  - bioconda::varscan
+  - bioconda::trim-galore
+  - bioconda::star
+  - bioconda::somatic-sniper
+  - bioconda::bedtools
+  - bioconda::kallisto
+  - bioconda::mhcflurry
+  - bioconda::subread
+  - bioconda::qualimap
+  - bioconda::vcftools
