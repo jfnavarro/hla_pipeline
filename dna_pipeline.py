@@ -297,7 +297,7 @@ if __name__ == '__main__':
                         help='String indicated which Annovar database to use (default: humandb)')
     parser.add_argument('--annovar-version', type=str, default='hg38', required=False,
                         help='String indicated which version of the Annovar database to use (default: hg38)')
-    parser.add_argument('--graph-dir', type=str, default=None, required=False,
+    parser.add_argument('--graph-dir', type=str, default=None, required=True,
                         help='Path to the the folder with the HLA-LA graphs')
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
@@ -324,10 +324,8 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
-    if 'hla' in STEPS and not args.graph_dir:
-        print('HLA-LA graph dir must be provided when performing the hla step')
-        sys.exit(-1)
     GRAPHDIR = os.path.abspath(args.graph_dir)
+    
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
     os.chdir(os.path.abspath(DIR))
