@@ -5,6 +5,12 @@
 pip install gsutil
 
 cd ~/shared
+# Download and build HLA-LA graphs
+wget http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz
+tar -xvf PRG_MHC_GRCh38_withIMGT.tar.gz
+~/anaconda3/envs/hla/opt/hla-la/bin/HLA-LA --action prepareGraph --PRG_graph_dir PRG_MHC_GRCh38_withIMGT
+
+cd ~/shared
 # Download references for GRCh38 and build STAR index
 mkdir -p GRCh38
 cd GRCh38
