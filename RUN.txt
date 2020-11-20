@@ -18,7 +18,7 @@ dna_pipeline.py \
   --threads 20 \
   --annovar-db humandb \
   --annovar-version hg38 \
-  --graph-dir ~/shared/PRG_MHC_GRCh38_withIMGT \
+  --graph-name PRG_MHC_GRCh38_withIMGT \
   NormalR1.fastq.gz NormalR2.fastq.gz \
   TumorR1.fastq.gz TumorR2.fastq.gz
   
@@ -34,7 +34,7 @@ dna_pipeline.py \
   --threads 20 \
   --annovar-db humandb \
   --annovar-version hg38 \
-  --graph-dir ~/shared/PRG_MHC_GRCh38_withIMGT \
+  --graph-name PRG_MHC_GRCh38_withIMGT \
   NormalR1.fastq.gz NormalR2.fastq.gz \
   cfDNAR1.fastq.gz cfDNAR2.fastq.gz
 

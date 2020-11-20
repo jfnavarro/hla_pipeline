@@ -36,7 +36,7 @@ def main(R1_NORMAL,
          INTERVALS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         GRAPHDIR,
+         GRAPHNAME,
          STEPS):
 
     # TODO add sanity checks for the parameters
@@ -155,11 +155,11 @@ def main(R1_NORMAL,
         print('Performing HLA-LA predictions')
         p1 = multiprocessing.Process(target=HLA_predictionDNA,
                                      args=('sample2_final.bam', SAMPLEID,
-                                           GRAPHDIR, 'PRG-HLA-LA_Normal_output.txt', THREADS))
+                                           GRAPHNAME, 'PRG-HLA-LA_Normal_output.txt', THREADS))
         p1.start()
         p2 = multiprocessing.Process(target=HLA_predictionDNA,
                                      args=('sample1_final.bam', SAMPLEID,
-                                           GRAPHDIR, 'PRG-HLA-LA_Tumor_output.txt', THREADS))
+                                           GRAPHNAME, 'PRG-HLA-LA_Tumor_output.txt', THREADS))
         p2.start()
 
         # Wait for the processes to finish in parallel
@@ -297,8 +297,8 @@ if __name__ == '__main__':
                         help='String indicated which Annovar database to use (default: humandb)')
     parser.add_argument('--annovar-version', type=str, default='hg38', required=False,
                         help='String indicated which version of the Annovar database to use (default: hg38)')
-    parser.add_argument('--graph-dir', type=str, default=None, required=True,
-                        help='Path to the the folder with the HLA-LA graphs')
+    parser.add_argument('--graph-name', type=str, default='PRG_MHC_GRCh38_withIMGT', required=False,
+                        help='Name of the HLA-LA graph to use (must be located in the graphs folder of HLA-LA)')
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
@@ -324,7 +324,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
-    GRAPHDIR = os.path.abspath(args.graph_dir)
+    GRAPHNAME = os.path.abspath(args.graph_name)
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -345,5 +345,5 @@ if __name__ == '__main__':
          INTERVALS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         GRAPHDIR,
+         GRAPHNAME,
          STEPS)
