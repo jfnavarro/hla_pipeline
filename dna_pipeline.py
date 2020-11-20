@@ -325,7 +325,7 @@ if __name__ == '__main__':
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
     GRAPHDIR = os.path.abspath(args.graph_dir)
-    
+
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
     os.chdir(os.path.abspath(DIR))
