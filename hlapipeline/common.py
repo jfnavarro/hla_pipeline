@@ -23,7 +23,7 @@ def exec_command(cmd, detach=False):
         sys.exit(-1)
 
 
-def HLA_predictionDNA(inputbam, sampleID, outfile, threads):
+def HLA_predictionDNA(inputbam, sampleID, graphdir, outfile, threads):
     """
     Performs HLA typing with HLA-LA for aligned DNA data.
     The output of HLA is reformatted to make it easier to use.
@@ -37,7 +37,7 @@ def HLA_predictionDNA(inputbam, sampleID, outfile, threads):
     OUT_DIR = os.path.abspath(os.path.join('out_hla_', os.path.splitext(outfile)[0]))
     os.makedirs(OUT_DIR, exist_ok=True)
     cmd = '{} --BAM {} --workingDir {} --graph {} --sampleID {}' \
-          ' --maxTHREADS {}'.format(HLALA, inputbam, OUT_DIR, 'PRG_MHC_GRCh38_withIMGT', sampleID_clean, threads)
+          ' --maxTHREADS {}'.format(HLALA, inputbam, OUT_DIR, graphdir, sampleID_clean, threads)
     exec_command(cmd)
 
     # create a dictionary to store the output for each allele

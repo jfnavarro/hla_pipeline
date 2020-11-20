@@ -36,6 +36,7 @@ def main(R1_NORMAL,
          INTERVALS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
+         GRAPHDIR,
          STEPS):
 
     # TODO add sanity checks for the parameters
@@ -153,10 +154,12 @@ def main(R1_NORMAL,
         # HLA-LA predictions
         print('Performing HLA-LA predictions')
         p1 = multiprocessing.Process(target=HLA_predictionDNA,
-                                     args=('sample2_final.bam', SAMPLEID, 'PRG-HLA-LA_Normal_output.txt', THREADS))
+                                     args=('sample2_final.bam', SAMPLEID,
+                                           GRAPHDIR, 'PRG-HLA-LA_Normal_output.txt', THREADS))
         p1.start()
         p2 = multiprocessing.Process(target=HLA_predictionDNA,
-                                     args=('sample1_final.bam', SAMPLEID, 'PRG-HLA-LA_Tumor_output.txt', THREADS))
+                                     args=('sample1_final.bam', SAMPLEID,
+                                           GRAPHDIR, 'PRG-HLA-LA_Tumor_output.txt', THREADS))
         p2.start()
 
         # Wait for the processes to finish in parallel
@@ -253,16 +256,16 @@ def main(R1_NORMAL,
         shutil.move('PRG-HLA-LA_Tumor_output.txt', '../PRG-HLA-LA_Tumor_output.txt')
         shutil.move('sample1_final.bam', '../tumor_final.bam')
         shutil.move('sample2_final.bam', '../normal_final.bam')
-        if os.path.isdir('../bamQC_Normal'):
-            shutil.rmtree(os.path.abspath('../bamQC_Normal'))
-        shutil.move('bamQC_Normal', '../bamQC_Normal')
-        if os.path.isdir('../bamQC_Tumor'):
-            shutil.rmtree(os.path.abspath('../bamQC_Tumor'))
-        shutil.move('bamQC_Tumor', '../bamQC_Tumor')
+        if os.path.isdir('../{}_bamQCNormal'.format(SAMPLEID)):
+            shutil.rmtree(os.path.abspath('../{}_bamQCNormal'.format(SAMPLEID)))
+        shutil.move('bamQC_Normal', '../{}_bamQCNormal'.format(SAMPLEID))
+        if os.path.isdir('../{}_bamQCTumor'.format(SAMPLEID)):
+            shutil.rmtree(os.path.abspath('../{}_bamQCTumor'.format(SAMPLEID)))
+        shutil.move('bamQC_Tumor', '../{}_bamQCTumor'.format(SAMPLEID))
         for file in glob.glob('*_fastqc*'):
-            shutil.move(file, '../{}'.format(file))
+            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
         for file in glob.glob('*_trimming_report*'):
-            shutil.move(file, '../{}'.format(file))
+            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
 
     print('COMPLETED!')
 
@@ -294,6 +297,8 @@ if __name__ == '__main__':
                         help='String indicated which Annovar database to use (default: humandb)')
     parser.add_argument('--annovar-version', type=str, default='hg38', required=False,
                         help='String indicated which version of the Annovar database to use (default: hg38)')
+    parser.add_argument('--graph-dir', type=str, default=None, required=False,
+                        help='Path to the the folder with the HLA-LA graphs')
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
@@ -319,7 +324,10 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
-
+    if 'hla' in STEPS and not args.graph_dir:
+        print('HLA-LA graph dir must be provided when performing the hla step')
+        sys.exit(-1)
+    GRAPHDIR = os.path.abspath(args.graph_dir)
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
     os.chdir(os.path.abspath(DIR))
@@ -339,4 +347,5 @@ if __name__ == '__main__':
          INTERVALS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
+         GRAPHDIR,
          STEPS)

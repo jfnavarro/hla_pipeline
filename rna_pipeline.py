@@ -176,16 +176,16 @@ def main(R1,
         shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
         shutil.move('Log.final.out', '../{}_Log.final.out'.format(SAMPLEID))
         shutil.move('sample_final.bam', '../sample_final.bam')
-        if os.path.isdir('../bamQC'):
-            shutil.rmtree(os.path.abspath('../bamQC'))
-        shutil.move('bamQC', '../bamQC')
-        if os.path.isdir('../bamQCRNA'):
-            shutil.rmtree(os.path.abspath('../bamQCRNA'))
-        shutil.move('bamQCRNA', '../bamQCRNA')
+        if os.path.isdir('../{}_bamQC'.format(SAMPLEID)):
+            shutil.rmtree(os.path.abspath('../{}_bamQC'.format(SAMPLEID)))
+        shutil.move('bamQC', '../{}_bamQC'.format(SAMPLEID))
+        if os.path.isdir('../{}_bamQCRNA'.format(SAMPLEID)):
+            shutil.rmtree(os.path.abspath('../{}_bamQCRNA'.format(SAMPLEID)))
+        shutil.move('bamQCRNA', '../{}_bamQCRNA'.format(SAMPLEID))
         for file in glob.glob('*_fastqc*'):
-            shutil.move(file, '../{}'.format(file))
+            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
         for file in glob.glob('*_trimming_report*'):
-            shutil.move(file, '../{}'.format(file))
+            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
 
     print("COMPLETED!")
 
