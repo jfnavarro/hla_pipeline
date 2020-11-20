@@ -298,7 +298,8 @@ if __name__ == '__main__':
     parser.add_argument('--annovar-version', type=str, default='hg38', required=False,
                         help='String indicated which version of the Annovar database to use (default: hg38)')
     parser.add_argument('--graph-name', type=str, default='PRG_MHC_GRCh38_withIMGT', required=False,
-                        help='Name of the HLA-LA graph to use (must be located in the graphs folder of HLA-LA)')
+                        help='Name of the HLA-LA graph to use (must be located in the graphs folder of HLA-LA) '
+                             '(default: PRG_MHC_GRCh38_withIMGT')
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
@@ -324,7 +325,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
-    GRAPHNAME = os.path.abspath(args.graph_name)
+    GRAPHNAME = args.graph_name
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
