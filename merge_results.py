@@ -87,7 +87,8 @@ def main(dna_variants,
 
     # TODO this could be done more elegantly and efficiently
     counts_dict = defaultdict(lambda: defaultdict(float))
-    counts_stats = defaultdict(list)
+    counts_stats = defaultdict(float)
+    counts_stats_percentile = defaultdict(lambda: defaultdict(float))
     if rna_counts and len(rna_counts) > 0 and len(rna_counts) == len(rna_names):
         print('Loading Gene counts..')
         for file, name in zip(rna_counts, rna_names):
@@ -106,8 +107,9 @@ def main(dna_variants,
             for name, gene_counts in counts_dict.items():
                 counts = list(gene_counts.values())
                 mean = np.around(statistics.mean(counts), 3)
-                percentile = np.around(stats.percentileofscore(counts, 3), 3)
-                counts_stats[name] = [mean, percentile]
+                counts_stats[name] = mean
+                for gene, count in gene_counts.items():
+                    counts_stats_percentile[name][gene] = np.around(stats.percentileofscore(counts, count), 3)
 
     print('Creating merged variants..')
     header_final = 'Variant key\tDNA samples (passing)\tNumber of DNA samples (passing)\t' \
@@ -159,7 +161,8 @@ def main(dna_variants,
             for name, gene_counts in counts_dict.items():
                 try:
                     gene_count = gene_counts[gene]
-                    gene_mean, gene_percentile = counts_stats[name]
+                    gene_mean = counts_stats[name]
+                    gene_percentile = counts_stats_percentile[name][gene]
                     gene_locus.append('{}:({})'.format(name,
                                                        ';'.join([gene,
                                                                  str(gene_count),

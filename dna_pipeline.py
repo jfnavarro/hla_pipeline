@@ -251,7 +251,8 @@ def main(R1_NORMAL,
 
         # Moving result files to output
         shutil.move('combined_calls.vcf', '../combined_calls.vcf')
-        shutil.move('annotated.hg38_multianno.vcf', '../annotated.hg38_multianno.vcf')
+        shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
+                    '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
         shutil.move('PRG-HLA-LA_Normal_output.txt', '../PRG-HLA-LA_Normal_output.txt')
         shutil.move('PRG-HLA-LA_Tumor_output.txt', '../PRG-HLA-LA_Tumor_output.txt')
         shutil.move('sample1_final.bam', '../tumor_final.bam')
