@@ -23,53 +23,70 @@ def exec_command(cmd, detach=False):
         sys.exit(-1)
 
 
-def HLA_predictionDNA(inputbam, sampleID, graphdir, outfile, threads):
+def HLA_prediction(inputbam, threads, origin, sample, fasta):
     """
-    Performs HLA typing with HLA-LA for aligned DNA data.
-    The output of HLA is reformatted to make it easier to use.
-    :param inputbam: aligned DNA data
-    :param sampleID: the ID to give to the sample
-    :param outfile: the name of the reformatted output file
-    :param threads: the number of threads to use
-    """
-    # HLA-LA only supports alphanumeric
-    sampleID_clean = ''.join(ch for ch in sampleID if ch.isalnum())
-    OUT_DIR = os.path.abspath(os.path.join('out_hla_', os.path.splitext(outfile)[0]))
-    os.makedirs(OUT_DIR, exist_ok=True)
-    cmd = '{} --BAM {} --workingDir {} --graph {} --sampleID {}' \
-          ' --maxTHREADS {}'.format(HLALA, inputbam, OUT_DIR, graphdir, sampleID_clean, threads)
-    exec_command(cmd)
-
-    # create a dictionary to store the output for each allele
-    hla = pd.read_table(os.path.join(OUT_DIR, sampleID_clean, 'hla', 'R1_bestguess_G.txt'), sep='\t')
-    allele_dict = {}
-    hla = hla.groupby('Locus')
-    for k, g in hla:
-        allele = [re.sub('G$', '', a).replace('N', '') for a in g['Allele'].tolist()]
-        allele_dict['HLA_' + k] = allele
-
-    # Create formatted output file
-    a = open(outfile, 'w')
-    for key, value in allele_dict.items():
-        a.write('{}\t{}\t{}\n'.format(sampleID, key, '\t'.join(value)))
-    a.close()
-
-
-def HLA_predictionRNA(inputbam, threads):
-    """
-    Performs HLA typing with arcasHLA for RNA data.
+    Performs HLA typing with OptiType for either RNA or DNA data.
     :param inputbam: BAM file with aligned reads
     :param threads: the number of threads
+    :param origin: prefix for the output hla genotype file.
+    :param sample: prefix for the sample name.
+    :param fasta: HLA reference fasta.
     """
-    cmd = '{} extract --threads {} --paired {}'.format(ARCASHLA, threads, inputbam)
+
+    cmd = "mkdir -p {}/index".format(os.getcwd())
     exec_command(cmd)
 
-    clean_name = os.path.splitext(inputbam)[0]
+    cmd = "{} {} -o {}/index/hla_reference".format(YARAI, fasta, os.getcwd())
+    exec_command(cmd)
 
-    cmd = '{} genotype --threads {} {}.extracted.1.fq.gz {}.extracted.2.fq.gz'.format(ARCASHLA,
-                                                                                      threads,
-                                                                                      clean_name,
-                                                                                      clean_name)
+    cmd = "{} view -@ {} -h -f 0x40 {} > {}_output_1.bam".format(
+        SAMTOOLS, threads, inputbam, origin
+    )
+    p1 = exec_command(cmd, detach=True)
+
+    cmd = "{} view -@ {} -h -f 0x80 {} > {}_output_2.bam".format(
+        SAMTOOLS, threads, inputbam, origin
+    )
+    p2 = exec_command(cmd, detach=True)
+
+    p1.wait()
+    p2.wait()
+
+    cmd = "{} bam2fq -@ {} {}_output_1.bam > {}_output_1.fastq".format(
+        SAMTOOLS, threads, origin, origin
+    )
+    p1 = exec_command(cmd, detach=True)
+
+    cmd = "{} bam2fq -@ {} {}_output_2.bam > {}_output_2.fastq".format(
+        SAMTOOLS, threads, origin, origin
+    )
+    p2 = exec_command(cmd, detach=True)
+
+    p1.wait()
+    p2.wait()
+
+    cmd = "{} -e 3 -t {} -f bam {}/index/hla_reference {}_output_1.fastq {}_output_2.fastq > {}_output.bam".format(
+        YARAM, threads, os.getcwd(), origin, origin, origin
+    )
+    exec_command(cmd)
+
+    cmd = "{} view -@ {} -h -F 4 -f 0x40 {}_output.bam > {}_mapped_1.bam".format(
+        SAMTOOLS, threads, origin, origin
+    )
+    p1 = exec_command(cmd, detach=True)
+    cmd = "{} view -@ {} -h -F 4 -f 0x80 {}_output.bam > {}_mapped_2.bam".format(
+        SAMTOOLS, threads, origin, origin
+    )
+    p2 = exec_command(cmd, detach=True)
+
+    p1.wait()
+    p2.wait()
+    # clean_name = os.path.splitext(inputbam)[0]
+
+    cmd = "{} --input {}_mapped_1.bam {}_mapped_2.bam --rna --prefix {}_{}_hla_genotype --outdir {}".format(
+        OPTITYPE, origin, origin, origin, sample, os.getcwd()
+    )
+
     exec_command(cmd)
 
 

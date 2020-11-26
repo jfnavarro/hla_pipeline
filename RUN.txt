@@ -18,7 +18,7 @@ dna_pipeline.py \
   --threads 20 \
   --annovar-db humandb \
   --annovar-version hg38 \
-  --graph-name PRG_MHC_GRCh38_withIMGT \
+  --hla-fasta ~/shared/hla_reference/hla_reference_dna.fasta \
   NormalR1.fastq.gz NormalR2.fastq.gz \
   TumorR1.fastq.gz TumorR2.fastq.gz
   
@@ -34,7 +34,7 @@ dna_pipeline.py \
   --threads 20 \
   --annovar-db humandb \
   --annovar-version hg38 \
-  --graph-name PRG_MHC_GRCh38_withIMGT \
+  --hla-fasta ~/shared/hla_reference/hla_reference_dna.fasta \
   NormalR1.fastq.gz NormalR2.fastq.gz \
   cfDNAR1.fastq.gz cfDNAR2.fastq.gz
 
@@ -50,6 +50,7 @@ rna_pipeline.py \
   --threads 20 \
   --annovar-db humandb \
   --annovar-version hg38 \
+  --hla-fasta ~/shared/hla_reference/hla_reference_rna.fasta \
   RNAR1.fastq.gz RNAR2.fastq.gz
   
 merge_results.py \
@@ -62,7 +63,7 @@ merge_results.py \
   --rna-counts outrna/gene.counts'
 
 mhc_predict.py \
-  --hla-dna outtumor/PRG-HLA-LA_Tumor_output.txt outcfdna/PRG-HLA-LA_Tumor_output.txt \
-  --hla-rna outrna/hla_genotype.json \
+  --hla-dna outtumor/Tumor_hla_genotype.tsv outcfdna/Tumor_hla_genotype.tsv \
+  --hla-rna outrna/hla_genotype.tsv \
   --variants overlap_final.txt \
   --alleles ~/shared/alleles.txt
