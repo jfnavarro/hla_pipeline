@@ -153,13 +153,13 @@ def main(R1_NORMAL,
     if 'hla' in STEPS:
         # HLA-LA predictions
         print('Performing HLA-LA predictions')
-        p1 = multiprocessing.Process(target=HLA_predictionDNA,
-                                     args=('sample2_final.bam', SAMPLEID,
-                                           GRAPHNAME, 'PRG-HLA-LA_Normal_output.txt', THREADS))
+        p1 = multiprocessing.Process(target=HLA_prediction,
+                                    args=("sample2_final.bam", THREADS,
+                                    "Normal", SAMPLEID, HLA_FASTA))
         p1.start()
-        p2 = multiprocessing.Process(target=HLA_predictionDNA,
-                                     args=('sample1_final.bam', SAMPLEID,
-                                           GRAPHNAME, 'PRG-HLA-LA_Tumor_output.txt', THREADS))
+        p2 = multiprocessing.Process(target=HLA_prediction,
+                                    args=("sample1_final.bam", THREADS,
+                                    "Tumor", SAMPLEID, HLA_FASTA))
         p2.start()
 
         # Wait for the processes to finish in parallel
@@ -253,8 +253,10 @@ def main(R1_NORMAL,
         shutil.move('combined_calls.vcf', '../combined_calls.vcf')
         shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
                     '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
-        shutil.move('PRG-HLA-LA_Normal_output.txt', '../PRG-HLA-LA_Normal_output.txt')
-        shutil.move('PRG-HLA-LA_Tumor_output.txt', '../PRG-HLA-LA_Tumor_output.txt')
+        shutil.move('Tumor_{}_hla_genotype_results.tsv'.format(SAMPLEID),
+                    '../Tumor_hla_genotype.tsv')
+        shutil.move('Normal_{}_hla_genotype_results.tsv'.format(SAMPLEID),
+                    '../Normal_hla_genotype.tsv')
         shutil.move('sample1_final.bam', '../tumor_final.bam')
         shutil.move('sample2_final.bam', '../normal_final.bam')
         if os.path.isdir('../{}_bamQCNormal'.format(SAMPLEID)):
@@ -298,9 +300,8 @@ if __name__ == '__main__':
                         help='String indicated which Annovar database to use (default: humandb)')
     parser.add_argument('--annovar-version', type=str, default='hg38', required=False,
                         help='String indicated which version of the Annovar database to use (default: hg38)')
-    parser.add_argument('--graph-name', type=str, default='PRG_MHC_GRCh38_withIMGT', required=False,
-                        help='Name of the HLA-LA graph to use (must be located in the graphs folder of HLA-LA) '
-                             '(default: PRG_MHC_GRCh38_withIMGT')
+    parser.add_argument("--hla-fasta",type=str,default="hla_reference_rna.fasta",required=False,
+                        help="Path to the dna hla reference fasta file located in shared. (default: hla_reference_dna.fasta)")
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
@@ -326,7 +327,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
-    GRAPHNAME = args.graph_name
+    HLA_FASTA = args.hla_fasta
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -347,5 +348,5 @@ if __name__ == '__main__':
          INTERVALS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         GRAPHNAME,
-         STEPS)
+         STEPS,
+         HLA_FASTA)

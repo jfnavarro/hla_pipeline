@@ -4,7 +4,6 @@ This tools uses the output of merge_results.py and HLAs predicted with either
 the dna_pipeline.py and/or the rna_pipeline.py to predict neoantigens.
 The tool extracts the WT and MUT peptides and makes affinity binding
 predictions for the HLAs (class I). The tools uses MHC-flurry for the predictions.
-
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import exec_command
@@ -14,33 +13,23 @@ import json
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import sys
 
-def main(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_filter):
+def main(hla, overlap_final, alleles_file, mode, results, results_filter):
 
-    if not hla_dna and not hla_rna:
+    if not hla:
         sys.stderr.write("Error, need HLAs as input.\n")
         sys.exit(1)
 
     HLA_dict = defaultdict(list)
 
-    # First parse hla_exome_cancer and normal (HLA-LA format)
-    if hla_dna:
-        print('Loading DNA HLAs..')
-        for file in hla_dna:
+    if hla:
+        print('Loading HLAs..')
+        for file in hla:
             with open(file) as f:
+                keys = next(f).split("\t")[1:7]
                 for line in f.readlines():
-                    columns = line.strip().split('\t')
-                    hla = columns[1].split("_")[-1]
-                    alleles = columns[2:]
-                    HLA_dict[hla].extend(alleles)
-
-    # Parse RNA hlas (arcasHLA JSON format)
-    if hla_rna:
-        print('Loading RNA HLAs..')
-        for file in hla_rna:
-            with open(file) as f:
-                local_dict = json.load(f)
-                for hla, alleles in local_dict.items():
-                    HLA_dict[hla].extend(alleles)
+                    columns = line.split('\t')[1:7]
+                    for i in range(len(keys)):
+                        HLA_dict[keys[i]].append(columns[i])
 
     # Filter HLAs by occurrences
     filtered_hla = []
@@ -115,10 +104,8 @@ def main(hla_dna, hla_rna, overlap_final, alleles_file, mode, results, results_f
 
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
-    parser.add_argument('--hla-dna', nargs='+', default=None, required=False,
-                        help='A file or files containing predicted HLAs from DNA (HLA-LA table format)')
-    parser.add_argument('--hla-rna', nargs='+', default=None, required=False,
-                        help='A file or files containing predicted HLAs from RNA (arcasHLA JSON format)')
+    parser.add_argument('--hla', nargs='+', default=None, required=False,
+                        help='A file or files containing predicted HLAs from DNA (OptiType TSV format)')
     parser.add_argument('--variants', default=None, required=True,
                         help='A file with the final variants generated with merge_results.py (table format)')
     parser.add_argument('--alleles', default=None, required=True,
@@ -133,4 +120,4 @@ if __name__ == '__main__':
                         help='What filtering criteria to use when using --results best (default=affinity)',
                         choices=['presentation_score', 'processing_score', 'affinity', 'affinity_percentile'])
     args = parser.parse_args()
-    main(args.hla_dna, args.hla_rna, args.variants, args.alleles, args.mode, args.results, args.results_filter)
+    main(args.hla, args.variants, args.alleles, args.mode, args.results, args.results_filter)
