@@ -11,15 +11,6 @@ conda env create -f environment.yml
 # Download mhcflurry models
 mhcflurry-downloads fetch models_class1_presentation
 
-# Install git-lfs (instructions for Centos)
-curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | sudo bash
-sudo yum install git-lfs
-
-# Install arcasHLA (requires git-lfs)
-git clone https://github.com/RabadanLab/arcasHLA.git
-cd arcasHLA/
-./arcasHLA reference --update
-
 cd ~/shared
 # Install Strelka (Conda version is only compatible with Python 2.7)
 wget https://github.com/Illumina/strelka/releases/download/v2.9.10/strelka-2.9.10.centos6_x86_64.tar.bz2
