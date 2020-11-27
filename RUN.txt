@@ -63,7 +63,6 @@ merge_results.py \
   --rna-counts outrna/gene.counts'
 
 mhc_predict.py \
-  --hla-dna outtumor/Tumor_hla_genotype.tsv outcfdna/Tumor_hla_genotype.tsv \
-  --hla-rna outrna/hla_genotype.tsv \
+  --hla outtumor/Tumor_hla_genotype.tsv outcfdna/Tumor_hla_genotype.tsv outrna/hla_genotype.tsv \
   --variants overlap_final.txt \
   --alleles ~/shared/alleles.txt
