@@ -33,60 +33,46 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta):
     :param fasta: HLA reference fasta.
     """
 
-    cmd = "mkdir -p {}/index".format(os.getcwd())
+    # TODO use os.makadirs instead
+    cmd = 'mkdir -p {}/index'.format(os.getcwd())
     exec_command(cmd)
 
-    cmd = "{} {} -o {}/index/hla_reference".format(YARAI, fasta, os.getcwd())
+    cmd = '{} {} -o {}/index/hla_reference'.format(YARAI, fasta, os.getcwd())
     exec_command(cmd)
 
-    cmd = "{} view -@ {} -h -f 0x40 {} > {}_output_1.bam".format(
-        SAMTOOLS, threads, inputbam, origin
-    )
+    cmd = '{} view -@ {} -h -f 0x40 {} > {}_output_1.bam'.format(SAMTOOLS, threads, inputbam, origin)
     p1 = exec_command(cmd, detach=True)
 
-    cmd = "{} view -@ {} -h -f 0x80 {} > {}_output_2.bam".format(
-        SAMTOOLS, threads, inputbam, origin
-    )
+    cmd = '{} view -@ {} -h -f 0x80 {} > {}_output_2.bam'.format(SAMTOOLS, threads, inputbam, origin)
     p2 = exec_command(cmd, detach=True)
 
     p1.wait()
     p2.wait()
 
-    cmd = "{} bam2fq -@ {} {}_output_1.bam > {}_output_1.fastq".format(
-        SAMTOOLS, threads, origin, origin
-    )
+    cmd = '{} bam2fq -@ {} {}_output_1.bam > {}_output_1.fastq'.format(SAMTOOLS, threads, origin, origin)
     p1 = exec_command(cmd, detach=True)
 
-    cmd = "{} bam2fq -@ {} {}_output_2.bam > {}_output_2.fastq".format(
-        SAMTOOLS, threads, origin, origin
-    )
+    cmd = '{} bam2fq -@ {} {}_output_2.bam > {}_output_2.fastq'.format(SAMTOOLS, threads, origin, origin)
     p2 = exec_command(cmd, detach=True)
 
     p1.wait()
     p2.wait()
 
-    cmd = "{} -e 3 -t {} -f bam {}/index/hla_reference {}_output_1.fastq {}_output_2.fastq > {}_output.bam".format(
-        YARAM, threads, os.getcwd(), origin, origin, origin
-    )
+    cmd = '{} -e 3 -t {} -f bam {}/index/hla_reference {}_output_1.fastq {}_output_2.fastq > {}_output.bam'.format(
+        YARAM, threads, os.getcwd(), origin, origin, origin)
     exec_command(cmd)
 
-    cmd = "{} view -@ {} -h -F 4 -f 0x40 {}_output.bam > {}_mapped_1.bam".format(
-        SAMTOOLS, threads, origin, origin
-    )
+    cmd = '{} view -@ {} -h -F 4 -f 0x40 {}_output.bam > {}_mapped_1.bam'.format(SAMTOOLS, threads, origin, origin)
     p1 = exec_command(cmd, detach=True)
-    cmd = "{} view -@ {} -h -F 4 -f 0x80 {}_output.bam > {}_mapped_2.bam".format(
-        SAMTOOLS, threads, origin, origin
-    )
+    
+    cmd = '{} view -@ {} -h -F 4 -f 0x80 {}_output.bam > {}_mapped_2.bam'.format(SAMTOOLS, threads, origin, origin)
     p2 = exec_command(cmd, detach=True)
 
     p1.wait()
     p2.wait()
-    # clean_name = os.path.splitext(inputbam)[0]
 
-    cmd = "{} --input {}_mapped_1.bam {}_mapped_2.bam --rna --prefix {}_{}_hla_genotype --outdir {}".format(
-        OPTITYPE, origin, origin, origin, sample, os.getcwd()
-    )
-
+    cmd = '{} --input {}_mapped_1.bam {}_mapped_2.bam --rna --prefix {}_{}_hla_genotype --outdir {}'.format(
+        OPTITYPE, origin, origin, origin, sample, os.getcwd())
     exec_command(cmd)
 
 
