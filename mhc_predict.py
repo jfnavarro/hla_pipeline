@@ -15,21 +15,17 @@ import sys
 
 def main(hla, overlap_final, alleles_file, mode, results, results_filter):
 
-    if not hla:
-        sys.stderr.write("Error, need HLAs as input.\n")
-        sys.exit(1)
-
+    # TODO perform sanity check on input parameters
+    
     HLA_dict = defaultdict(list)
-
-    if hla:
-        print('Loading HLAs..')
-        for file in hla:
-            with open(file) as f:
-                keys = next(f).split("\t")[1:7]
-                for line in f.readlines():
-                    columns = line.split('\t')[1:7]
-                    for i in range(len(keys)):
-                        HLA_dict[keys[i]].append(columns[i])
+    print('Loading HLAs..')
+    for file in hla:
+        with open(file) as f:
+            keys = next(f).split("\t")[1:7]
+            for line in f.readlines():
+                columns = line.split('\t')[1:7]
+                for i in range(len(keys)):
+                    HLA_dict[keys[i]].append(columns[i])
 
     # Filter HLAs by occurrences
     filtered_hla = []
@@ -104,8 +100,8 @@ def main(hla, overlap_final, alleles_file, mode, results, results_filter):
 
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
-    parser.add_argument('--hla', nargs='+', default=None, required=False,
-                        help='A file or files containing predicted HLAs from DNA (OptiType TSV format)')
+    parser.add_argument('--hla', nargs='+', default=None, required=True,
+                        help='A file or files containing predicted HLAs from DNA/RNA (OptiType TSV format)')
     parser.add_argument('--variants', default=None, required=True,
                         help='A file with the final variants generated with merge_results.py (table format)')
     parser.add_argument('--alleles', default=None, required=True,
