@@ -99,7 +99,7 @@ def main(R1,
 
     if 'hla' in STEPS:
         print('Predicting HLAs')
-        HLA_prediction('sample_final.bam', THREADS, "rna", SAMPLEID, HLA_FASTA)
+        HLA_prediction('sample_final.bam', THREADS, 'rna', SAMPLEID, HLA_FASTA)
 
     if 'variant' in STEPS:
         # Variant calling (Samtools pile-ups)
@@ -220,8 +220,8 @@ if __name__ == '__main__':
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                         help='Steps to perform in the pipeline',
                         choices=['mapping', 'gatk', 'hla', 'variant', 'filter'])
-    parser.add_argument("--hla-fasta", type=str, default="hla_reference_rna.fasta", required=False, 
-                        help="Path to the rna hla reference fasta file located in shared. (default: hla_reference_rna.fasta)")
+    parser.add_argument("--hla-fasta", type=str, default=None, required=True, 
+                        help="Path to the HLA reference fasta file for HLA typing with Optitype.")
 
     # Parse arguments
     args = parser.parse_args()
@@ -239,7 +239,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
-    HLA_FASTA = args.hla_fasta
+    HLA_FASTA = path.abspath(args.hla_fasta)
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
