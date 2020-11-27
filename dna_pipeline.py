@@ -284,8 +284,8 @@ if __name__ == '__main__':
                         help='String indicated which Annovar database to use (default: humandb)')
     parser.add_argument('--annovar-version', type=str, default='hg38', required=False,
                         help='String indicated which version of the Annovar database to use (default: hg38)')
-    parser.add_argument("--hla-fasta",type=str,default="hla_reference_rna.fasta",required=False,
-                        help="Path to the dna hla reference fasta file located in shared. (default: hla_reference_dna.fasta)")
+    parser.add_argument("--hla-fasta", type=str, default=None, required=True,
+                        help="Path to the HLA reference fasta file located for Optype.")
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
@@ -311,7 +311,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
-    HLA_FASTA = args.hla_fasta
+    HLA_FASTA = os.path.abspath(args.hla_fasta)
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
