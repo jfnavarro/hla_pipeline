@@ -19,9 +19,9 @@ BWA = 'bwa mem'
 FEATURECOUNTS = 'featureCounts'
 BAMQC = 'qualimap bamqc'
 BAMQCRNA = 'qualimap rnaseq'
-OPTITYPE = "OptiTypePipeline.py"
-YARAI = "yara_indexer"
-YARAM = "yara_mapper"
+OPTITYPE = 'OptiTypePipeline.py'
+YARAI = 'yara_indexer'
+YARAM = 'yara_mapper'
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
 ANNOVAR_ANNO = 'refGene,knownGene,ensGene -operation g,g,g -nastring .'
