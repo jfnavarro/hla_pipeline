@@ -239,7 +239,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
-    HLA_FASTA = path.abspath(args.hla_fasta)
+    HLA_FASTA = os.path.abspath(args.hla_fasta)
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
