@@ -24,3 +24,4 @@ dependencies:
   - bioconda::qualimap
   - bioconda::vcftools
   - bioconda::optitype
+  - bioconda::yara
