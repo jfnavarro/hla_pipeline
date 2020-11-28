@@ -237,9 +237,9 @@ def main(R1_NORMAL,
         shutil.move('combined_calls.vcf', '../combined_calls.vcf')
         shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
                     '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
-        shutil.move('Tumor_{}_hla_genotype_results.tsv'.format(SAMPLEID),
+        shutil.move('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID),
                     '../Tumor_hla_genotype.tsv')
-        shutil.move('Normal_{}_hla_genotype_results.tsv'.format(SAMPLEID),
+        shutil.move('Normal_{}_hla_genotype_result.tsv'.format(SAMPLEID),
                     '../Normal_hla_genotype.tsv')
         shutil.move('sample1_final.bam', '../tumor_final.bam')
         shutil.move('sample2_final.bam', '../normal_final.bam')
