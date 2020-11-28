@@ -170,7 +170,7 @@ def main(R1,
         shutil.move('combined_calls.vcf', '../combined_calls.vcf')
         shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
                     '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
-        shutil.move('rna_{}_hla_genotype_results.tsv'.format(SAMPLEID),
+        shutil.move('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID),
                     '../hla_genotype.tsv')
         shutil.move('gene.counts', '../gene.counts')
         shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
