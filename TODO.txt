@@ -11,3 +11,4 @@
 * Replace bwa-mem by bwa-mem2
 * Add headers in bma mem command (-R) instead of using bedtools
 * Add a tool to compute clonality
+* Allow to pass workdir as parameter
