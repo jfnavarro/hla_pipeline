@@ -86,11 +86,11 @@ def main(R1,
 
         # BamQC
         cmd = '{} -bam sample_final.bam -gtf {} --paired -outdir bamQCRNA ' \
-              '--java-mem-size=16000M -outformat HTML'.format(BAMQCRNA, ANNOTATION)
+              '--java-mem-size=16G -outformat HTML'.format(BAMQCRNA, ANNOTATION)
         p1 = exec_command(cmd, detach=True)
 
         cmd = '{} -bam sample_final.bam --genome-gc-distr HUMAN -nt {} ' \
-              '-outdir bamQC -outformat HTML'.format(BAMQC, THREADS)
+              '--java-mem-size=16G -outdir bamQC -outformat HTML'.format(BAMQC, THREADS)
         p2 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel
@@ -167,21 +167,31 @@ def main(R1,
         annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
 
         # Moving result files to output
-        shutil.move('combined_calls.vcf', '../combined_calls.vcf')
-        shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
-                    '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
-        shutil.move('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID),
-                    '../hla_genotype.tsv')
-        shutil.move('gene.counts', '../gene.counts')
-        shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
-        shutil.move('Log.final.out', '../{}_Log.final.out'.format(SAMPLEID))
-        shutil.move('sample_final.bam', '../sample_final.bam')
+
+	if os.path.isfile('combined_calls.vcf'):
+            shutil.move('combined_calls.vcf', '../combined_calls.vcf')
+	if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
+            shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
+                        '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
+	if os.path.isfile('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
+	    shutil.move('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID),
+                        '../hla_genotype.tsv')
+	if os.path.isfile('gene.counts'):
+	    shutil.move('gene.counts', '../gene.counts')
+        if os.path.isfile('gene.counts.summary'):
+	    shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
+	if os.path.isfile('Log.final.out'):
+	    shutil.move('Log.final.out', '../{}_Log.final.out'.format(SAMPLEID))
+        if os.path.isfile('sample_final.bam'):
+	    shutil.move('sample_final.bam', '../sample_final.bam')
         if os.path.isdir('../{}_bamQC'.format(SAMPLEID)):
             shutil.rmtree(os.path.abspath('../{}_bamQC'.format(SAMPLEID)))
-        shutil.move('bamQC', '../{}_bamQC'.format(SAMPLEID))
+	if os.path.isdir('bamQC'):
+            shutil.move('bamQC', '../{}_bamQC'.format(SAMPLEID))
         if os.path.isdir('../{}_bamQCRNA'.format(SAMPLEID)):
             shutil.rmtree(os.path.abspath('../{}_bamQCRNA'.format(SAMPLEID)))
-        shutil.move('bamQCRNA', '../{}_bamQCRNA'.format(SAMPLEID))
+	if os.path.isdir('bamQCRNA'):
+            shutil.move('bamQCRNA', '../{}_bamQCRNA'.format(SAMPLEID))
         for file in glob.glob('*_fastqc*'):
             shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
         for file in glob.glob('*_trimming_report*'):
