@@ -112,7 +112,7 @@ def main(dna_variants,
                     counts_stats_percentile[name][gene] = np.around(stats.percentileofscore(counts, count), 3)
 
     print('Creating merged variants..')
-    header_final = 'Variant key\tDNA samples (passing)\tNumber of DNA samples (passing)\t' \
+    header_final = 'Variant key\tDBsnp ID\tGnomad MAF\tCosmic ID\tDNA samples (passing)\tNumber of DNA samples (passing)\t' \
                    'DNA samples (failing)\tNumber of DNA samples (failing)\t' \
                    'RNA samples (passing)\tNumber of RNA samples (passing)\t' \
                    'RNA samples (failing)\tRNA of DNA samples (failing)\tEffects\t' \
@@ -154,7 +154,9 @@ def main(dna_variants,
         epitopes = value[0][0].epitopes
         effects = value[0][0].effects
         gene = value[0][0].geneName
-
+	dbsnp = value[0][0].dbsnp
+	gnomad = value[0][0].gnomad
+	cosmic = value[0][0].cosmic
         # Get gene exp. if any (gene should be the same in all the effects)
         gene_locus = []
         if gene is not None:
@@ -175,6 +177,7 @@ def main(dna_variants,
 
         for epitope, effect in zip(epitopes, effects):
             to_write = '\t'.join(str(x) for x in [key,
+						  dbsnp, gnomad, cosmic,
                                                   ';'.join(dna_name_pass), num_dna_pass,
                                                   ';'.join(dna_name_fail), num_dna_fail,
                                                   ';'.join(rna_name_pass), num_rna_pass,
