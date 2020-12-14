@@ -167,6 +167,9 @@ def main(R1,
         # Annotate with Annovar
         print('Annotating variants')
         annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
+        # Replace UTF-8 code to equivalent characters
+        cmd = "sed -i -e 's/{}{}/-/g' -e 's/{}{}/:/g' annotated.{}_multianno.vcf".format("\\","\\x3b","\\","\\x3d", ANNOVAR_VERSION)
+        exec_command(cmd)
 
         # Moving result files to output
         shutil.move('combined_calls.vcf', '../combined_calls.vcf')
