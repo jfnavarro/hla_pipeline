@@ -23,4 +23,4 @@ BAMQC = 'qualimap bamqc'
 BAMQCRNA = 'qualimap rnaseq'
 # ANNOVAR location must be in $ANNOVAR
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
-ANNOVAR_ANNO = 'refGene,knownGene,ensGene -operation g,g,g -nastring .'
+ANNOVAR_ANNO = 'refGene,knownGene,ensGene,avsnp150,gnomad211_exome,cosmic70 -operation g,g,g,f,f,f -nastring .'
