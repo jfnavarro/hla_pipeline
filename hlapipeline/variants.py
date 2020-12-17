@@ -140,9 +140,9 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
         has_func_known = 'nonsynonymous' in funcknownGene or 'frame' in funcknownGene
         funcRefGene = ''.join(record.INFO['ExonicFunc.refGene'])
         has_func_ref = 'nonsynonymous' in funcRefGene or 'frame' in funcRefGene
-        avsnp150 = record.INFO['avsnp150'][0] if record.INFO['avsnp150'] != [] else np.nan
-        gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else np.nan
-        cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO['cosmic70'] != [] else np.nan
+        avsnp150 = record.INFO['avsnp150'][0] if record.INFO['avsnp150'] != [] else 'NA'
+        gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else 'NA'
+        cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO['cosmic70'] != [] else 'NA'
         if has_func_ens or has_func_known or has_func_ref:
             called = {x.sample: x.data for x in record.calls if x.called}
             filtered = dict()
@@ -218,9 +218,9 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
         has_func_known = 'nonsynonymous' in funcknownGene or 'frame' in funcknownGene
         funcRefGene = ''.join(record.INFO['ExonicFunc.refGene'])
         has_func_ref = 'nonsynonymous' in funcRefGene or 'frame' in funcRefGene
-        avsnp150 = record.INFO['avsnp150'][0] if record.INFO['avsnp150'] != [] else np.nan
-        gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else np.nan
-        cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO['cosmic70'] != [] else np.nan
+        avsnp150 = record.INFO['avsnp150'][0] if record.INFO['avsnp150'] != [] else 'NA'
+        gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else 'NA'
+        cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO['cosmic70'] != [] else 'NA'
 
         if has_func_ens or has_func_known or has_func_ref:
             called = {x.sample: x.data for x in record.calls if x.called}
