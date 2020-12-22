@@ -23,7 +23,7 @@ def exec_command(cmd, detach=False):
         sys.exit(-1)
 
 
-def HLA_prediction(inputbam, threads, origin, sample, fasta):
+def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid):
     """
     Performs HLA typing with OptiType for either RNA or DNA data.
     :param inputbam: BAM file with aligned reads
@@ -71,8 +71,8 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta):
     p1.wait()
     p2.wait()
 
-    cmd = '{} --input {}_mapped_1.bam {}_mapped_2.bam --rna --prefix {}_{}_hla_genotype --outdir {}'.format(
-        OPTITYPE, origin, origin, origin, sample, os.getcwd())
+    cmd = '{} --input {}_mapped_1.bam {}_mapped_2.bam --{} --prefix {}_{}_hla_genotype --outdir {}'.format(
+        OPTITYPE, origin, origin, nacid, origin, sample, os.getcwd())
     exec_command(cmd)
 
 
