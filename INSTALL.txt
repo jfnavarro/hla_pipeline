@@ -54,6 +54,23 @@ gsutil cp gs://gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-1-0-gf15c
 tar xjf GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2
 mv GenomeAnalysisTK-3.8-1-0-gf15c1c3ef/GenomeAnalysisTK.jar gatk3.8.jar
 
+# Install vcftools from github
+cd ~/shared
+git clone https://github.com/vcftools/vcftools.git
+cd vcftools
+./autogen.sh
+./configure
+make
+make install
+
+# Install bcftools from github
+cd ~/shared
+git clone git://github.com/samtools/htslib.git
+git clone git://github.com/samtools/bcftools.git
+cd bcftools
+autoheader && autoconf && ./configure --enable-libgsl --enable-perl-filters
+make
+
 # Create hg38 and hg19 dictionaries following the steps in the notebooks located in /dictionaries
 
 cd ~
