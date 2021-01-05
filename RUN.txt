@@ -3,7 +3,6 @@ export STRELKA_PATH="~/shared/strelka"
 export ANNOVAR_PATH="~/shared/annovar"
 export GATK3_PATH="~/shared/gatk3.8.jar"
 export ARCASHLA_PATH="~/shared/arcasHLA"
-export VCFTOOLS="~/shared/vcftools/src/cpp/vcftools"
 
 conda activate hla
 
