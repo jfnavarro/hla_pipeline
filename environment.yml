@@ -24,3 +24,4 @@ dependencies:
   - bioconda::subread
   - bioconda::qualimap
   - bioconda::vcftools
+  - bioconda::bcftools

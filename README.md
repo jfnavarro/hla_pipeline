@@ -83,6 +83,8 @@ These following tools are required:
 * scikit-learn
 * pysam
 * vcfpy
+* vcftools
+* bcftools
 
 ## Install
 See INSTALL.txt for installation instructions. 

@@ -4,9 +4,6 @@ export ANNOVAR_PATH="~/shared/annovar"
 export GATK3_PATH="~/shared/gatk3.8.jar"
 export ARCASHLA_PATH="~/shared/arcasHLA"
 export VCFTOOLS="~/shared/vcftools/src/cpp/vcftools"
-export PERL5LIB="~/shared/vcftools/src/perl/"
-export BCFTOOLS="~/shared/bcftools/bcftools"
-export BCFTOOLS_PLUGINS="~/shared/bcftools/plugins/"
 
 conda activate hla
 

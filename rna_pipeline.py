@@ -171,26 +171,13 @@ def main(R1,
         cmd = "sed -i -e 's/{}{}/-/g' -e 's/{}{}/:/g' annotated.{}_multianno.vcf".format("\\","\\x3b","\\","\\x3d", ANNOVAR_VERSION)
         exec_command(cmd)
 
-        # VCFtools: relatedness2
-        cmd = '{} --vcf annotated.{}_multianno.vcf --relatedness2 --out {}'.format(VCFTOOLS, ANNOVAR_VERSION, SAMPLEID)
-        exec_command(cmd)
-
-        # VCFtools: summary of all Trasitions and Transversions
-        cmd = '{} --vcf annotated.{}_multianno.vcf --TsTv-summary --out {}'.format(VCFTOOLS, ANNOVAR_VERSION, SAMPLEID)
-        exec_command(cmd)
-
-        # BCFtools stats
-        cmd = 'bgzip -c annotated.{}_multianno.vcf > annotated.{}_multianno.vcf.gz'.format(ANNOVAR_VERSION, ANNOVAR_VERSION)
-        exec_command(cmd)
-        cmd = 'tabix -p vcf annotated.{}_multianno.vcf.gz'.format(ANNOVAR_VERSION)
-        exec_command(cmd)
-        cmd = '{} stats annotated.{}_multianno.vcf.gz > annotated.{}_multianno.vchk'.format(BCFTOOLS, ANNOVAR_VERSION, ANNOVAR_VERSION)
-        exec_command(cmd)
+        # Summary of basic statistic of annotated VCF file
+        annotated_vcf = "annotated.{}_multianno.vcf".format(ANNOVAR_VERSION)
+        vcf_stats(annotated_vcf, SAMPLEID)
 
         # Moving result files to output
         shutil.move('combined_calls.vcf', '../combined_calls.vcf')
-        shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
-                    '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
+        shutil.move(annotated_vcf, '../{}'.format(annotated_vcf))
         shutil.move('sample_final.genotype.json', '../hla_genotype.json')
         shutil.move('gene.counts', '../gene.counts')
         shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
