@@ -259,6 +259,12 @@ def main(R1_NORMAL,
         # Moving result files to output
         shutil.move('combined_calls.vcf', '../combined_calls.vcf')
         shutil.move(annotated_vcf, '../{}'.format(annotated_vcf))
+        if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
+            shutil.move('{}.relatedness2'.format(SAMPLEID), '../{}.relatedness2'.format(SAMPLEID))
+        if os.path.isfile('{}.TsTv.summary'.format(SAMPLEID)):
+            shutil.move('{}.TsTv.summary'.format(SAMPLEID), '../{}.TsTv.summary'.format(SAMPLEID))
+        if os.path.isfile('{}.vchk'.format(SAMPLEID)):
+            shutil.move('{}.vchk'.format(SAMPLEID), '../{}.vchk'.format(SAMPLEID))
         shutil.move('PRG-HLA-LA_Normal_output.txt', '../PRG-HLA-LA_Normal_output.txt')
         shutil.move('PRG-HLA-LA_Tumor_output.txt', '../PRG-HLA-LA_Tumor_output.txt')
         shutil.move('sample1_final.bam', '../tumor_final.bam')
