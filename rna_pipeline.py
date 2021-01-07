@@ -178,6 +178,12 @@ def main(R1,
         # Moving result files to output
         shutil.move('combined_calls.vcf', '../combined_calls.vcf')
         shutil.move(annotated_vcf, '../{}'.format(annotated_vcf))
+        if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
+            shutil.move('{}.relatedness2'.format(SAMPLEID), '../{}.relatedness2'.format(SAMPLEID))
+        if os.path.isfile('{}.TsTv.summary'.format(SAMPLEID)):
+            shutil.move('{}.TsTv.summary'.format(SAMPLEID), '../{}.TsTv.summary'.format(SAMPLEID))
+        if os.path.isfile('{}.vchk'.format(SAMPLEID)):
+            shutil.move('{}.vchk'.format(SAMPLEID), '../{}.vchk'.format(SAMPLEID))
         shutil.move('sample_final.genotype.json', '../hla_genotype.json')
         shutil.move('gene.counts', '../gene.counts')
         shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
