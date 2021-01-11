@@ -107,5 +107,5 @@ def vcf_stats(annotated_VCF, sampleID):
     exec_command(cmd)
     cmd = '{} -p vcf {}.gz'.format(TABIX, annotated_VCF)
     exec_command(cmd)
-    cmd = '{} stats {}.gz > {}.vchk'.format(BCFTOOLS, version, sampleID)
+    cmd = '{} stats {}.gz > {}.vchk'.format(BCFTOOLS, annotated_VCF, sampleID)
     exec_command(cmd)
