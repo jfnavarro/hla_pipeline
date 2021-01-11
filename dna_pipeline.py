@@ -138,11 +138,11 @@ def main(R1_NORMAL,
         print('Performing HLA-LA predictions')
         p1 = multiprocessing.Process(target=HLA_prediction,
                                     args=('sample2_final.bam', THREADS,
-                                    'Normal', SAMPLEID, HLA_FASTA))
+                                    'Normal', SAMPLEID, HLA_FASTA, 'dna'))
         p1.start()
         p2 = multiprocessing.Process(target=HLA_prediction,
                                     args=('sample1_final.bam', THREADS,
-                                    'Tumor', SAMPLEID, HLA_FASTA))
+                                    'Tumor', SAMPLEID, HLA_FASTA, 'dna'))
         p2.start()
 
         # Wait for the processes to finish in parallel
@@ -234,33 +234,33 @@ def main(R1_NORMAL,
 
         # Moving result files to output
 
-	if os.path.isfile('combined_calls.vcf'):
-	    shutil.move('combined_calls.vcf', '../combined_calls.vcf')
-	if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
-	    shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
-	                '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
-	if os.path.isfile('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
-	    shutil.move('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID),
-	                '../Tumor_hla_genotype.tsv')
-	if os.path.isfile('Normal_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
-	    shutil.move('Normal_{}_hla_genotype_result.tsv'.format(SAMPLEID),
-	                '../Normal_hla_genotype.tsv')
-	if os.path.isfile('sample1_final.bam'):
-            shutil.move('sample1_final.bam', '../tumor_final.bam')
-	if os.path.isfile('sample2_final.bam'):
-            shutil.move('sample2_final.bam', '../normal_final.bam')
-        if os.path.isdir('../{}_bamQCNormal'.format(SAMPLEID)):
-            shutil.rmtree(os.path.abspath('../{}_bamQCNormal'.format(SAMPLEID)))
-	if os.path.isdir('bamQC_Normal'):
-            shutil.move('bamQC_Normal', '../{}_bamQCNormal'.format(SAMPLEID))
-        if os.path.isdir('../{}_bamQCTumor'.format(SAMPLEID)):
-            shutil.rmtree(os.path.abspath('../{}_bamQCTumor'.format(SAMPLEID)))
-	if os.path.isdir('bamQC_Tumor'):
-            shutil.move('bamQC_Tumor', '../{}_bamQCTumor'.format(SAMPLEID))
-        for file in glob.glob('*_fastqc*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
-        for file in glob.glob('*_trimming_report*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+    if os.path.isfile('combined_calls.vcf'):
+        shutil.move('combined_calls.vcf', '../combined_calls.vcf')
+    if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
+        shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
+            '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
+    if os.path.isfile('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
+        shutil.move('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID),
+            '../Tumor_hla_genotype.tsv')
+    if os.path.isfile('Normal_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
+        shutil.move('Normal_{}_hla_genotype_result.tsv'.format(SAMPLEID),
+            '../Normal_hla_genotype.tsv')
+    if os.path.isfile('sample1_final.bam'):
+        shutil.move('sample1_final.bam', '../tumor_final.bam')
+    if os.path.isfile('sample2_final.bam'):
+        shutil.move('sample2_final.bam', '../normal_final.bam')
+    if os.path.isdir('../{}_bamQCNormal'.format(SAMPLEID)):
+        shutil.rmtree(os.path.abspath('../{}_bamQCNormal'.format(SAMPLEID)))
+    if os.path.isdir('bamQC_Normal'):
+        shutil.move('bamQC_Normal', '../{}_bamQCNormal'.format(SAMPLEID))
+    if os.path.isdir('../{}_bamQCTumor'.format(SAMPLEID)):
+        shutil.rmtree(os.path.abspath('../{}_bamQCTumor'.format(SAMPLEID)))
+    if os.path.isdir('bamQC_Tumor'):
+        shutil.move('bamQC_Tumor', '../{}_bamQCTumor'.format(SAMPLEID))
+    for file in glob.glob('*_fastqc*'):
+        shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+    for file in glob.glob('*_trimming_report*'):
+        shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
 
     print('COMPLETED!')
 
