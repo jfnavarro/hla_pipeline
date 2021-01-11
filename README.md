@@ -17,14 +17,14 @@ filtered and annotated somatic variants.
 The variant callers are Mutect2, Strelka2, Varscan and SomaticSniper and both indels and SNPs are
 reported. Annotation is performed using Annovar. 
 The pipeline uses trim-galore to trim, bwa-men to align and follows GATK4 best practices. 
-The pipeline also performs HLA predictions with HLA-LA (tumor and normal).
+The pipeline also performs HLA predictions with OptiType (tumor and normal).
 QC is performed with FastQC and BamQC.
 
 **rna_pipeline.py** processes RNA data and generates a list of unified
 annotated somatic variants (weak filtered) and also a list of gene counts values. 
 The variant callers used are Varscan and HaplotypeCaller. Annotation is performed with Annovar.
 The pipeline uses trim-galore to trim, STAR to align and follows GATK4 best practices. 
-The pipeline also performs HLA predictions with arcasHLA.
+The pipeline also performs HLA predictions with OptiType.
 The gene counts values are computed with featureCounts.
 QC is performed with FastQC and BamQC.
 
@@ -54,36 +54,7 @@ To build these dictionaries you can use as reference the Jupyter Notebooks locat
 We strongly recommend to use Anaconda or Miniconda, otherwise you may need to create aliases
 for some tools as expected in the file hlapipeline/tools.py. 
 
-These following tools are required:
-
-* optitype
-* gatk4
-* gatk3
-* bwa 
-* samtools 
-* picard 
-* varscan 
-* trim-galore 
-* star 
-* somatic-sniper 
-* bedtools
-* tensorflow>=1.15.0
-* mhcflurry
-* kallisto
-* biopython
-* subread
-* strelka
-* annovar
-* qualimap
-* numpy
-* scipy
-* numpy
-* pandas
-* scikit-learn
-* pysam
-* vcfpy
-* vcftools
-* bcftools
+See environment.yml for a list of required packages. 
 
 ## Install
 See INSTALL.txt for installation instructions. 

@@ -240,42 +240,42 @@ def main(R1_NORMAL,
         vcf_stats(annotated_vcf, SAMPLEID)
 
         # Moving result files to output
-
-    if os.path.isfile('combined_calls.vcf'):
-        shutil.move('combined_calls.vcf', '../combined_calls.vcf')
-    if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
-        shutil.move('{}.relatedness2'.format(SAMPLEID), '../{}.relatedness2'.format(SAMPLEID))
-    if os.path.isfile('{}.TsTv.summary'.format(SAMPLEID)):
-        shutil.move('{}.TsTv.summary'.format(SAMPLEID), '../{}.TsTv.summary'.format(SAMPLEID))
-    if os.path.isfile('{}.vchk'.format(SAMPLEID)):
-        shutil.move('{}.vchk'.format(SAMPLEID), '../{}.vchk'.format(SAMPLEID))
-    if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
-        shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
-            '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
-    if os.path.isfile('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
-        shutil.move('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID),
-            '../Tumor_hla_genotype.tsv')
-    if os.path.isfile('Normal_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
-        shutil.move('Normal_{}_hla_genotype_result.tsv'.format(SAMPLEID),
-            '../Normal_hla_genotype.tsv')
-    if os.path.isfile('sample1_final.bam'):
-        shutil.move('sample1_final.bam', '../tumor_final.bam')
-    if os.path.isfile('sample2_final.bam'):
-        shutil.move('sample2_final.bam', '../normal_final.bam')
-    if os.path.isdir('../{}_bamQCNormal'.format(SAMPLEID)):
-        shutil.rmtree(os.path.abspath('../{}_bamQCNormal'.format(SAMPLEID)))
-    if os.path.isdir('bamQC_Normal'):
-        shutil.move('bamQC_Normal', '../{}_bamQCNormal'.format(SAMPLEID))
-    if os.path.isdir('../{}_bamQCTumor'.format(SAMPLEID)):
-        shutil.rmtree(os.path.abspath('../{}_bamQCTumor'.format(SAMPLEID)))
-    if os.path.isdir('bamQC_Tumor'):
-        shutil.move('bamQC_Tumor', '../{}_bamQCTumor'.format(SAMPLEID))
-    for file in glob.glob('*_fastqc*'):
-        shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
-    for file in glob.glob('*_trimming_report*'):
-        shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+        if os.path.isfile('combined_calls.vcf'):
+            shutil.move('combined_calls.vcf', '../combined_calls.vcf')
+        if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
+            shutil.move('{}.relatedness2'.format(SAMPLEID), '../{}.relatedness2'.format(SAMPLEID))
+        if os.path.isfile('{}.TsTv.summary'.format(SAMPLEID)):
+            shutil.move('{}.TsTv.summary'.format(SAMPLEID), '../{}.TsTv.summary'.format(SAMPLEID))
+        if os.path.isfile('{}.vchk'.format(SAMPLEID)):
+            shutil.move('{}.vchk'.format(SAMPLEID), '../{}.vchk'.format(SAMPLEID))
+        if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
+            shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
+                        '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
+        if os.path.isfile('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
+            shutil.move('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID),
+                        '../Tumor_hla_genotype.tsv')
+        if os.path.isfile('Normal_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
+            shutil.move('Normal_{}_hla_genotype_result.tsv'.format(SAMPLEID),
+                        '../Normal_hla_genotype.tsv')
+        if os.path.isfile('sample1_final.bam'):
+            shutil.move('sample1_final.bam', '../tumor_final.bam')
+        if os.path.isfile('sample2_final.bam'):
+            shutil.move('sample2_final.bam', '../normal_final.bam')
+        if os.path.isdir('../{}_bamQCNormal'.format(SAMPLEID)):
+            shutil.rmtree(os.path.abspath('../{}_bamQCNormal'.format(SAMPLEID)))
+        if os.path.isdir('bamQC_Normal'):
+            shutil.move('bamQC_Normal', '../{}_bamQCNormal'.format(SAMPLEID))
+        if os.path.isdir('../{}_bamQCTumor'.format(SAMPLEID)):
+            shutil.rmtree(os.path.abspath('../{}_bamQCTumor'.format(SAMPLEID)))
+        if os.path.isdir('bamQC_Tumor'):
+            shutil.move('bamQC_Tumor', '../{}_bamQCTumor'.format(SAMPLEID))
+        for file in glob.glob('*_fastqc*'):
+            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+        for file in glob.glob('*_trimming_report*'):
+            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
 
     print('COMPLETED!')
+
 
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)

@@ -185,10 +185,9 @@ def main(R1,
             shutil.move('combined_calls.vcf', '../combined_calls.vcf')
         if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
             shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
-                  '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
+                        '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
         if os.path.isfile('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
-            shutil.move('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID),
-                  '../hla_genotype.tsv')
+            shutil.move('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID), '../hla_genotype.tsv')
         if os.path.isfile('gene.counts'):
             shutil.move('gene.counts', '../gene.counts')
         if os.path.isfile('gene.counts.summary'):
