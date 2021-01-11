@@ -80,6 +80,7 @@ Other files:
   - normal_final.bam
   - fastqc files
   - cutadapt stats
+  - vcf stats
   - bamQC_Normal folder
   - bamQC_Tumor folder
   
@@ -94,6 +95,7 @@ Other files:
   - fastqc files
   - cutadapt stats
   - STAR log
+  - vcf stats
   - bamQC folder
   - bamQCRNA folder
   
