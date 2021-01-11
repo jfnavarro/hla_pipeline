@@ -89,3 +89,23 @@ def annotate_variants(input, output, db, version, threads):
     cmd = '{} {} {} -thread {} -out {} -vcfinput -remove -protocol {}'.format(
         os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), input, annovardb, threads, output, ANNOVAR_ANNO)
     exec_command(cmd)
+
+def vcf_stats(annotated_VCF, sampleID):
+    """
+    Performs summary of basic statistics of annotated VCF file using vcftools and bcftools
+    :param annotated_VCF: annotated VCF file
+    :param sampleID: the ID to give to the sample
+    """
+    # VCFtools: pairwise individual relatedness using relatedness2 method
+    cmd = '{} --vcf {} --relatedness2 --out {}'.format(VCFTOOLS, annotated_VCF, sampleID)
+    exec_command(cmd)
+    # VCFtools: summary of all Transitions and Transversions
+    cmd = '{} --vcf {} --TsTv-summary --out {}'.format(VCFTOOLS, annotated_VCF, sampleID)
+    exec_command(cmd)
+    # bcftools multiple stats
+    cmd = '{} -c {} > {}.gz'.format(BGZIP, annotated_VCF, annotated_VCF)
+    exec_command(cmd)
+    cmd = '{} -p vcf {}.gz'.format(TABIX, annotated_VCF)
+    exec_command(cmd)
+    cmd = '{} stats {}.gz > {}.vchk'.format(BCFTOOLS, version, sampleID)
+    exec_command(cmd)

@@ -235,10 +235,20 @@ def main(R1_NORMAL,
         cmd = "sed -i -e 's/{}{}/-/g' -e 's/{}{}/:/g' annotated.{}_multianno.vcf".format("\\","\\x3b","\\","\\x3d", ANNOVAR_VERSION)
         exec_command(cmd)
 
+        # Summary of basic statistic of annotated VCF file
+        annotated_vcf = "annotated.{}_multianno.vcf".format(ANNOVAR_VERSION)
+        vcf_stats(annotated_vcf, SAMPLEID)
+
         # Moving result files to output
 
     if os.path.isfile('combined_calls.vcf'):
         shutil.move('combined_calls.vcf', '../combined_calls.vcf')
+    if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
+        shutil.move('{}.relatedness2'.format(SAMPLEID), '../{}.relatedness2'.format(SAMPLEID))
+    if os.path.isfile('{}.TsTv.summary'.format(SAMPLEID)):
+        shutil.move('{}.TsTv.summary'.format(SAMPLEID), '../{}.TsTv.summary'.format(SAMPLEID))
+    if os.path.isfile('{}.vchk'.format(SAMPLEID)):
+        shutil.move('{}.vchk'.format(SAMPLEID), '../{}.vchk'.format(SAMPLEID))
     if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
         shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
             '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
