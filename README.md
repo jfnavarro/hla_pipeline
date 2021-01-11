@@ -56,7 +56,7 @@ for some tools as expected in the file hlapipeline/tools.py.
 
 These following tools are required:
 
-* hla-la
+* optitype
 * gatk4
 * gatk3
 * bwa 
@@ -74,7 +74,6 @@ These following tools are required:
 * subread
 * strelka
 * annovar
-* arcashla
 * qualimap
 * numpy
 * scipy
@@ -102,7 +101,7 @@ and 500GB of disk space.
 
 **dna_pipeline.py** 
 - annotated.hgXX_multianno.vcf (annotated and combined somatic variants)
-- HLA predictions DNA (PRG-HLA-LA_Tumor_output.txt and PRG-HLA-LA_Normal_output.txt)
+- HLA predictions DNA (Tumor_hla_genotype.tsv and Normal_hla_genotype.tsv)
 
 Other files:
   - combined_calls.vcf
@@ -116,13 +115,14 @@ Other files:
 **rna_pipeline.py** 
 - annotated.hgXX_multianno.vcf (annotated and combined germline variants)
 - gene.counts (gene counts from featureCounts)
-- HLA predictions (hla_genotype.json)
+- HLA predictions (hla_genotype.tsv)
 
 Other files:
   - combined_calls.vcf
   - sample_final.bam
   - fastqc files
   - cutadapt stats
+  - STAR log
   - bamQC folder
   - bamQCRNA folder
   

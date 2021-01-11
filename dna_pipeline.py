@@ -12,7 +12,6 @@ Multiple options are available. To see them type --help
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import *
-import shutil
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import os
 import sys
@@ -36,7 +35,7 @@ def main(R1_NORMAL,
          INTERVALS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         GRAPHNAME,
+         HLA_FASTA,
          STEPS):
 
     # TODO add sanity checks for the parameters
@@ -69,31 +68,15 @@ def main(R1_NORMAL,
         print('Starting alignment')
 
         # Normal (paired)
-        cmd = '{} -t {} {} normal_val_1.fq.gz normal_val_2.fq.gz | ' \
-              '{} sort --threads {} > aligned_normal_merged.bam'.format(BWA, THREADS, GENOME, SAMTOOLS, THREADS)
+        cmd = '{} -t {} {} -R "@RG\\tID:{}\\tPL:Illumina\\tLB:DNA\\tPU:{}\\tSM:{}\\tCN:{}" normal_val_1.fq.gz normal_val_2.fq.gz | ' \
+              '{} sort --threads {} > sample2_header.bam'.format(
+                    BWA, THREADS, GENOME, sample2_ID, sample2_ID, sample2_ID, sample2_ID, SAMTOOLS, THREADS)
         p1 = exec_command(cmd, detach=True)
 
         # Tumor (paired)
-        cmd = '{} -t {} {} tumor_val_1.fq.gz tumor_val_2.fq.gz | ' \
-              '{} sort --threads {} > aligned_tumor_merged.bam'.format(BWA, THREADS, GENOME, SAMTOOLS, THREADS)
-        p2 = exec_command(cmd, detach=True)
-
-        # Wait for the processes to finish in parallel
-        p1.wait()
-        p2.wait()
-
-        # Add headers
-        print("Adding headers")
-        cmd = '{} AddOrReplaceReadGroups --INPUT aligned_tumor_merged.bam --OUTPUT sample1_header.bam ' \
-              '--SORT_ORDER coordinate --RGID {} --RGPL Illumina --RGLB DNA --RGPU {} --RGSM {} --RGCN {} ' \
-              '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, sample1_ID,
-                                                                          sample1_ID, sample1_ID, sample1_ID)
-        p1 = exec_command(cmd, detach=True)
-
-        cmd = '{} AddOrReplaceReadGroups --INPUT aligned_normal_merged.bam --OUTPUT sample2_header.bam ' \
-              '--SORT_ORDER coordinate --RGID {} --RGPL Illumina --RGLB DNA --RGPU {} --RGSM {} --RGCN {} ' \
-              '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, sample2_ID,
-                                                                          sample2_ID, sample2_ID, sample2_ID)
+        cmd = '{} -t {} {} -R "@RG\\tID:{}\\tPL:Illumina\\tLB:DNA\\tPU:{}\\tSM:{}\\tCN:{}" tumor_val_1.fq.gz tumor_val_2.fq.gz | ' \
+              '{} sort --threads {} > sample1_header.bam'.format(
+                    BWA, THREADS, GENOME, sample1_ID, sample1_ID, sample1_ID, sample1_ID, SAMTOOLS, THREADS)
         p2 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel
@@ -138,11 +121,11 @@ def main(R1_NORMAL,
         exec_command(cmd)
 
         # BamQC
-        cmd = '{} -bam sample2_final.bam --genome-gc-distr HUMAN -nt {} ' \
+        cmd = '{} -bam sample2_final.bam --genome-gc-distr HUMAN -nt {} --java-mem-size=16G ' \
               '-outdir bamQC_Normal -outformat HTML'.format(BAMQC, THREADS)
         p1 = exec_command(cmd, detach=True)
 
-        cmd = '{} -bam sample1_final.bam --genome-gc-distr HUMAN -nt {} ' \
+        cmd = '{} -bam sample1_final.bam --genome-gc-distr HUMAN -nt {} --java-mem-size=16G ' \
               '-outdir bamQC_Tumor -outformat HTML'.format(BAMQC, THREADS)
         p2 = exec_command(cmd, detach=True)
 
@@ -153,13 +136,13 @@ def main(R1_NORMAL,
     if 'hla' in STEPS:
         # HLA-LA predictions
         print('Performing HLA-LA predictions')
-        p1 = multiprocessing.Process(target=HLA_predictionDNA,
-                                     args=('sample2_final.bam', SAMPLEID,
-                                           GRAPHNAME, 'PRG-HLA-LA_Normal_output.txt', THREADS))
+        p1 = multiprocessing.Process(target=HLA_prediction,
+                                    args=('sample2_final.bam', THREADS,
+                                    'Normal', SAMPLEID, HLA_FASTA, 'dna'))
         p1.start()
-        p2 = multiprocessing.Process(target=HLA_predictionDNA,
-                                     args=('sample1_final.bam', SAMPLEID,
-                                           GRAPHNAME, 'PRG-HLA-LA_Tumor_output.txt', THREADS))
+        p2 = multiprocessing.Process(target=HLA_prediction,
+                                    args=('sample1_final.bam', THREADS,
+                                    'Tumor', SAMPLEID, HLA_FASTA, 'dna'))
         p2.start()
 
         # Wait for the processes to finish in parallel
@@ -257,28 +240,40 @@ def main(R1_NORMAL,
         vcf_stats(annotated_vcf, SAMPLEID)
 
         # Moving result files to output
+
+    if os.path.isfile('combined_calls.vcf'):
         shutil.move('combined_calls.vcf', '../combined_calls.vcf')
-        shutil.move(annotated_vcf, '../{}'.format(annotated_vcf))
-        if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
-            shutil.move('{}.relatedness2'.format(SAMPLEID), '../{}.relatedness2'.format(SAMPLEID))
-        if os.path.isfile('{}.TsTv.summary'.format(SAMPLEID)):
-            shutil.move('{}.TsTv.summary'.format(SAMPLEID), '../{}.TsTv.summary'.format(SAMPLEID))
-        if os.path.isfile('{}.vchk'.format(SAMPLEID)):
-            shutil.move('{}.vchk'.format(SAMPLEID), '../{}.vchk'.format(SAMPLEID))
-        shutil.move('PRG-HLA-LA_Normal_output.txt', '../PRG-HLA-LA_Normal_output.txt')
-        shutil.move('PRG-HLA-LA_Tumor_output.txt', '../PRG-HLA-LA_Tumor_output.txt')
+    if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
+        shutil.move('{}.relatedness2'.format(SAMPLEID), '../{}.relatedness2'.format(SAMPLEID))
+    if os.path.isfile('{}.TsTv.summary'.format(SAMPLEID)):
+        shutil.move('{}.TsTv.summary'.format(SAMPLEID), '../{}.TsTv.summary'.format(SAMPLEID))
+    if os.path.isfile('{}.vchk'.format(SAMPLEID)):
+        shutil.move('{}.vchk'.format(SAMPLEID), '../{}.vchk'.format(SAMPLEID))
+    if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
+        shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
+            '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
+    if os.path.isfile('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
+        shutil.move('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID),
+            '../Tumor_hla_genotype.tsv')
+    if os.path.isfile('Normal_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
+        shutil.move('Normal_{}_hla_genotype_result.tsv'.format(SAMPLEID),
+            '../Normal_hla_genotype.tsv')
+    if os.path.isfile('sample1_final.bam'):
         shutil.move('sample1_final.bam', '../tumor_final.bam')
+    if os.path.isfile('sample2_final.bam'):
         shutil.move('sample2_final.bam', '../normal_final.bam')
-        if os.path.isdir('../{}_bamQCNormal'.format(SAMPLEID)):
-            shutil.rmtree(os.path.abspath('../{}_bamQCNormal'.format(SAMPLEID)))
+    if os.path.isdir('../{}_bamQCNormal'.format(SAMPLEID)):
+        shutil.rmtree(os.path.abspath('../{}_bamQCNormal'.format(SAMPLEID)))
+    if os.path.isdir('bamQC_Normal'):
         shutil.move('bamQC_Normal', '../{}_bamQCNormal'.format(SAMPLEID))
-        if os.path.isdir('../{}_bamQCTumor'.format(SAMPLEID)):
-            shutil.rmtree(os.path.abspath('../{}_bamQCTumor'.format(SAMPLEID)))
+    if os.path.isdir('../{}_bamQCTumor'.format(SAMPLEID)):
+        shutil.rmtree(os.path.abspath('../{}_bamQCTumor'.format(SAMPLEID)))
+    if os.path.isdir('bamQC_Tumor'):
         shutil.move('bamQC_Tumor', '../{}_bamQCTumor'.format(SAMPLEID))
-        for file in glob.glob('*_fastqc*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
-        for file in glob.glob('*_trimming_report*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+    for file in glob.glob('*_fastqc*'):
+        shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+    for file in glob.glob('*_trimming_report*'):
+        shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
 
     print('COMPLETED!')
 
@@ -310,9 +305,8 @@ if __name__ == '__main__':
                         help='String indicated which Annovar database to use (default: humandb)')
     parser.add_argument('--annovar-version', type=str, default='hg38', required=False,
                         help='String indicated which version of the Annovar database to use (default: hg38)')
-    parser.add_argument('--graph-name', type=str, default='PRG_MHC_GRCh38_withIMGT', required=False,
-                        help='Name of the HLA-LA graph to use (must be located in the graphs folder of HLA-LA) '
-                             '(default: PRG_MHC_GRCh38_withIMGT')
+    parser.add_argument("--hla-fasta", type=str, default=None, required=True,
+                        help="Path to the HLA reference fasta file located for Optype.")
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
@@ -338,7 +332,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
-    GRAPHNAME = args.graph_name
+    HLA_FASTA = os.path.abspath(args.hla_fasta)
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -359,5 +353,5 @@ if __name__ == '__main__':
          INTERVALS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         GRAPHNAME,
+         HLA_FASTA,
          STEPS)
