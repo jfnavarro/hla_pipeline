@@ -31,171 +31,174 @@ def main(R1,
          STEPS,
          HLA_FASTA):
 
-      # TODO add sanity checks for the parameters
-      # TODO better log info
+    # TODO add sanity checks for the parameters
+    # TODO better log info
 
-      print("RNA somatic pipeline")
+    print("RNA somatic pipeline")
 
-      # Create sub-folder to store all results
-      os.makedirs('workdir', exist_ok=True)
-      os.chdir('workdir')
+    # Create sub-folder to store all results
+    os.makedirs('workdir', exist_ok=True)
+    os.chdir('workdir')
 
-      if 'mapping' in STEPS:
-            print('Trimming reads')
-            cmd = '{} --cores {} --fastqc --paired --basename sample {} {}'.format(TRIMGALORE, THREADS, R1, R2)
-            exec_command(cmd)
+    if 'mapping' in STEPS:
+        print('Trimming reads')
+        cmd = '{} --cores {} --fastqc --paired --basename sample {} {}'.format(TRIMGALORE, THREADS, R1, R2)
+        exec_command(cmd)
 
-            # ALIGNMENT
-            print('Starting alignment')
-            cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
-                  ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
-                  ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
-                  ' --runThreadN {}'.format(STAR, GENOME_STAR, ANNOTATION, THREADS)
-            exec_command(cmd)
+        # ALIGNMENT
+        print('Starting alignment')
+        cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
+              ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
+              ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
+              ' --runThreadN {}'.format(STAR, GENOME_STAR, ANNOTATION, THREADS)
+        exec_command(cmd)
 
-            # Add headers
-            print("Adding headers")
-            cmd = '{} AddOrReplaceReadGroups --INPUT Aligned.sortedByCoord.out.bam --OUTPUT sample_header.bam ' \
-                  '--SORT_ORDER coordinate --RGID {} --RGPL Illumina --RGLB DNA --RGPU {} --RGSM {} --RGCN {} ' \
-                  '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, SAMPLEID, SAMPLEID, SAMPLEID, SAMPLEID)
-            exec_command(cmd)
+        # Add headers
+        print("Adding headers")
+        cmd = '{} AddOrReplaceReadGroups --INPUT Aligned.sortedByCoord.out.bam --OUTPUT sample_header.bam ' \
+              '--SORT_ORDER coordinate --RGID {} --RGPL Illumina --RGLB DNA --RGPU {} --RGSM {} --RGCN {} ' \
+              '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, SAMPLEID, SAMPLEID, SAMPLEID, SAMPLEID)
+        exec_command(cmd)
 
-      if 'gatk' in STEPS:
-            # Mark duplicates
-            print('Marking duplicates')
-            cmd = '{} MarkDuplicatesSpark --input sample_header.bam --output sample_dedup.bam'.format(GATK)
-            exec_command(cmd)
+    if 'gatk' in STEPS:
+        # Mark duplicates
+        print('Marking duplicates')
+        cmd = '{} MarkDuplicatesSpark --input sample_header.bam --output sample_dedup.bam'.format(GATK)
+        exec_command(cmd)
 
-            # Split N and cigars
-            print('Splitting NCigar Reads')
-            cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK, GENOME)
-            exec_command(cmd)
+        # Split N and cigars
+        print('Splitting NCigar Reads')
+        cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK, GENOME)
+        exec_command(cmd)
 
-            # GATK base re-calibration
-            print('Starting re-calibration')
-            cmd = '{} BaseRecalibratorSpark --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
-                  '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK,
-                                                                                          GENOME,
-                                                                                          SNPSITES,
-                                                                                          KNOWN_SITE1,
-                                                                                          KNOWN_SITE2)
-            exec_command(cmd)
-            cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input sample_split.bam ' \
-                  '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK, GENOME)
-            exec_command(cmd)
+        # GATK base re-calibration
+        print('Starting re-calibration')
+        cmd = '{} BaseRecalibratorSpark --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
+              '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK,
+                                                                                        GENOME,
+                                                                                        SNPSITES,
+                                                                                        KNOWN_SITE1,
+                                                                                        KNOWN_SITE2)
+        exec_command(cmd)
+        cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input sample_split.bam ' \
+              '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK, GENOME)
+        exec_command(cmd)
 
-            # BamQC
-            cmd = '{} -bam sample_final.bam -gtf {} --paired -outdir bamQCRNA ' \
-                  '--java-mem-size=16G -outformat HTML'.format(BAMQCRNA, ANNOTATION)
-            p1 = exec_command(cmd, detach=True)
+        # BamQC
+        cmd = '{} -bam sample_final.bam -gtf {} --paired -outdir bamQCRNA ' \
+              '--java-mem-size=16000M -outformat HTML'.format(BAMQCRNA, ANNOTATION)
+        p1 = exec_command(cmd, detach=True)
 
-            cmd = '{} -bam sample_final.bam --genome-gc-distr HUMAN -nt {} ' \
-                  '--java-mem-size=16G -outdir bamQC -outformat HTML'.format(BAMQC, THREADS)
-            p2 = exec_command(cmd, detach=True)
+        cmd = '{} -bam sample_final.bam --genome-gc-distr HUMAN -nt {} ' \
+              '-outdir bamQC -outformat HTML'.format(BAMQC, THREADS)
+        p2 = exec_command(cmd, detach=True)
 
-            # Wait for the processes to finish in parallel
-            p1.wait()
-            p2.wait()
+        # Wait for the processes to finish in parallel
+        p1.wait()
+        p2.wait()
 
-      if 'hla' in STEPS:
-            print('Predicting HLAs')
-            HLA_prediction('sample_final.bam', THREADS, 'rna', SAMPLEID, HLA_FASTA, 'rna')
+    if 'hla' in STEPS:
+        print('Predicting HLAs')
+        HLA_prediction('sample_final.bam', THREADS, 'rna', SAMPLEID, HLA_FASTA, 'rna')
 
-      if 'variant' in STEPS:
-            # Variant calling (Samtools pile-ups)
-            print('Computing pile-ups')
-            cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, GENOME)
-            p1 = exec_command(cmd, detach=True)
+    if 'variant' in STEPS:
+        # Variant calling (Samtools pile-ups)
+        print('Computing pile-ups')
+        cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, GENOME)
+        p1 = exec_command(cmd, detach=True)
 
-            # Variant calling (HaplotypeCaller)
-            print('Variant calling with HaplotypeCaller')
-            cmd = '{} HaplotypeCaller --reference {} --input sample_final.bam --output haplotypecaller.vcf ' \
-                  '--dont-use-soft-clipped-bases --standard-min-confidence-threshold-for-calling 20 ' \
-                  '--dbsnp {}'.format(GATK, GENOME, SNPSITES)
-            p2 = exec_command(cmd, detach=True)
+        # Variant calling (HaplotypeCaller)
+        print('Variant calling with HaplotypeCaller')
+        cmd = '{} HaplotypeCaller --reference {} --input sample_final.bam --output haplotypecaller.vcf ' \
+              '--dont-use-soft-clipped-bases --standard-min-confidence-threshold-for-calling 20 ' \
+              '--dbsnp {}'.format(GATK, GENOME, SNPSITES)
+        p2 = exec_command(cmd, detach=True)
 
-            # Computing gene counts
-            print('Computing gene counts with featureCounts')
-            cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
-                  '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, ANNOTATION)
-            p3 = exec_command(cmd, detach=True)
+        # Computing gene counts
+        print('Computing gene counts with featureCounts')
+        cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
+              '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, ANNOTATION)
+        p3 = exec_command(cmd, detach=True)
 
-            # Variant calling VarScan
-            p1.wait()
-            print('Variant calling with VarScan2')
-            cmd = '{} mpileup2cns sample.pileup --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
-                  '--min-var-freq 0.01 --min-avg-qual 15 --p-value 0.99 --strand-filter 1 > varscan.vcf'.format(VARSCAN)
-            p4 = exec_command(cmd, detach=True)
+        # Variant calling VarScan
+        p1.wait()
+        print('Variant calling with VarScan2')
+        cmd = '{} mpileup2cns sample.pileup --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
+              '--min-var-freq 0.01 --min-avg-qual 15 --p-value 0.99 --strand-filter 1 > varscan.vcf'.format(VARSCAN)
+        p4 = exec_command(cmd, detach=True)
 
-            # Wait for processes to finish
-            p2.wait()
-            p3.wait()
-            p4.wait()
+        # Wait for processes to finish
+        p2.wait()
+        p3.wait()
+        p4.wait()
 
-      if 'filter' in STEPS:
-            # Filtering variants (HaplotypeCaller)
-            print("Filtering HaplotypeCaller variants")
-            cmd = '{} VariantFiltration --reference {} --variant haplotypecaller.vcf --window 35 --cluster 3 --filter-name "FS" ' \
-                  '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK, GENOME)
-            exec_command(cmd)
+    if 'filter' in STEPS:
+        # Filtering variants (HaplotypeCaller)
+        print("Filtering HaplotypeCaller variants")
+        cmd = '{} VariantFiltration --reference {} --variant haplotypecaller.vcf --window 35 --cluster 3 --filter-name "FS" ' \
+              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK, GENOME)
+        exec_command(cmd)
 
-            # NOTE replacing IUPAC codes from VCF
-            # NOTE this will also skip variants whose REF and ALT fields are identical
-            cmd = 'awk \'{if ($1 ~ /#/) {print} else if ($4 != $5) {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS="\t"; print}}\' ' \
-                  'varscan.vcf > varscan_filtered.vcf'
-            exec_command(cmd)
+        # NOTE replacing IUPAC codes from VCF
+        # NOTE this will also skip variants whose REF and ALT fields are identical
+        cmd = 'awk \'{if ($1 ~ /#/) {print} else if ($4 != $5) {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS="\t"; print}}\' ' \
+              'varscan.vcf > varscan_filtered.vcf'
+        exec_command(cmd)
 
-            # Combine with GATK
-            print('Combining variants')
-            # TODO replace this with jacquard merge
-            # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
-            cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf ' \
-                  '-V:HaplotypeCaller haplotype_caller_filtered.vcf -o combined_calls.vcf '\
-                  '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, GENOME, THREADS)
-            exec_command(cmd)
+        # Combine with GATK
+        print('Combining variants')
+        # TODO replace this with jacquard merge
+        # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
+        cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf ' \
+              '-V:HaplotypeCaller haplotype_caller_filtered.vcf -o combined_calls.vcf '\
+              '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, GENOME, THREADS)
+        exec_command(cmd)
 
-            # Replace name of the caller in the VCF file
-            cmd = 'sed -i \'s/{}.HaplotypeCaller/HaplotypeCaller/g\' combined_calls.vcf'.format(SAMPLEID)
-            exec_command(cmd)
+        # Replace name of the caller in the VCF file
+        cmd = 'sed -i \'s/{}.HaplotypeCaller/HaplotypeCaller/g\' combined_calls.vcf'.format(SAMPLEID)
+        exec_command(cmd)
 
-            # Replace name of the caller in the VCF file
-            cmd = 'sed -i \'s/Sample1.varscan/varscan/g\' combined_calls.vcf'
-            exec_command(cmd)
+        # Replace name of the caller in the VCF file
+        cmd = 'sed -i \'s/Sample1.varscan/varscan/g\' combined_calls.vcf'
+        exec_command(cmd)
 
-            # Annotate with Annovar
-            print('Annotating variants')
-            annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
+        # Annotate with Annovar
+        print('Annotating variants')
+        annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
+        
+        # Replace UTF-8 code to equivalent characters
+        cmd = "sed -i -e 's/{}{}/-/g' -e 's/{}{}/:/g' annotated.{}_multianno.vcf".format("\\","\\x3b","\\","\\x3d", ANNOVAR_VERSION)
+        exec_command(cmd)
 
         # Moving result files to output
-
-      if os.path.isfile('combined_calls.vcf'):
-            shutil.move('combined_calls.vcf', '../combined_calls.vcf')
-      if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
-            shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
-                  '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
-      if os.path.isfile('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
-            shutil.move('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID),
-                  '../hla_genotype.tsv')
-      if os.path.isfile('gene.counts'):
-            shutil.move('gene.counts', '../gene.counts')
-      if os.path.isfile('gene.counts.summary'):
-            shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
-      if os.path.isfile('Log.final.out'):
-            shutil.move('Log.final.out', '../{}_Log.final.out'.format(SAMPLEID))
-      if os.path.isfile('sample_final.bam'):
-            shutil.move('sample_final.bam', '../sample_final.bam')
-      if os.path.isdir('../{}_bamQC'.format(SAMPLEID)):
-            shutil.rmtree(os.path.abspath('../{}_bamQC'.format(SAMPLEID)))
-      if os.path.isdir('bamQC'):
-            shutil.move('bamQC', '../{}_bamQC'.format(SAMPLEID))
-      if os.path.isdir('../{}_bamQCRNA'.format(SAMPLEID)):
-            shutil.rmtree(os.path.abspath('../{}_bamQCRNA'.format(SAMPLEID)))
-      if os.path.isdir('bamQCRNA'):
-            shutil.move('bamQCRNA', '../{}_bamQCRNA'.format(SAMPLEID))
-      for file in glob.glob('*_fastqc*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
-      for file in glob.glob('*_trimming_report*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+        if os.path.isfile('combined_calls.vcf'):
+              shutil.move('combined_calls.vcf', '../combined_calls.vcf')
+        if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
+              shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
+                    '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
+        if os.path.isfile('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
+              shutil.move('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID),
+                    '../hla_genotype.tsv')
+        if os.path.isfile('gene.counts'):
+              shutil.move('gene.counts', '../gene.counts')
+        if os.path.isfile('gene.counts.summary'):
+              shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
+        if os.path.isfile('Log.final.out'):
+              shutil.move('Log.final.out', '../{}_Log.final.out'.format(SAMPLEID))
+        if os.path.isfile('sample_final.bam'):
+              shutil.move('sample_final.bam', '../sample_final.bam')
+        if os.path.isdir('../{}_bamQC'.format(SAMPLEID)):
+              shutil.rmtree(os.path.abspath('../{}_bamQC'.format(SAMPLEID)))
+        if os.path.isdir('bamQC'):
+              shutil.move('bamQC', '../{}_bamQC'.format(SAMPLEID))
+        if os.path.isdir('../{}_bamQCRNA'.format(SAMPLEID)):
+              shutil.rmtree(os.path.abspath('../{}_bamQCRNA'.format(SAMPLEID)))
+        if os.path.isdir('bamQCRNA'):
+              shutil.move('bamQCRNA', '../{}_bamQCRNA'.format(SAMPLEID))
+        for file in glob.glob('*_fastqc*'):
+              shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+        for file in glob.glob('*_trimming_report*'):
+              shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
 
       print("COMPLETED!")
 

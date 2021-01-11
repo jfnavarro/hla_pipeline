@@ -21,7 +21,9 @@ class Variant:
         self.num_callers = None
         self.status = None
         self.type = None
-
+        self.dbsnp = None
+        self.gnomad = None
+        self.cosmic = None
     @property
     def key(self):
         return "{}:{} {}>{}".format(self.chrom, self.start, self.ref, self.alt)
@@ -138,7 +140,9 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
         has_func_known = 'nonsynonymous' in funcknownGene or 'frame' in funcknownGene
         funcRefGene = ''.join(record.INFO['ExonicFunc.refGene'])
         has_func_ref = 'nonsynonymous' in funcRefGene or 'frame' in funcRefGene
-
+        avsnp150 = record.INFO['avsnp150'][0] if record.INFO['avsnp150'] != [] else 'NA'
+        gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else 'NA'
+        cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO['cosmic70'] != [] else 'NA'
         if has_func_ens or has_func_known or has_func_ref:
             called = {x.sample: x.data for x in record.calls if x.called}
             filtered = dict()
@@ -173,6 +177,9 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
             variant.status = is_valid
             variant.effects = [';'.join(dbs_seen_in[r[-1]]) for r in variant_effects]
             variant.epitopes = variant_effects
+            variant.dbsnp = avsnp150
+            variant.gnomad = gnomad_AF
+            variant.cosmic = cosmic70
             variant.type = 'rna'
             variants.append(variant)
 
@@ -211,6 +218,10 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
         has_func_known = 'nonsynonymous' in funcknownGene or 'frame' in funcknownGene
         funcRefGene = ''.join(record.INFO['ExonicFunc.refGene'])
         has_func_ref = 'nonsynonymous' in funcRefGene or 'frame' in funcRefGene
+        avsnp150 = record.INFO['avsnp150'][0] if record.INFO['avsnp150'] != [] else 'NA'
+        gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else 'NA'
+        cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO['cosmic70'] != [] else 'NA'
+
         if has_func_ens or has_func_known or has_func_ref:
             called = {x.sample: x.data for x in record.calls if x.called}
             filtered = dict()
@@ -341,6 +352,9 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
             variant.status = is_valid
             variant.effects = [';'.join(dbs_seen_in[r[-1]]) for r in variant_effects]
             variant.epitopes = variant_effects
+            variant.dbsnp = avsnp150
+            variant.gnomad = gnomad_AF
+            variant.cosmic = cosmic70
             variant.type = 'dna'
             variants.append(variant)
 
