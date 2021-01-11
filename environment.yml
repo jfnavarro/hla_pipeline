@@ -9,7 +9,6 @@ dependencies:
   - python=3.6.1
   - tensorflow=1.15.0
   - biopython
-  - bioconda::hla-la
   - bioconda::gatk4-spark
   - bioconda::samtools
   - bioconda::bwa
@@ -24,3 +23,5 @@ dependencies:
   - bioconda::subread
   - bioconda::qualimap
   - bioconda::vcftools
+  - bioconda::optitype
+  - bioconda::yara

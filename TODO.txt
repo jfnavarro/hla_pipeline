@@ -3,12 +3,10 @@
 * Add QC step for combined VCF (bcftools)
 * Use jacquard merge instead of GATK3 to merge variants (with this the awk hacks to replace IUPA REF can be removed)
 * Add tests
-* Replace HLA-LA and arcasHLA by OptiType
 * Add a dispatcher to better control creation and destruction of processes
-* Replace the epitopes generation function by Varcode
+* Replace the epitopes generation function by PyEnsembl or Varcode
 * Add k-mer epitope distance as parameter in merge_results.py
 * Add number of DNA/RNA callers required as parameters in mhc_predict.py
 * Replace bwa-mem by bwa-mem2
-* Add headers in bma mem command (-R) instead of using bedtools
 * Add a tool to compute clonality
 * Allow to pass workdir as parameter

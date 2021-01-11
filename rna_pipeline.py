@@ -1,15 +1,12 @@
 #! /usr/bin/env python
 """
 This pipeline computes somatic variants from RNA data.
-
 The pipeline trims with trimgalore, aligns with STAR,
 performs the GATK4 best practices and computes variants with
 HaplotypeCaller and Varscan. The variants are then combined into
 one file and annotated with Annovar. Gene counts are also
 computed with featureCounts.
-
 Multiple options are available. To see them type --help
-
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import *
@@ -31,7 +28,8 @@ def main(R1,
          THREADS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         STEPS):
+         STEPS,
+         HLA_FASTA):
 
     # TODO add sanity checks for the parameters
     # TODO better log info
@@ -101,7 +99,7 @@ def main(R1,
 
     if 'hla' in STEPS:
         print('Predicting HLAs')
-        HLA_predictionRNA('sample_final.bam', THREADS)
+        HLA_prediction('sample_final.bam', THREADS, 'rna', SAMPLEID, HLA_FASTA, 'rna')
 
     if 'variant' in STEPS:
         # Variant calling (Samtools pile-ups)
@@ -167,31 +165,42 @@ def main(R1,
         # Annotate with Annovar
         print('Annotating variants')
         annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
+        
         # Replace UTF-8 code to equivalent characters
         cmd = "sed -i -e 's/{}{}/-/g' -e 's/{}{}/:/g' annotated.{}_multianno.vcf".format("\\","\\x3b","\\","\\x3d", ANNOVAR_VERSION)
         exec_command(cmd)
 
         # Moving result files to output
-        shutil.move('combined_calls.vcf', '../combined_calls.vcf')
-        shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
+        if os.path.isfile('combined_calls.vcf'):
+              shutil.move('combined_calls.vcf', '../combined_calls.vcf')
+        if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
+              shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
                     '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
-        shutil.move('sample_final.genotype.json', '../hla_genotype.json')
-        shutil.move('gene.counts', '../gene.counts')
-        shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
-        shutil.move('Log.final.out', '../{}_Log.final.out'.format(SAMPLEID))
-        shutil.move('sample_final.bam', '../sample_final.bam')
+        if os.path.isfile('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
+              shutil.move('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID),
+                    '../hla_genotype.tsv')
+        if os.path.isfile('gene.counts'):
+              shutil.move('gene.counts', '../gene.counts')
+        if os.path.isfile('gene.counts.summary'):
+              shutil.move('gene.counts.summary', '../{}_gene.counts.summary'.format(SAMPLEID))
+        if os.path.isfile('Log.final.out'):
+              shutil.move('Log.final.out', '../{}_Log.final.out'.format(SAMPLEID))
+        if os.path.isfile('sample_final.bam'):
+              shutil.move('sample_final.bam', '../sample_final.bam')
         if os.path.isdir('../{}_bamQC'.format(SAMPLEID)):
-            shutil.rmtree(os.path.abspath('../{}_bamQC'.format(SAMPLEID)))
-        shutil.move('bamQC', '../{}_bamQC'.format(SAMPLEID))
+              shutil.rmtree(os.path.abspath('../{}_bamQC'.format(SAMPLEID)))
+        if os.path.isdir('bamQC'):
+              shutil.move('bamQC', '../{}_bamQC'.format(SAMPLEID))
         if os.path.isdir('../{}_bamQCRNA'.format(SAMPLEID)):
-            shutil.rmtree(os.path.abspath('../{}_bamQCRNA'.format(SAMPLEID)))
-        shutil.move('bamQCRNA', '../{}_bamQCRNA'.format(SAMPLEID))
+              shutil.rmtree(os.path.abspath('../{}_bamQCRNA'.format(SAMPLEID)))
+        if os.path.isdir('bamQCRNA'):
+              shutil.move('bamQCRNA', '../{}_bamQCRNA'.format(SAMPLEID))
         for file in glob.glob('*_fastqc*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+              shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
         for file in glob.glob('*_trimming_report*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+              shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
 
-    print("COMPLETED!")
+      print("COMPLETED!")
 
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
@@ -224,6 +233,8 @@ if __name__ == '__main__':
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                         help='Steps to perform in the pipeline',
                         choices=['mapping', 'gatk', 'hla', 'variant', 'filter'])
+    parser.add_argument("--hla-fasta", type=str, default=None, required=True, 
+                        help="Path to the HLA reference fasta file for HLA typing with Optitype.")
 
     # Parse arguments
     args = parser.parse_args()
@@ -241,6 +252,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
+    HLA_FASTA = os.path.abspath(args.hla_fasta)
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -258,4 +270,5 @@ if __name__ == '__main__':
          THREADS,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
-         STEPS)
+         STEPS,
+         HLA_FASTA)
