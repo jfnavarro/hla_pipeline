@@ -208,8 +208,9 @@ def main(R1,
             shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
         for file in glob.glob('*_trimming_report*'):
             shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+                  
+        print("COMPLETED!")
 
-      print("COMPLETED!")
 
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
