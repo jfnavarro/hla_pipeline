@@ -83,7 +83,7 @@ def effects(record, cDNA_seq_dict, AA_seq_dict):
                     already_processed.add(mutmer)
                     epitopes.append(Epitope(transcript, mut_dna, mut_aa, flags, wtmer, mutmer))
                 if mutmer != "-":
-                    effects_seen_in[mutmer].add('ensGene_{}_{}'.format(gene, funcRefGene))
+                    effects_seen_in[mutmer].add('ensGene_{}_{}'.format(gene, funcensGene))
     if has_func_known:
         for mutation in record.INFO['AAChange.knownGene']:
             if len(mutation.split(':')) == 5:
@@ -95,7 +95,7 @@ def effects(record, cDNA_seq_dict, AA_seq_dict):
                     already_processed.add(mutmer)
                     epitopes.append(Epitope(transcript, mut_dna, mut_aa, flags, wtmer, mutmer))
                 if mutmer != "-":
-                    effects_seen_in[mutmer].add('knownGene_{}_{}'.format(gene, funcRefGene))
+                    effects_seen_in[mutmer].add('knownGene_{}_{}'.format(gene, funcknownGene))
     if has_func_ref:
         for mutation in record.INFO['AAChange.refGene']:
             if len(mutation.split(':')) == 5:
