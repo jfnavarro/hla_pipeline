@@ -20,6 +20,7 @@ import glob
 import multiprocessing
 from hlapipeline.filters import *
 
+
 def main(R1_NORMAL,
          R2_NORMAL,
          R1_TUMOR,

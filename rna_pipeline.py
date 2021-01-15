@@ -16,6 +16,7 @@ import shutil
 import glob
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
+
 def main(R1,
          R2,
          SAMPLEID,
@@ -86,11 +87,11 @@ def main(R1,
 
         # BamQC
         cmd = '{} -bam sample_final.bam -gtf {} --paired -outdir bamQCRNA ' \
-              '--java-mem-size=16000M -outformat HTML'.format(BAMQCRNA, ANNOTATION)
+              '--java-mem-size=16G -outformat HTML'.format(BAMQCRNA, ANNOTATION)
         p1 = exec_command(cmd, detach=True)
 
         cmd = '{} -bam sample_final.bam --genome-gc-distr HUMAN -nt {} ' \
-              '-outdir bamQC -outformat HTML'.format(BAMQC, THREADS)
+              '--java-mem-size=16G -outdir bamQC -outformat HTML'.format(BAMQC, THREADS)
         p2 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel

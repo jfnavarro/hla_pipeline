@@ -26,3 +26,4 @@ dependencies:
   - bioconda::bcftools
   - bioconda::optitype
   - bioconda::yara
+  - bioconda::vcfpy

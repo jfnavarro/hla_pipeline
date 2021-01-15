@@ -1,8 +1,8 @@
 * Add better logging and error handling (general)
-* Use snpEff for annotation instead of Annovar (this may make it possible to remove hacks to make the VCFs compatible with Annovar)
+* Use VEP for annotation instead of Annovar (this may make it possible to remove hacks to make the VCFs compatible with Annovar)
 * Use jacquard merge instead of GATK3 to merge variants (with this the awk hacks to replace IUPA REF can be removed)
 * Add tests
-* Add a dispatcher to better control creation and destruction of processes
+* Add log object to write log messages and version
 * Replace the epitopes generation function by PyEnsembl or Varcode
 * Add k-mer epitope distance as parameter in merge_results.py
 * Add number of DNA/RNA callers required as parameters in mhc_predict.py
