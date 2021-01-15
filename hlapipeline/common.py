@@ -23,7 +23,7 @@ def exec_command(cmd, detach=False):
         sys.exit(-1)
 
 
-def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid):
+def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
     """
     Performs HLA typing with OptiType for either RNA or DNA data.
     :param inputbam: BAM file with aligned reads
@@ -58,9 +58,22 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid):
     p1.wait()
     p2.wait()
 
+    if not KEEP:
+        if os.path.isfile('{}_output_1.bam'.format(origin)):
+            os.remove('{}_output_1.bam'.format(origin))
+        if os.path.isfile('{}_output_2.bam'.format(origin)):
+            os.remove('{}_output_2.bam'.format(origin))
+        
+
     cmd = '{} -e 3 -t {} -f bam {}/index/hla_reference {}_output_1.fastq {}_output_2.fastq > {}_output.bam'.format(
         YARAM, threads, os.getcwd(), origin, origin, origin)
     exec_command(cmd)
+
+    if not KEEP:
+        if os.path.isfile('{}_output_1.fastq'.format(origin)):
+            os.remove('{}_output_1.fastq'.format(origin))
+        if os.path.isfile('{}_output_2.fastq'.format(origin)):
+            os.remove('{}_output_2.fastq'.format(origin))
 
     cmd = '{} view -@ {} -h -F 4 -f 0x40 {}_output.bam > {}_mapped_1.bam'.format(SAMTOOLS, threads, origin, origin)
     p1 = exec_command(cmd, detach=True)
@@ -75,6 +88,13 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid):
         OPTITYPE, origin, origin, nacid, origin, sample, os.getcwd())
     exec_command(cmd)
 
+    if not KEEP:
+        if os.path.isfile('{}_output.bam'.format(origin)):
+            os.remove('{}_output.bam'.format(origin))
+        if os.path.isfile('{}_mapped_1.bam'.format(origin)):
+            os.remove('{}_mapped_1.bam'.format(origin))
+        if os.path.isfile('{}_mapped_2.bam'.format(origin)):
+            os.remove('{}_mapped_2.bam'.format(origin))
 
 def annotate_variants(input, output, db, version, threads):
     """

@@ -37,6 +37,7 @@ def main(R1_NORMAL,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
          HLA_FASTA,
+         KEEP,
          STEPS):
     # TODO add sanity checks for the parameters
     # TODO better log info
@@ -83,6 +84,16 @@ def main(R1_NORMAL,
         # Wait for the processes to finish in parallel
         p1.wait()
         p2.wait()
+
+        if not KEEP:
+            if os.path.isfile('normal_val_1.fq.gz'):
+                os.remove('normal_val_1.fq.gz')
+            if os.path.isfile('normal_val_2.fq.gz'):
+                os.remove('normal_val_2.fq.gz')
+            if os.path.isfile('tumor_val_1.fq.gz'):
+                os.remove('tumor_val_1.fq.gz')
+            if os.path.isfile('tumor_val_2.fq.gz'):
+                os.remove('tumor_val_2.fq.gz')
 
     if 'gatk' in STEPS:
         # Mark duplicates
@@ -134,16 +145,30 @@ def main(R1_NORMAL,
         p1.wait()
         p2.wait()
 
+        if not KEEP:
+            if os.path.isfile('sample1_dedup.bam'):
+                os.remove('sample1_dedup.bam')
+            if os.path.isfile('sample2_dedup.bam'):
+                os.remove('sample2_dedup.bam')
+            if os.path.isfile('sample1_dedup.bam.bai'):
+                os.remove('sample1_dedup.bam.bai')
+            if os.path.isfile('sample2_dedup.bam.bai'):
+                os.remove('sample2_dedup.bam.bai')
+            if os.path.isfile('sample1_recal_data.txt'):
+                os.remove('sample1_recal_data.txt')
+            if os.path.isfile('sample2_recal_data.txt'):
+                os.remove('sample2_recal_data.txt')
+
     if 'hla' in STEPS:
         # HLA-LA predictions
         print('Performing HLA-LA predictions')
         p1 = multiprocessing.Process(target=HLA_prediction,
                                      args=('sample2_final.bam', THREADS,
-                                           'Normal', SAMPLEID, HLA_FASTA, 'dna'))
+                                           'Normal', SAMPLEID, HLA_FASTA, 'dna', KEEP))
         p1.start()
         p2 = multiprocessing.Process(target=HLA_prediction,
                                      args=('sample1_final.bam', THREADS,
-                                           'Tumor', SAMPLEID, HLA_FASTA, 'dna'))
+                                           'Tumor', SAMPLEID, HLA_FASTA, 'dna', KEEP))
         p2.start()
 
         # Wait for the processes to finish in parallel
@@ -207,11 +232,18 @@ def main(R1_NORMAL,
         p3.wait()
         p6.wait()
 
+        if not KEEP:
+            if os.path.isfile('sample1.pileup'):
+                os.remove('sample1.pileup')
+            if os.path.isfile('sample2.pileup'):
+                os.remove('sample2.pileup')
+
     if 'filter' in STEPS:
         print('Filtering variants')
-        cmd = '{} FilterMutectCalls --variant Mutect_unfiltered.vcf --output Mutect.vcf --reference {}'.format(GATK,
-                                                                                                               GENOME)
+        cmd = '{} FilterMutectCalls --variant Mutect_unfiltered.vcf --stats Mutect_unfiltered.vcf.stats' \
+              '--output Mutect.vcf --reference {}'.format(GATK, GENOME)
         exec_command(cmd)
+
         mutect2_filter('Mutect.vcf', 'mutect_filtered.vcf', sample1_ID, sample2_ID)
         strelka2_filter('Strelka_output/results/variants/somatic.snvs.vcf.gz', 'strelka_filtered.vcf')
         somaticSniper_filter('SS.vcf', 'somaticsniper_filtered.vcf')
@@ -240,6 +272,22 @@ def main(R1_NORMAL,
         # Summary of basic statistic of annotated VCF file
         annotated_vcf = "annotated.{}_multianno.vcf".format(ANNOVAR_VERSION)
         vcf_stats(annotated_vcf, SAMPLEID)
+
+        if not KEEP:
+            if os.path.isfile('Mutect.vcf'):
+                os.remove('Mutect.vcf')
+            if os.path.isfile('mutect_filtered.vcf'):
+                os.remove('mutect_filtered.vcf')
+            if os.path.isfile('strelka_filtered.vcf'):
+                os.remove('strelka_filtered.vcf')
+            if os.path.isfile('somaticsniper_filtered.vcf'):
+                os.remove('somaticsniper_filtered.vcf')
+            if os.path.isfile('varscan_filtered.vcf'):
+                os.remove('varscan_filtered.vcf')
+            if os.path.isfile('strelka_indel_filtered.vcf'):
+                os.remove('strelka_indel_filtered.vcf')
+            if os.path.isfile('varscan_filtered_indel.vcf'):
+                os.remove('varscan_filtered_indel.vcf')
 
         # Moving result files to output
         if os.path.isfile('combined_calls.vcf'):
@@ -314,6 +362,8 @@ if __name__ == '__main__':
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                         help='Steps to perform in the pipeline',
                         choices=['mapping', 'gatk', 'hla', 'variant', 'filter'])
+    parser.add_argument('--keep-intermediate', default=False, action='store_true', required=False,
+                        help='Avoid intermediate files from being removed.')
 
     # Parse arguments
     args = parser.parse_args()
@@ -335,6 +385,7 @@ if __name__ == '__main__':
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
     HLA_FASTA = os.path.abspath(args.hla_fasta)
+    KEEP = args.keep_intermediate
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -356,4 +407,5 @@ if __name__ == '__main__':
          ANNOVAR_DB,
          ANNOVAR_VERSION,
          HLA_FASTA,
+         KEEP,
          STEPS)
