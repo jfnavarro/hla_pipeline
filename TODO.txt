@@ -1,4 +1,5 @@
-* Add better logging and error handling (general)
+* Add logging object
+* Add better error handling
 * Use VEP for annotation instead of Annovar (this may make it possible to remove hacks to make the VCFs compatible with Annovar)
 * Use jacquard merge instead of GATK3 to merge variants (with this the awk hacks to replace IUPA REF can be removed)
 * Add tests
@@ -9,4 +10,5 @@
 * Replace bwa-mem by bwa-mem2
 * Add a tool to compute clonality
 * Allow to pass workdir as parameter
+* Add flag to keep intermediate files
 * Add an entry in the docs on how to run MultiQC 

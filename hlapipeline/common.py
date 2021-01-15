@@ -33,7 +33,7 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid):
     :param fasta: HLA reference fasta.
     """
 
-    # TODO use os.makadirs instead
+    # TODO use os.makedirs instead
     cmd = 'mkdir -p {}/index'.format(os.getcwd())
     exec_command(cmd)
 
@@ -89,6 +89,7 @@ def annotate_variants(input, output, db, version, threads):
     cmd = '{} {} {} -thread {} -out {} -vcfinput -remove -protocol {}'.format(
         os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), input, annovardb, threads, output, ANNOVAR_ANNO)
     exec_command(cmd)
+
 
 def vcf_stats(annotated_VCF, sampleID):
     """

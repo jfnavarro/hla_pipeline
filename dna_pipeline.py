@@ -38,7 +38,6 @@ def main(R1_NORMAL,
          ANNOVAR_VERSION,
          HLA_FASTA,
          STEPS):
-
     # TODO add sanity checks for the parameters
     # TODO better log info
 
@@ -55,7 +54,8 @@ def main(R1_NORMAL,
     if 'mapping' in STEPS:
         # TRIMMING
         print('Starting trimming')
-        cmd = '{} --cores {} --fastqc --paired --basename normal {} {}'.format(TRIMGALORE, THREADS, R1_NORMAL, R2_NORMAL)
+        cmd = '{} --cores {} --fastqc --paired --basename normal {} {}'.format(TRIMGALORE, THREADS, R1_NORMAL,
+                                                                               R2_NORMAL)
         p1 = exec_command(cmd, detach=True)
 
         cmd = '{} --cores {} --fastqc --paired --basename tumor {} {}'.format(TRIMGALORE, THREADS, R1_TUMOR, R2_TUMOR)
@@ -71,13 +71,13 @@ def main(R1_NORMAL,
         # Normal (paired)
         cmd = '{} -t {} {} -R "@RG\\tID:{}\\tPL:Illumina\\tLB:DNA\\tPU:{}\\tSM:{}\\tCN:{}" normal_val_1.fq.gz normal_val_2.fq.gz | ' \
               '{} sort --threads {} > sample2_header.bam'.format(
-                    BWA, THREADS, GENOME, sample2_ID, sample2_ID, sample2_ID, sample2_ID, SAMTOOLS, THREADS)
+            BWA, THREADS, GENOME, sample2_ID, sample2_ID, sample2_ID, sample2_ID, SAMTOOLS, THREADS)
         p1 = exec_command(cmd, detach=True)
 
         # Tumor (paired)
         cmd = '{} -t {} {} -R "@RG\\tID:{}\\tPL:Illumina\\tLB:DNA\\tPU:{}\\tSM:{}\\tCN:{}" tumor_val_1.fq.gz tumor_val_2.fq.gz | ' \
               '{} sort --threads {} > sample1_header.bam'.format(
-                    BWA, THREADS, GENOME, sample1_ID, sample1_ID, sample1_ID, sample1_ID, SAMTOOLS, THREADS)
+            BWA, THREADS, GENOME, sample1_ID, sample1_ID, sample1_ID, sample1_ID, SAMTOOLS, THREADS)
         p2 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel
@@ -138,12 +138,12 @@ def main(R1_NORMAL,
         # HLA-LA predictions
         print('Performing HLA-LA predictions')
         p1 = multiprocessing.Process(target=HLA_prediction,
-                                    args=('sample2_final.bam', THREADS,
-                                    'Normal', SAMPLEID, HLA_FASTA, 'dna'))
+                                     args=('sample2_final.bam', THREADS,
+                                           'Normal', SAMPLEID, HLA_FASTA, 'dna'))
         p1.start()
         p2 = multiprocessing.Process(target=HLA_prediction,
-                                    args=('sample1_final.bam', THREADS,
-                                    'Tumor', SAMPLEID, HLA_FASTA, 'dna'))
+                                     args=('sample1_final.bam', THREADS,
+                                           'Tumor', SAMPLEID, HLA_FASTA, 'dna'))
         p2.start()
 
         # Wait for the processes to finish in parallel
@@ -225,7 +225,7 @@ def main(R1_NORMAL,
         # TODO replace this with jacquard merge
         cmd = '{} -T CombineVariants -R {} -V:varscan_indel varscan_filtered_indel.vcf -V:varscan varscan_filtered.vcf ' \
               '-V:mutect mutect_filtered.vcf -V:strelka_indel strelka_indel_filtered.vcf -V:strelka strelka_filtered.vcf ' \
-              '-V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf '\
+              '-V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf ' \
               '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, GENOME, THREADS)
         exec_command(cmd)
 
@@ -233,7 +233,8 @@ def main(R1_NORMAL,
         print('Annotating variants')
         annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
         # Replace UTF-8 code to equivalent characters
-        cmd = "sed -i -e 's/{}{}/-/g' -e 's/{}{}/:/g' annotated.{}_multianno.vcf".format("\\","\\x3b","\\","\\x3d", ANNOVAR_VERSION)
+        cmd = "sed -i -e 's/{}{}/-/g' -e 's/{}{}/:/g' annotated.{}_multianno.vcf".format("\\", "\\x3b", "\\", "\\x3d",
+                                                                                         ANNOVAR_VERSION)
         exec_command(cmd)
 
         # Summary of basic statistic of annotated VCF file
