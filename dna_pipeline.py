@@ -39,6 +39,7 @@ def main(R1_NORMAL,
          HLA_FASTA,
          KEEP,
          STEPS):
+
     # TODO add sanity checks for the parameters
     # TODO better log info
 
@@ -272,7 +273,6 @@ def main(R1_NORMAL,
         # Summary of basic statistic of annotated VCF file
         annotated_vcf = "annotated.{}_multianno.vcf".format(ANNOVAR_VERSION)
         vcf_stats(annotated_vcf, SAMPLEID)
-
 
         # Moving result files to output
         if os.path.isfile('combined_calls.vcf'):

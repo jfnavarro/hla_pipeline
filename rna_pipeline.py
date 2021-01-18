@@ -32,7 +32,6 @@ def main(R1,
          STEPS,
          HLA_FASTA,
          KEEP):
-
     # TODO add sanity checks for the parameters
     # TODO better log info
     # Use SAMPLE as logfile name
@@ -60,7 +59,8 @@ def main(R1,
         print("Adding headers")
         cmd = '{} AddOrReplaceReadGroups --INPUT Aligned.sortedByCoord.out.bam --OUTPUT sample_header.bam ' \
               '--SORT_ORDER coordinate --RGID {} --RGPL Illumina --RGLB DNA --RGPU {} --RGSM {} --RGCN {} ' \
-              '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, SAMPLEID, SAMPLEID, SAMPLEID, SAMPLEID)
+              '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, SAMPLEID, SAMPLEID, SAMPLEID,
+                                                                          SAMPLEID)
         exec_command(cmd)
 
         if not KEEP:
@@ -68,7 +68,6 @@ def main(R1,
                 os.remove('sample_val_1.fq.gz')
             if os.path.isfile('sample_val_2.fq.gz'):
                 os.remove('sample_val_2.fq.gz')
-            
 
     if 'gatk' in STEPS:
         # Mark duplicates
@@ -78,7 +77,8 @@ def main(R1,
 
         # Split N and cigars
         print('Splitting NCigar Reads')
-        cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK, GENOME)
+        cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK,
+                                                                                                             GENOME)
         exec_command(cmd)
 
         # GATK base re-calibration
@@ -162,7 +162,8 @@ def main(R1,
         # Filtering variants (HaplotypeCaller)
         print("Filtering HaplotypeCaller variants")
         cmd = '{} VariantFiltration --reference {} --variant haplotypecaller.vcf --window 35 --cluster 3 --filter-name "FS" ' \
-              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(GATK, GENOME)
+              '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(
+            GATK, GENOME)
         exec_command(cmd)
 
         # NOTE replacing IUPAC codes from VCF
@@ -176,7 +177,7 @@ def main(R1,
         # TODO replace this with jacquard merge
         # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
         cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf ' \
-              '-V:HaplotypeCaller haplotype_caller_filtered.vcf -o combined_calls.vcf '\
+              '-V:HaplotypeCaller haplotype_caller_filtered.vcf -o combined_calls.vcf ' \
               '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, GENOME, THREADS)
         exec_command(cmd)
 
@@ -191,15 +192,15 @@ def main(R1,
         # Annotate with Annovar
         print('Annotating variants')
         annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
-        
+
         # Replace UTF-8 code to equivalent characters
-        cmd = "sed -i -e 's/{}{}/-/g' -e 's/{}{}/:/g' annotated.{}_multianno.vcf".format("\\","\\x3b","\\","\\x3d", ANNOVAR_VERSION)
+        cmd = "sed -i -e 's/{}{}/-/g' -e 's/{}{}/:/g' annotated.{}_multianno.vcf".format("\\", "\\x3b", "\\", "\\x3d",
+                                                                                         ANNOVAR_VERSION)
         exec_command(cmd)
 
         # Summary of basic statistic of annotated VCF file
         annotated_vcf = "annotated.{}_multianno.vcf".format(ANNOVAR_VERSION)
         vcf_stats(annotated_vcf, SAMPLEID)
-
 
         # Moving result files to output
         if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
@@ -235,7 +236,7 @@ def main(R1,
             shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
         for file in glob.glob('*_trimming_report*'):
             shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
-                  
+
         print("COMPLETED!")
 
 
@@ -270,7 +271,7 @@ if __name__ == '__main__':
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                         help='Steps to perform in the pipeline',
                         choices=['mapping', 'gatk', 'hla', 'variant', 'filter'])
-    parser.add_argument("--hla-fasta", type=str, default=None, required=True, 
+    parser.add_argument("--hla-fasta", type=str, default=None, required=True,
                         help="Path to the HLA reference fasta file for HLA typing with Optitype.")
     parser.add_argument('--keep-intermediate', default=False, action='store_true', required=False,
                         help='Avoid intermediate files from being removed.')
