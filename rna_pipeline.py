@@ -30,10 +30,12 @@ def main(R1,
          ANNOVAR_DB,
          ANNOVAR_VERSION,
          STEPS,
-         HLA_FASTA):
+         HLA_FASTA,
+         KEEP):
 
     # TODO add sanity checks for the parameters
     # TODO better log info
+    # Use SAMPLE as logfile name
 
     print("RNA somatic pipeline")
 
@@ -60,6 +62,13 @@ def main(R1,
               '--SORT_ORDER coordinate --RGID {} --RGPL Illumina --RGLB DNA --RGPU {} --RGSM {} --RGCN {} ' \
               '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, SAMPLEID, SAMPLEID, SAMPLEID, SAMPLEID)
         exec_command(cmd)
+
+        if not KEEP:
+            if os.path.isfile('sample_val_1.fq.gz'):
+                os.remove('sample_val_1.fq.gz')
+            if os.path.isfile('sample_val_2.fq.gz'):
+                os.remove('sample_val_2.fq.gz')
+            
 
     if 'gatk' in STEPS:
         # Mark duplicates
@@ -98,9 +107,17 @@ def main(R1,
         p1.wait()
         p2.wait()
 
+        if not KEEP:
+            if os.path.isfile('sample_recal_data.txt'):
+                os.remove('sample_recal_data.txt')
+            if os.path.isfile('sample_split.bam'):
+                os.remove('sample_split.bam')
+            if os.path.isfile('sample_split.bai'):
+                os.remove('sample_split.bai')
+
     if 'hla' in STEPS:
         print('Predicting HLAs')
-        HLA_prediction('sample_final.bam', THREADS, 'rna', SAMPLEID, HLA_FASTA, 'rna')
+        HLA_prediction('sample_final.bam', THREADS, 'rna', SAMPLEID, HLA_FASTA, 'rna', KEEP)
 
     if 'variant' in STEPS:
         # Variant calling (Samtools pile-ups)
@@ -132,6 +149,14 @@ def main(R1,
         p2.wait()
         p3.wait()
         p4.wait()
+
+        if not KEEP:
+            if os.path.isfile('sample.pileup'):
+                os.remove('sample.pileup')
+            if os.path.isfile('sample_dedup.bam'):
+                os.remove('sample_dedup.bam')
+            if os.path.isfile('sample_dedup.bam.bai'):
+                os.remove('sample_dedup.bam.bai')
 
     if 'filter' in STEPS:
         # Filtering variants (HaplotypeCaller)
@@ -174,6 +199,7 @@ def main(R1,
         # Summary of basic statistic of annotated VCF file
         annotated_vcf = "annotated.{}_multianno.vcf".format(ANNOVAR_VERSION)
         vcf_stats(annotated_vcf, SAMPLEID)
+
 
         # Moving result files to output
         if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
@@ -246,6 +272,8 @@ if __name__ == '__main__':
                         choices=['mapping', 'gatk', 'hla', 'variant', 'filter'])
     parser.add_argument("--hla-fasta", type=str, default=None, required=True, 
                         help="Path to the HLA reference fasta file for HLA typing with Optitype.")
+    parser.add_argument('--keep-intermediate', default=False, action='store_true', required=False,
+                        help='Avoid intermediate files from being removed.')
 
     # Parse arguments
     args = parser.parse_args()
@@ -264,6 +292,7 @@ if __name__ == '__main__':
     ANNOVAR_DB = args.annovar_db
     ANNOVAR_VERSION = args.annovar_version
     HLA_FASTA = os.path.abspath(args.hla_fasta)
+    KEEP = args.keep_intermediate
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -282,4 +311,5 @@ if __name__ == '__main__':
          ANNOVAR_DB,
          ANNOVAR_VERSION,
          STEPS,
-         HLA_FASTA)
+         HLA_FASTA,
+         KEEP)
