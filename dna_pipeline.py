@@ -273,21 +273,6 @@ def main(R1_NORMAL,
         annotated_vcf = "annotated.{}_multianno.vcf".format(ANNOVAR_VERSION)
         vcf_stats(annotated_vcf, SAMPLEID)
 
-        if not KEEP:
-            if os.path.isfile('Mutect.vcf'):
-                os.remove('Mutect.vcf')
-            if os.path.isfile('mutect_filtered.vcf'):
-                os.remove('mutect_filtered.vcf')
-            if os.path.isfile('strelka_filtered.vcf'):
-                os.remove('strelka_filtered.vcf')
-            if os.path.isfile('somaticsniper_filtered.vcf'):
-                os.remove('somaticsniper_filtered.vcf')
-            if os.path.isfile('varscan_filtered.vcf'):
-                os.remove('varscan_filtered.vcf')
-            if os.path.isfile('strelka_indel_filtered.vcf'):
-                os.remove('strelka_indel_filtered.vcf')
-            if os.path.isfile('varscan_filtered_indel.vcf'):
-                os.remove('varscan_filtered_indel.vcf')
 
         # Moving result files to output
         if os.path.isfile('combined_calls.vcf'):

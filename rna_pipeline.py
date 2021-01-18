@@ -200,11 +200,6 @@ def main(R1,
         annotated_vcf = "annotated.{}_multianno.vcf".format(ANNOVAR_VERSION)
         vcf_stats(annotated_vcf, SAMPLEID)
 
-        if not KEEP:
-            if os.path.isfile('haplotype_caller_filtered.vcf'):
-                os.remove('haplotype_caller_filtered.vcf')
-            if os.path.isfile('varscan_filtered.vcf'):
-                os.remove('varscan_filtered.vcf')
 
         # Moving result files to output
         if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
