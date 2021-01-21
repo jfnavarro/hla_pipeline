@@ -8,6 +8,7 @@ DNA and RNA variant calling pipeline with HLA and neoantigen predictions
 import os
 import io
 import glob
+from hlapipeline.version import version_number
 from setuptools import setup, find_packages
 
 # Get the long description from the relevant file
@@ -17,7 +18,7 @@ with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
   name='hlapipeline',
-  version="0.5.0",
+  version=version_number,
   description=__doc__.split("\n", 1)[0],
   long_description=long_description,
   keywords='rna-seq analysis dna WES WGS HLA MHC neoantigen variant',

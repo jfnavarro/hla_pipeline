@@ -7,19 +7,20 @@ from hlapipeline.tools import *
 import pandas as pd
 import re
 import os
-
+import logging
 
 def exec_command(cmd, detach=False):
-    print(cmd)
+    logger = logging.getLogger()
+    logger.info(cmd)
     if detach:
         return subprocess.Popen(cmd, shell=True)
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output, error = p.communicate()
     if p.returncode != 0:
         for line in output.decode("utf-8").split("\n") if output else "":
-            print(line.rstrip())
+            logger.error(line.rstrip())
         for line in error.decode("utf-8").split("\n") if error else "":
-            print(line.rstrip())
+            logger.error(line.rstrip())
         sys.exit(-1)
 
 
@@ -32,6 +33,8 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
     :param sample: prefix for the sample name.
     :param fasta: HLA reference fasta.
     """
+
+    logger = logging.getLogger()
 
     # TODO use os.makedirs instead
     cmd = 'mkdir -p {}/index'.format(os.getcwd())
@@ -60,8 +63,10 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
 
     if not KEEP:
         if os.path.isfile('{}_output_1.bam'.format(origin)):
+            logger.info('Removing intermediate file: {}_output_1.bam'.format(origin))
             os.remove('{}_output_1.bam'.format(origin))
         if os.path.isfile('{}_output_2.bam'.format(origin)):
+            logger.info('Removing intermediate file: {}_output_1.bam'.format(origin))
             os.remove('{}_output_2.bam'.format(origin))
         
 
@@ -71,8 +76,10 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
 
     if not KEEP:
         if os.path.isfile('{}_output_1.fastq'.format(origin)):
+            logger.info('Removing intermediate file: {}_output_1.fastq'.format(origin))
             os.remove('{}_output_1.fastq'.format(origin))
         if os.path.isfile('{}_output_2.fastq'.format(origin)):
+            logger.info('Removing intermediate file: {}_output_2.fastq'.format(origin))
             os.remove('{}_output_2.fastq'.format(origin))
 
     cmd = '{} view -@ {} -h -F 4 -f 0x40 {}_output.bam > {}_mapped_1.bam'.format(SAMTOOLS, threads, origin, origin)
@@ -90,10 +97,13 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
 
     if not KEEP:
         if os.path.isfile('{}_output.bam'.format(origin)):
+            logger.info('Removing intermediate file: {}_output.bam'.format(origin))
             os.remove('{}_output.bam'.format(origin))
         if os.path.isfile('{}_mapped_1.bam'.format(origin)):
+            logger.info('Removing intermediate file: {}_mapped_1.bam'.format(origin))
             os.remove('{}_mapped_1.bam'.format(origin))
         if os.path.isfile('{}_mapped_2.bam'.format(origin)):
+            logger.info('Removing intermediate file: {}_mapped_2.bam'.format(origin))
             os.remove('{}_mapped_2.bam'.format(origin))
 
 def annotate_variants(input, output, db, version, threads):
