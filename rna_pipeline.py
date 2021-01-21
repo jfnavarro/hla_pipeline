@@ -11,9 +11,12 @@ Multiple options are available. To see them type --help
 """
 from hlapipeline.common import *
 from hlapipeline.tools import *
+from hlapipeline.version import version_number
 import os
 import shutil
 import glob
+import logging
+import datetime
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 
@@ -33,22 +36,31 @@ def main(R1,
          HLA_FASTA,
          KEEP):
     # TODO add sanity checks for the parameters
-    # TODO better log info
-    # Use SAMPLE as logfile name
 
-    print("RNA somatic pipeline")
+    logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S',
+                        level=logging.DEBUG, filename=SAMPLEID)
+    logger = logging.getLogger(SAMPLEID)
+
+    start_pipeline_time = datetime.datetime.now()
+
+    logger.info('Starting RNA somatic pipeline: {}'.format(start_pipeline_time))
+    logger.info('HLA Pipeline version: {}'.format(version_number))
+    logger.info('Processing FASTQs {} and {} with Sample ID {} using ' \
+                'genome version {}.'.format(R1, R2, SAMPLEID, ANNOVAR_VERSION))
 
     # Create sub-folder to store all results
     os.makedirs('workdir', exist_ok=True)
     os.chdir('workdir')
 
     if 'mapping' in STEPS:
-        print('Trimming reads')
+        start_map_time = datetime.datetime.now()
+        logger.info('Starting trimming and mapping step: {}'.format(start_map_time))
+        logger.info('Trimming reads')
         cmd = '{} --cores {} --fastqc --paired --basename sample {} {}'.format(TRIMGALORE, THREADS, R1, R2)
         exec_command(cmd)
 
         # ALIGNMENT
-        print('Starting alignment')
+        logger.info('Starting alignment')
         cmd = '{} --genomeDir {} --readFilesIn sample_val_1.fq.gz sample_val_2.fq.gz --outSAMorder Paired' \
               ' --twopassMode Basic --outSAMunmapped None --sjdbGTFfile {}' \
               ' --outSAMtype BAM SortedByCoordinate --readFilesCommand gunzip -c' \
@@ -56,7 +68,7 @@ def main(R1,
         exec_command(cmd)
 
         # Add headers
-        print("Adding headers")
+        logger.info("Adding headers")
         cmd = '{} AddOrReplaceReadGroups --INPUT Aligned.sortedByCoord.out.bam --OUTPUT sample_header.bam ' \
               '--SORT_ORDER coordinate --RGID {} --RGPL Illumina --RGLB DNA --RGPU {} --RGSM {} --RGCN {} ' \
               '--CREATE_INDEX true --VALIDATION_STRINGENCY SILENT'.format(PICARD, SAMPLEID, SAMPLEID, SAMPLEID,
@@ -64,25 +76,36 @@ def main(R1,
         exec_command(cmd)
 
         if not KEEP:
+            if os.path.isfile('Aligned.sortedByCoord.out.bam'):
+                logger.info('Removing intermediate file: Aligned.sortedByCoord.out.bam')
+                os.remove('Aligned.sortedByCoord.out.bam')
             if os.path.isfile('sample_val_1.fq.gz'):
+                logger.info('Removing intermediate file: sample_val_1.fq.gz')
                 os.remove('sample_val_1.fq.gz')
             if os.path.isfile('sample_val_2.fq.gz'):
+                logger.info('Removing intermediate file: sample_val_2.fq.gz')
                 os.remove('sample_val_2.fq.gz')
+        
+        end_map_time = datetime.datetime.now()
+        total_map_time = end_map_time - start_map_time
+        logger.info('Total trimming and mapping execution time: {}'.format(total_map_time))
 
     if 'gatk' in STEPS:
+        start_gatk_time = datetime.datetime.now()
+        logger.info('Starting GATK steps: {}'.format(start_gatk_time))
         # Mark duplicates
-        print('Marking duplicates')
+        logger.info('Marking duplicates')
         cmd = '{} MarkDuplicatesSpark --input sample_header.bam --output sample_dedup.bam'.format(GATK)
         exec_command(cmd)
 
         # Split N and cigars
-        print('Splitting NCigar Reads')
+        logger.info('Splitting NCigar Reads')
         cmd = '{} SplitNCigarReads --reference {} --input sample_dedup.bam --output sample_split.bam'.format(GATK,
                                                                                                              GENOME)
         exec_command(cmd)
 
         # GATK base re-calibration
-        print('Starting re-calibration')
+        logger.info('Starting re-calibration')
         cmd = '{} BaseRecalibratorSpark --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
               '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK,
                                                                                         GENOME,
@@ -109,38 +132,51 @@ def main(R1,
 
         if not KEEP:
             if os.path.isfile('sample_recal_data.txt'):
+                logger.info('Removing intermediate file: sample_recal_data.txt')
                 os.remove('sample_recal_data.txt')
             if os.path.isfile('sample_split.bam'):
+                logger.info('Removing intermediate file: sample_split.bam')
                 os.remove('sample_split.bam')
             if os.path.isfile('sample_split.bai'):
+                logger.info('Removing intermediate file: sample_split.bai')
                 os.remove('sample_split.bai')
 
+        end_gatk_time = datetime.datetime.now()
+        total_gatk_time = end_gatk_time - start_gatk_time
+        logger.info('Total GATK processing time: {}'.format(total_gatk_time))
+
     if 'hla' in STEPS:
-        print('Predicting HLAs')
+        start_hla_time = datetime.datetime.now()
+        logger.info('Starting HLA prediction: {}'.format(start_hla_time))
         HLA_prediction('sample_final.bam', THREADS, 'rna', SAMPLEID, HLA_FASTA, 'rna', KEEP)
+        end_hla_time = datetime.datetime.now()
+        total_hla_time = end_hla_time - start_hla_time
+        logger.info('Total HLA prediction time: {}'.format(total_hla_time))
 
     if 'variant' in STEPS:
+        start_variant_time = datetime.datetime.now()
+        logger.info('Starting variant calling: {}'.format(start_variant_time))
         # Variant calling (Samtools pile-ups)
-        print('Computing pile-ups')
+        logger.info('Computing pile-ups')
         cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, GENOME)
         p1 = exec_command(cmd, detach=True)
 
         # Variant calling (HaplotypeCaller)
-        print('Variant calling with HaplotypeCaller')
+        logger.info('Variant calling with HaplotypeCaller')
         cmd = '{} HaplotypeCaller --reference {} --input sample_final.bam --output haplotypecaller.vcf ' \
               '--dont-use-soft-clipped-bases --standard-min-confidence-threshold-for-calling 20 ' \
               '--dbsnp {}'.format(GATK, GENOME, SNPSITES)
         p2 = exec_command(cmd, detach=True)
 
         # Computing gene counts
-        print('Computing gene counts with featureCounts')
+        logger.info('Computing gene counts with featureCounts')
         cmd = '{} -T {} --primary --ignoreDup -O -C -t exon ' \
               '-g gene_name -a {} -o gene.counts sample_dedup.bam'.format(FEATURECOUNTS, THREADS, ANNOTATION)
         p3 = exec_command(cmd, detach=True)
 
         # Variant calling VarScan
         p1.wait()
-        print('Variant calling with VarScan2')
+        logger.info('Variant calling with VarScan2')
         cmd = '{} mpileup2cns sample.pileup --variants 0 --min-coverage 2 --min-reads2 1 --output-vcf 1 ' \
               '--min-var-freq 0.01 --min-avg-qual 15 --p-value 0.99 --strand-filter 1 > varscan.vcf'.format(VARSCAN)
         p4 = exec_command(cmd, detach=True)
@@ -152,15 +188,24 @@ def main(R1,
 
         if not KEEP:
             if os.path.isfile('sample.pileup'):
+                logger.info('Removing intermediate file: sample.pileup')
                 os.remove('sample.pileup')
             if os.path.isfile('sample_dedup.bam'):
+                logger.info('Removing intermediate file: sample_dedup.bam')
                 os.remove('sample_dedup.bam')
             if os.path.isfile('sample_dedup.bam.bai'):
+                logger.info('Removing intermediate file: sample_dedup.bam.bai')
                 os.remove('sample_dedup.bam.bai')
 
+        end_variant_time = datetime.datetime.now()
+        total_variant_time = end_variant_time - start_variant_time
+        logger.info('Total variant calling processing time: {}'.format(total_variant_time))
+
     if 'filter' in STEPS:
+        start_filter_time = datetime.datetime.now()
+        logger.info('Starting variant filtering and annotation: {}'.format(start_filter_time))
         # Filtering variants (HaplotypeCaller)
-        print("Filtering HaplotypeCaller variants")
+        logger.info("Filtering HaplotypeCaller variants")
         cmd = '{} VariantFiltration --reference {} --variant haplotypecaller.vcf --window 35 --cluster 3 --filter-name "FS" ' \
               '--filter "FS > 30.0" --filter-name "QD" --filter "QD < 2.0" --output haplotype_caller_filtered.vcf'.format(
             GATK, GENOME)
@@ -173,7 +218,7 @@ def main(R1,
         exec_command(cmd)
 
         # Combine with GATK
-        print('Combining variants')
+        logger.info('Combining variants')
         # TODO replace this with jacquard merge
         # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
         cmd = '{} -T CombineVariants -R {} -V:varscan varscan_filtered.vcf ' \
@@ -190,7 +235,7 @@ def main(R1,
         exec_command(cmd)
 
         # Annotate with Annovar
-        print('Annotating variants')
+        logger.info('Annotating variants')
         annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
 
         # Replace UTF-8 code to equivalent characters
@@ -201,6 +246,11 @@ def main(R1,
         # Summary of basic statistic of annotated VCF file
         annotated_vcf = "annotated.{}_multianno.vcf".format(ANNOVAR_VERSION)
         vcf_stats(annotated_vcf, SAMPLEID)
+
+        end_filer_time = datetime.datetime.now()
+        total_filter_time = end_filer_time - start_filter_time
+        logger.info('Total filtering and annotation time: {}'.format(total_filter_time))
+
 
         # Moving result files to output
         if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
@@ -237,7 +287,11 @@ def main(R1,
         for file in glob.glob('*_trimming_report*'):
             shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
 
-        print("COMPLETED!")
+        end_pipeline_time = datetime.datetime.now()
+        total_pipeline_time = end_pipeline_time - start_pipeline_time
+        logger.info('Total pipeline execution time: {}'.format(total_pipeline_time))
+
+        logger.info("COMPLETED!")
 
 
 if __name__ == '__main__':
