@@ -45,7 +45,9 @@ def main(R1_NORMAL,
 
     # TODO add sanity checks for the parameters
 
-    logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.DEBUG, filename=SAMPLEID)
+    logging.basicConfig(format='%(asctime)s - %(message)s',
+                        datefmt='%d-%b-%y %H:%M:%S',
+                        level=logging.DEBUG, filename=SAMPLEID + ".log")
     logger = logging.getLogger(SAMPLEID)
 
     start_pipeline_time = datetime.datetime.now()
@@ -64,6 +66,7 @@ def main(R1_NORMAL,
     os.chdir('workdir')
 
     if 'mapping' in STEPS:
+
         start_map_time = datetime.datetime.now()
         logger.info('Starting trimming and mapping step: {}'.format(start_map_time))
         # TRIMMING
@@ -100,16 +103,12 @@ def main(R1_NORMAL,
 
         if not KEEP:
             if os.path.isfile('normal_val_1.fq.gz'):
-                logger.info('Removing intermediate file: normal_val_1.fq.gz')
                 os.remove('normal_val_1.fq.gz')
             if os.path.isfile('normal_val_2.fq.gz'):
-                logger.info('Removing intermediate file: normal_val_2.fq.gz')
                 os.remove('normal_val_2.fq.gz')
             if os.path.isfile('tumor_val_1.fq.gz'):
-                logger.info('Removing intermediate file: tumor_val_1.fq.gz')
                 os.remove('tumor_val_1.fq.gz')
             if os.path.isfile('tumor_val_2.fq.gz'):
-                logger.info('Removing intermediate file: tumor_val_2.fq.gz')
                 os.remove('tumor_val_2.fq.gz')
 
         end_map_time = datetime.datetime.now()
@@ -117,8 +116,10 @@ def main(R1_NORMAL,
         logger.info('Total trimming and mapping execution time: {}'.format(total_map_time))
 
     if 'gatk' in STEPS:
+
         start_gatk_time = datetime.datetime.now()
         logger.info('Starting GATK steps: {}'.format(start_gatk_time))
+
         # Mark duplicates
         logger.info('Marking duplicates')
         cmd = '{} MarkDuplicatesSpark --input sample1_header.bam --output sample1_dedup.bam'.format(GATK)
@@ -170,22 +171,16 @@ def main(R1_NORMAL,
 
         if not KEEP:
             if os.path.isfile('sample1_dedup.bam'):
-                logger.info('Removing intermediate file: sample1_dedup.bam')
                 os.remove('sample1_dedup.bam')
             if os.path.isfile('sample2_dedup.bam'):
-                logger.info('Removing intermediate file: sample2_dedup.bam')
                 os.remove('sample2_dedup.bam')
             if os.path.isfile('sample1_dedup.bam.bai'):
-                logger.info('Removing intermediate file: sample1_dedup.bam.bai')
                 os.remove('sample1_dedup.bam.bai')
             if os.path.isfile('sample2_dedup.bam.bai'):
-                logger.info('Removing intermediate file: sample2_dedup.bam.bai')
                 os.remove('sample2_dedup.bam.bai')
             if os.path.isfile('sample1_recal_data.txt'):
-                logger.info('Removing intermediate file: sample1_recal_data.txt')
                 os.remove('sample1_recal_data.txt')
             if os.path.isfile('sample2_recal_data.txt'):
-                logger.info('Removing intermediate file: sample2_recal_data.txt')
                 os.remove('sample2_recal_data.txt')
 
         end_gatk_time = datetime.datetime.now()
@@ -193,6 +188,7 @@ def main(R1_NORMAL,
         logger.info('Total GATK processing time: {}'.format(total_gatk_time))
 
     if 'hla' in STEPS:
+
         start_hla_time = datetime.datetime.now()
         logger.info('Starting HLA prediction: {}'.format(start_hla_time))
         # HLA-LA predictions
@@ -214,10 +210,13 @@ def main(R1_NORMAL,
         logger.info('Total HLA prediction time: {}'.format(total_hla_time))
 
     if 'variant' in STEPS:
+
         start_variant_time = datetime.datetime.now()
         logger.info('Starting variant calling: {}'.format(start_variant_time))
         logger.info('Performing variant calling Mutect2')
+
         intervals_cmd = '--intervals {}'.format(INTERVALS) if INTERVALS else ''
+
         # Variant calling Mutect2
         cmd = '{} Mutect2 --reference {} --input sample1_final.bam --input sample2_final.bam --normal-sample {} ' \
               '--output Mutect_unfiltered.vcf --germline-resource {} --dont-use-soft-clipped-bases ' \
@@ -229,6 +228,10 @@ def main(R1_NORMAL,
         if os.path.isdir('Strelka_output'):
             shutil.rmtree(os.path.abspath('Strelka_output'))
         if INTERVALS:
+            if os.path.isfile('intervals.bed.gz'):
+                os.remove('intervals.bed.gz')
+            if os.path.isfile('intervals.bed.gz.tbi'):
+                os.remove('intervals.bed.gz.tbi')
             cmd = 'cp {} intervals.bed && bgzip intervals.bed && tabix intervals.bed.gz'.format(INTERVALS)
             exec_command(cmd)
             intervals_cmd = '--exome --callRegions intervals.bed.gz'
@@ -274,10 +277,8 @@ def main(R1_NORMAL,
 
         if not KEEP:
             if os.path.isfile('sample1.pileup'):
-                logger.info('Removing intermediate file: sample1.pileup')
                 os.remove('sample1.pileup')
             if os.path.isfile('sample2.pileup'):
-                logger.info('Removing intermediate file: sample2.pileup')
                 os.remove('sample2.pileup')
         
         end_variant_time = datetime.datetime.now()

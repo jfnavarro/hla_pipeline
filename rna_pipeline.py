@@ -38,7 +38,7 @@ def main(R1,
     # TODO add sanity checks for the parameters
 
     logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S',
-                        level=logging.DEBUG, filename=SAMPLEID)
+                        level=logging.DEBUG, filename=SAMPLEID + ".log")
     logger = logging.getLogger(SAMPLEID)
 
     start_pipeline_time = datetime.datetime.now()
@@ -77,13 +77,10 @@ def main(R1,
 
         if not KEEP:
             if os.path.isfile('Aligned.sortedByCoord.out.bam'):
-                logger.info('Removing intermediate file: Aligned.sortedByCoord.out.bam')
                 os.remove('Aligned.sortedByCoord.out.bam')
             if os.path.isfile('sample_val_1.fq.gz'):
-                logger.info('Removing intermediate file: sample_val_1.fq.gz')
                 os.remove('sample_val_1.fq.gz')
             if os.path.isfile('sample_val_2.fq.gz'):
-                logger.info('Removing intermediate file: sample_val_2.fq.gz')
                 os.remove('sample_val_2.fq.gz')
         
         end_map_time = datetime.datetime.now()
@@ -91,8 +88,10 @@ def main(R1,
         logger.info('Total trimming and mapping execution time: {}'.format(total_map_time))
 
     if 'gatk' in STEPS:
+
         start_gatk_time = datetime.datetime.now()
         logger.info('Starting GATK steps: {}'.format(start_gatk_time))
+
         # Mark duplicates
         logger.info('Marking duplicates')
         cmd = '{} MarkDuplicatesSpark --input sample_header.bam --output sample_dedup.bam'.format(GATK)
@@ -132,13 +131,10 @@ def main(R1,
 
         if not KEEP:
             if os.path.isfile('sample_recal_data.txt'):
-                logger.info('Removing intermediate file: sample_recal_data.txt')
                 os.remove('sample_recal_data.txt')
             if os.path.isfile('sample_split.bam'):
-                logger.info('Removing intermediate file: sample_split.bam')
                 os.remove('sample_split.bam')
             if os.path.isfile('sample_split.bai'):
-                logger.info('Removing intermediate file: sample_split.bai')
                 os.remove('sample_split.bai')
 
         end_gatk_time = datetime.datetime.now()
@@ -146,16 +142,21 @@ def main(R1,
         logger.info('Total GATK processing time: {}'.format(total_gatk_time))
 
     if 'hla' in STEPS:
+
         start_hla_time = datetime.datetime.now()
         logger.info('Starting HLA prediction: {}'.format(start_hla_time))
+
         HLA_prediction('sample_final.bam', THREADS, 'rna', SAMPLEID, HLA_FASTA, 'rna', KEEP)
+
         end_hla_time = datetime.datetime.now()
         total_hla_time = end_hla_time - start_hla_time
         logger.info('Total HLA prediction time: {}'.format(total_hla_time))
 
     if 'variant' in STEPS:
+
         start_variant_time = datetime.datetime.now()
         logger.info('Starting variant calling: {}'.format(start_variant_time))
+
         # Variant calling (Samtools pile-ups)
         logger.info('Computing pile-ups')
         cmd = '{} mpileup -C 50 -B -q 1 -Q 15 -f {} sample_final.bam > sample.pileup'.format(SAMTOOLS, GENOME)
@@ -188,13 +189,10 @@ def main(R1,
 
         if not KEEP:
             if os.path.isfile('sample.pileup'):
-                logger.info('Removing intermediate file: sample.pileup')
                 os.remove('sample.pileup')
             if os.path.isfile('sample_dedup.bam'):
-                logger.info('Removing intermediate file: sample_dedup.bam')
                 os.remove('sample_dedup.bam')
             if os.path.isfile('sample_dedup.bam.bai'):
-                logger.info('Removing intermediate file: sample_dedup.bam.bai')
                 os.remove('sample_dedup.bam.bai')
 
         end_variant_time = datetime.datetime.now()
@@ -202,8 +200,10 @@ def main(R1,
         logger.info('Total variant calling processing time: {}'.format(total_variant_time))
 
     if 'filter' in STEPS:
+
         start_filter_time = datetime.datetime.now()
         logger.info('Starting variant filtering and annotation: {}'.format(start_filter_time))
+        
         # Filtering variants (HaplotypeCaller)
         logger.info("Filtering HaplotypeCaller variants")
         cmd = '{} VariantFiltration --reference {} --variant haplotypecaller.vcf --window 35 --cluster 3 --filter-name "FS" ' \
@@ -250,7 +250,6 @@ def main(R1,
         end_filer_time = datetime.datetime.now()
         total_filter_time = end_filer_time - start_filter_time
         logger.info('Total filtering and annotation time: {}'.format(total_filter_time))
-
 
         # Moving result files to output
         if os.path.isfile('{}.relatedness2'.format(SAMPLEID)):
