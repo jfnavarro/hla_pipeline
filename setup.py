@@ -38,7 +38,8 @@ setup(
     'pysam',
     'vcfpy',
     'biopython',
-    'mhcflurry'
+    'mhcflurry',
+    'varcode'
   ],
   #test_suite = 'tests',
   scripts=glob.glob('*.py'),

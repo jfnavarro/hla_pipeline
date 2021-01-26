@@ -27,4 +27,3 @@ dependencies:
   - bioconda::optitype
   - bioconda::yara
   - bioconda::vcfpy
-  - bioconda::varcode
