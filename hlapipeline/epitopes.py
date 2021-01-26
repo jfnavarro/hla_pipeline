@@ -175,7 +175,7 @@ def create_epitope(ref, alt, exonic_func, cDNA_mut, protein_mut, cDNA_seq, prote
                 # AAs before the mutation, the mutation
                 # and then 12 AAs after the mutation
                 # in the case of the mut epitope end end is
-                # extended until the first stop codon
+                #  extended until the first stop codon
                 ref_FASTA = str(translate_dna(cDNA_seq.replace(' ', '')))
                 mut_FASTA = str(translate_dna(mut_cDNA_seq.replace(' ', '')))
                 end_wt = position + 13

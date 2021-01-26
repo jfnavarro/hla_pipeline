@@ -78,7 +78,8 @@ def effects(record, cDNA_seq_dict, AA_seq_dict):
                 gene, transcript, exon, mut_dna, mut_aa = mutation.split(':')
                 cDNA_seq = cDNA_seq_dict.get(transcript, 'None').strip()
                 AA_seq = AA_seq_dict.get(transcript, 'None').strip()
-                pos, flags, wtmer, mutmer = create_epitope(record.REF, funcensGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
+                pos, flags, wtmer, mutmer = create_epitope(record.REF, record.ALT[0].serialize(),
+                                                           funcensGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
                 if mutmer not in already_processed and mutmer != "-":
                     already_processed.add(mutmer)
                     epitopes.append(Epitope(transcript, mut_dna, mut_aa, flags, wtmer, mutmer))
@@ -90,7 +91,8 @@ def effects(record, cDNA_seq_dict, AA_seq_dict):
                 gene, transcript, exon, mut_dna, mut_aa = mutation.split(':')
                 cDNA_seq = cDNA_seq_dict.get(transcript, 'None').strip()
                 AA_seq = AA_seq_dict.get(transcript, 'None').strip()
-                pos, flags, wtmer, mutmer = create_epitope(record.REF, funcknownGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
+                pos, flags, wtmer, mutmer = create_epitope(record.REF, record.ALT[0].serialize(),
+                                                           funcknownGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
                 if mutmer not in already_processed and mutmer != "-":
                     already_processed.add(mutmer)
                     epitopes.append(Epitope(transcript, mut_dna, mut_aa, flags, wtmer, mutmer))
@@ -102,7 +104,8 @@ def effects(record, cDNA_seq_dict, AA_seq_dict):
                 gene, transcript, exon, mut_dna, mut_aa = mutation.split(':')
                 cDNA_seq = cDNA_seq_dict.get(transcript, 'None').strip()
                 AA_seq = AA_seq_dict.get(transcript, 'None').strip()
-                pos, flags, wtmer, mutmer = create_epitope(record.REF, funcRefGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
+                pos, flags, wtmer, mutmer = create_epitope(record.REF, record.ALT[0].serialize(),
+                                                           funcRefGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
                 if mutmer not in already_processed and mutmer != "-":
                     already_processed.add(mutmer)
                     epitopes.append(Epitope(transcript, mut_dna, mut_aa, flags, wtmer, mutmer))
