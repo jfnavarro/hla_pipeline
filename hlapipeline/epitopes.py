@@ -153,7 +153,7 @@ def create_epitope(ref, alt, exonic_func, cDNA_mut, protein_mut, cDNA_seq, prote
             elif exonic_func in ['frameshift_insertion', 'nonframeshift_insertion']:
                 key = 'dup' if 'dup' in cDNA_mut else 'ins'
                 ins = cDNA_mut[int(cDNA_mut.find(key)) + 3:]
-                mut_cDNA_seq = cDNA_seq[:cDNA_pos] + ins + cDNA_seq[cDNA_pos :]
+                mut_cDNA_seq = cDNA_seq[:cDNA_pos] + ins + cDNA_seq[cDNA_pos:]
             elif exonic_func in ['frameshift_substitution', 'nonframeshift_substitution']:
                 subs = cDNA_mut[int(cDNA_mut.find('delins')) + 6:]
                 len_subs = len(subs)
