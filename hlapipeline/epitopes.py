@@ -37,7 +37,8 @@ def create_epitope_varcode(chrm, start, ref, alt, transcript, db='GRCh37'):
     effects = vinfo.effects()
     effect = None
     for e in effects:
-        if e is not None and e.transcript_id == transcript:
+        if e is not None and e.transcript_id == transcript \
+                and e.short_description is not None and e.short_description.startswith('p.'):
             effect = e
     if effect is None:
         errors.append('Could not find effects for this transcript (using top effect)')
@@ -152,7 +153,7 @@ def create_epitope(ref, alt, exonic_func, cDNA_mut, protein_mut, cDNA_seq, prote
             elif exonic_func in ['frameshift_insertion', 'nonframeshift_insertion']:
                 key = 'dup' if 'dup' in cDNA_mut else 'ins'
                 ins = cDNA_mut[int(cDNA_mut.find(key)) + 3:]
-                mut_cDNA_seq = cDNA_seq[:cDNA_pos] + ins + cDNA_seq[cDNA_pos + 1:]
+                mut_cDNA_seq = cDNA_seq[:cDNA_pos] + ins + cDNA_seq[cDNA_pos :]
             elif exonic_func in ['frameshift_substitution', 'nonframeshift_substitution']:
                 subs = cDNA_mut[int(cDNA_mut.find('delins')) + 6:]
                 len_subs = len(subs)
