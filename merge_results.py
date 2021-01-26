@@ -8,13 +8,11 @@ The table contains useful information for post-analysis.
 """
 import statistics
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-import numpy as np
-import math
 from scipy import stats
 import os
 import sys
-from collections import defaultdict
 from hlapipeline.variants import *
+
 
 def main(dna_variants,
          dna_names,
@@ -198,6 +196,7 @@ def main(dna_variants,
     final_file_rna.close()
     final_file_discarded.close()
     final_file_discarded_rna.close()
+
 
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)

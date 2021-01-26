@@ -9,6 +9,7 @@ import re
 import os
 import logging
 
+
 def exec_command(cmd, detach=False):
     logger = logging.getLogger()
     logger.info(cmd)
@@ -63,12 +64,9 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
 
     if not KEEP:
         if os.path.isfile('{}_output_1.bam'.format(origin)):
-            logger.info('Removing intermediate file: {}_output_1.bam'.format(origin))
             os.remove('{}_output_1.bam'.format(origin))
         if os.path.isfile('{}_output_2.bam'.format(origin)):
-            logger.info('Removing intermediate file: {}_output_1.bam'.format(origin))
             os.remove('{}_output_2.bam'.format(origin))
-        
 
     cmd = '{} -e 3 -t {} -f bam {}/index/hla_reference {}_output_1.fastq {}_output_2.fastq > {}_output.bam'.format(
         YARAM, threads, os.getcwd(), origin, origin, origin)
@@ -76,15 +74,13 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
 
     if not KEEP:
         if os.path.isfile('{}_output_1.fastq'.format(origin)):
-            logger.info('Removing intermediate file: {}_output_1.fastq'.format(origin))
             os.remove('{}_output_1.fastq'.format(origin))
         if os.path.isfile('{}_output_2.fastq'.format(origin)):
-            logger.info('Removing intermediate file: {}_output_2.fastq'.format(origin))
             os.remove('{}_output_2.fastq'.format(origin))
 
     cmd = '{} view -@ {} -h -F 4 -f 0x40 {}_output.bam > {}_mapped_1.bam'.format(SAMTOOLS, threads, origin, origin)
     p1 = exec_command(cmd, detach=True)
-    
+
     cmd = '{} view -@ {} -h -F 4 -f 0x80 {}_output.bam > {}_mapped_2.bam'.format(SAMTOOLS, threads, origin, origin)
     p2 = exec_command(cmd, detach=True)
 
@@ -97,14 +93,12 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
 
     if not KEEP:
         if os.path.isfile('{}_output.bam'.format(origin)):
-            logger.info('Removing intermediate file: {}_output.bam'.format(origin))
             os.remove('{}_output.bam'.format(origin))
         if os.path.isfile('{}_mapped_1.bam'.format(origin)):
-            logger.info('Removing intermediate file: {}_mapped_1.bam'.format(origin))
             os.remove('{}_mapped_1.bam'.format(origin))
         if os.path.isfile('{}_mapped_2.bam'.format(origin)):
-            logger.info('Removing intermediate file: {}_mapped_2.bam'.format(origin))
             os.remove('{}_mapped_2.bam'.format(origin))
+
 
 def annotate_variants(input, output, db, version, threads):
     """
