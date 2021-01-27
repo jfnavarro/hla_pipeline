@@ -22,7 +22,7 @@ BAMQCRNA = 'qualimap rnaseq'
 OPTITYPE = 'OptiTypePipeline.py'
 YARAI = 'yara_indexer'
 YARAM = 'yara_mapper'
-# ANNOVAR location must be in $ANNOVAR
+# ANNOVAR location must be in $ANNOVAR_PATH
 ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
 ANNOVAR_ANNO = 'refGene,knownGene,ensGene,avsnp150,gnomad211_exome,cosmic70 -operation g,g,g,f,f,f -nastring .'
 VCFTOOLS = 'vcftools'

@@ -2,11 +2,12 @@
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com
 """
 from hlapipeline.epitopes import create_epitope
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 import numpy as np
 import vcfpy
 
-Epitope = namedtuple('Epitope', 'transcript dnamut aamut flags wtseq mutseq')
+#  A convenience namedtuple to store the informatin of an epitope
+Epitope = namedtuple('Epitope', 'transcript gene func dnamut aamut flags wtseq mutseq')
 
 
 class Variant:
@@ -15,7 +16,6 @@ class Variant:
         self.start = None
         self.ref = None
         self.alt = None
-        self.effects = None
         self.epitopes = None
         self.callers = None
         self.num_callers = None
@@ -24,12 +24,13 @@ class Variant:
         self.dbsnp = None
         self.gnomad = None
         self.cosmic = None
+
     @property
     def key(self):
         return "{}:{} {}>{}".format(self.chrom, self.start, self.ref, self.alt)
 
     @property
-    def ensemblGene(self):
+    def ensGene(self):
         gene = None
         for effect in self.effects:
             if 'ensGene' in effect:
@@ -38,10 +39,19 @@ class Variant:
         return gene
 
     @property
-    def geneName(self):
+    def knownGene(self):
         gene = None
         for effect in self.effects:
-            if 'knownGene' in effect or 'refGene' in effect:
+            if 'knownGene' in effect:
+                gene = effect.split("_")[1]
+                break
+        return gene
+
+    @property
+    def refGene(self):
+        gene = None
+        for effect in self.effects:
+            if 'refGene' in effect:
                 gene = effect.split("_")[1]
                 break
         return gene
@@ -50,29 +60,25 @@ class Variant:
         return '{}:{} {}>{} {} {}'.format(self.chrom, self.start, self.ref, self.alt, self.type, self.status)
 
 
-def effects(record, cDNA_seq_dict, AA_seq_dict):
+def epitopes(record, cDNA_seq_dict, AA_seq_dict):
     """
-    This function computes the effects of an Annovar annotated variant (record from vcfpy)
-    using 3 databases (Ensembl, NCBI and UCSC). The function will also compute the
-    mutated peptide of the variant for each effect/transcript.
+    This function computes the epitopes (mutated and wt peptides) of
+    an Annovar annotated variant (record from vcfpy) using the effects and
+    their isoforms from 3 databases (Ensembl, NCBI and UCSC).
     The function only considers nonsynonymous and framshift effects.
     :param record: A vcfpy record containing the variant information from Annovar
-    :param cDNA_seq_dic: a dictionary of cDNA sequences of the transcripts
-    :param AA_seq: a dictionary of AA sequences of the transcripts
+    :param cDNA_seq_dic: a dictionary of cDNA sequences of the transcripts ids
+    :param AA_seq: a dictionary of AA sequences of the transcripts ids
     :return:
-        A list of unique epitopes detected in the variant (dna_mut, aa_mut, flags, wt_peptide, mut_peptide)
-        A dict of unique effects detected in each of the variants unique mutated peptide
+        A list of unique epitopes detected in the variant
+        Epitope (transcript gene func dnamut aamut flags wtseq mutseq)
     """
     funcensGene = ''.join(record.INFO['ExonicFunc.ensGene'])
-    has_func_ens = 'nonsynonymous' in funcensGene or 'frame' in funcensGene
     funcknownGene = ''.join(record.INFO['ExonicFunc.knownGene'])
-    has_func_known = 'nonsynonymous' in funcknownGene or 'frame' in funcknownGene
     funcRefGene = ''.join(record.INFO['ExonicFunc.refGene'])
-    has_func_ref = 'nonsynonymous' in funcRefGene or 'frame' in funcRefGene
-    already_processed = set()
+
     epitopes = list()
-    effects_seen_in = defaultdict(set)
-    if has_func_ens:
+    if 'nonsynonymous' in funcensGene or 'frame' in funcensGene:
         for mutation in record.INFO['AAChange.ensGene']:
             if len(mutation.split(':')) == 5:
                 gene, transcript, exon, mut_dna, mut_aa = mutation.split(':')
@@ -80,12 +86,8 @@ def effects(record, cDNA_seq_dict, AA_seq_dict):
                 AA_seq = AA_seq_dict.get(transcript, 'None').strip()
                 pos, flags, wtmer, mutmer = create_epitope(record.REF, record.ALT[0].serialize(),
                                                            funcensGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
-                if mutmer not in already_processed and mutmer != "-":
-                    already_processed.add(mutmer)
-                    epitopes.append(Epitope(transcript, mut_dna, mut_aa, flags, wtmer, mutmer))
-                if mutmer != "-":
-                    effects_seen_in[mutmer].add('ensGene_{}_{}'.format(gene, funcensGene))
-    if has_func_known:
+                epitopes.append(Epitope(transcript, gene, funcensGene, mut_dna, mut_aa, flags, wtmer, mutmer))
+    if 'nonsynonymous' in funcknownGene or 'frame' in funcknownGene:
         for mutation in record.INFO['AAChange.knownGene']:
             if len(mutation.split(':')) == 5:
                 gene, transcript, exon, mut_dna, mut_aa = mutation.split(':')
@@ -93,12 +95,8 @@ def effects(record, cDNA_seq_dict, AA_seq_dict):
                 AA_seq = AA_seq_dict.get(transcript, 'None').strip()
                 pos, flags, wtmer, mutmer = create_epitope(record.REF, record.ALT[0].serialize(),
                                                            funcknownGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
-                if mutmer not in already_processed and mutmer != "-":
-                    already_processed.add(mutmer)
-                    epitopes.append(Epitope(transcript, mut_dna, mut_aa, flags, wtmer, mutmer))
-                if mutmer != "-":
-                    effects_seen_in[mutmer].add('knownGene_{}_{}'.format(gene, funcknownGene))
-    if has_func_ref:
+                epitopes.append(Epitope(transcript, gene, funcknownGene, mut_dna, mut_aa, flags, wtmer, mutmer))
+    if 'nonsynonymous' in funcRefGene or 'frame' in funcRefGene:
         for mutation in record.INFO['AAChange.refGene']:
             if len(mutation.split(':')) == 5:
                 gene, transcript, exon, mut_dna, mut_aa = mutation.split(':')
@@ -106,19 +104,15 @@ def effects(record, cDNA_seq_dict, AA_seq_dict):
                 AA_seq = AA_seq_dict.get(transcript, 'None').strip()
                 pos, flags, wtmer, mutmer = create_epitope(record.REF, record.ALT[0].serialize(),
                                                            funcRefGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
-                if mutmer not in already_processed and mutmer != "-":
-                    already_processed.add(mutmer)
-                    epitopes.append(Epitope(transcript, mut_dna, mut_aa, flags, wtmer, mutmer))
-                if mutmer != "-":
-                    effects_seen_in[mutmer].add('refGene_{}_{}'.format(gene, funcRefGene))
+                epitopes.append(Epitope(transcript, gene, funcRefGene, mut_dna, mut_aa, flags, wtmer, mutmer))
 
-    return epitopes, effects_seen_in
+    return epitopes
 
 
 def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
                         tumor_var_freq, num_callers, cDNA_seq_dict, AA_seq_dict):
     """
-    This function parses a list of annotated RNA variants from Annovar.
+    This function processes a list of annotated RNA variants from Annovar (VCF).
     It then applies some filters to the variants and computes the epitopes of each of
     the variants nonsynonymous and frameshift effects.
     The input is expected to contain HaplotypeCaller and Varscan RNA variants.
@@ -145,7 +139,8 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
         has_func_ref = 'nonsynonymous' in funcRefGene or 'frame' in funcRefGene
         avsnp150 = record.INFO['avsnp150'][0] if record.INFO['avsnp150'] != [] else 'NA'
         gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else 'NA'
-        cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO['cosmic70'] != [] else 'NA'
+        cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO[
+                                                                                        'cosmic70'] != [] else 'NA'
         if has_func_ens or has_func_known or has_func_ref:
             called = {x.sample: x.data for x in record.calls if x.called}
             filtered = dict()
@@ -168,8 +163,7 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
             except KeyError:
                 continue
 
-            is_valid = pass_variants >= num_callers
-            variant_effects, dbs_seen_in = effects(record, cDNA_seq_dict, AA_seq_dict)
+            variant_epitopes = epitopes(record, cDNA_seq_dict, AA_seq_dict)
             variant = Variant()
             variant.chrom = record.CHROM
             variant.start = record.POS
@@ -177,9 +171,8 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
             variant.alt = record.ALT[0].serialize()
             variant.callers = '|'.join(['{}:{}'.format(key, value) for key, value in filtered.items()])
             variant.num_callers = len(filtered)
-            variant.status = is_valid
-            variant.effects = [';'.join(dbs_seen_in[r[-1]]) for r in variant_effects]
-            variant.epitopes = variant_effects
+            variant.status = pass_variants >= num_callers
+            variant.epitopes = variant_epitopes
             variant.dbsnp = avsnp150
             variant.gnomad = gnomad_AF
             variant.cosmic = cosmic70
@@ -191,9 +184,9 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
 
 def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                         tumor_var_freq, normal_var_freq, t2n_ratio, num_callers,
-                        num_callers_indel, cDNA_seq, AA_seq):
+                        num_callers_indel, cDNA_seq_dict, AA_seq_dict):
     """
-    This function parses a list of annotated DNA variants from Annovar.
+    This function processes a list of annotated DNA variants from Annovar (VCF).
     It then applies some filters to the variants and computes the epitopes of each of
     the variants nonsynonymous and frameshift effects.
     The input is expected to contain Mutect2, Strelka, SomaticSniper and Varscan DNA variants.
@@ -223,7 +216,8 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
         has_func_ref = 'nonsynonymous' in funcRefGene or 'frame' in funcRefGene
         avsnp150 = record.INFO['avsnp150'][0] if record.INFO['avsnp150'] != [] else 'NA'
         gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else 'NA'
-        cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO['cosmic70'] != [] else 'NA'
+        cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO[
+                                                                                        'cosmic70'] != [] else 'NA'
 
         if has_func_ens or has_func_known or has_func_ref:
             called = {x.sample: x.data for x in record.calls if x.called}
@@ -343,8 +337,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
             except KeyError:
                 continue
 
-            is_valid = pass_snp >= num_callers or pass_indel >= num_callers_indel
-            variant_effects, dbs_seen_in = effects(record, cDNA_seq, AA_seq)
+            variant_epitopes = epitopes(record, cDNA_seq_dict, AA_seq_dict)
             variant = Variant()
             variant.chrom = record.CHROM
             variant.start = record.POS
@@ -352,9 +345,8 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
             variant.alt = record.ALT[0].serialize()
             variant.callers = '|'.join(['{}:{}'.format(key, value) for key, value in filtered.items()])
             variant.num_callers = len(filtered)
-            variant.status = is_valid
-            variant.effects = [';'.join(dbs_seen_in[r[-1]]) for r in variant_effects]
-            variant.epitopes = variant_effects
+            variant.status = pass_snp >= num_callers or pass_indel >= num_callers_indel
+            variant.epitopes = variant_epitopes
             variant.dbsnp = avsnp150
             variant.gnomad = gnomad_AF
             variant.cosmic = cosmic70

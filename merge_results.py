@@ -8,6 +8,8 @@ The table contains useful information for post-analysis.
 """
 import statistics
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from collections import defaultdict
+
 from scipy import stats
 import os
 import sys
@@ -148,34 +150,42 @@ def main(dna_variants,
         num_dna_pass = len(dna_name_pass)
         num_dna_fail = len(dna_name_fail)
 
-        # All variants share variant key so their epitopes/effects/gene must be the same (we take the first variant)
-        epitopes = value[0][0].epitopes
-        effects = value[0][0].effects
-        gene = value[0][0].geneName
+        # These are the same for all the variants in the same position
         dbsnp = value[0][0].dbsnp
         gnomad = value[0][0].gnomad
         cosmic = value[0][0].cosmic
-        # Get gene exp. if any (gene should be the same in all the effects)
-        gene_locus = []
-        if gene is not None:
-            for name, gene_counts in counts_dict.items():
-                try:
-                    gene_count = gene_counts[gene]
-                    gene_mean = counts_stats[name]
-                    gene_percentile = counts_stats_percentile[name][gene]
-                    gene_locus.append('{}:({})'.format(name,
-                                                       ';'.join([gene,
-                                                                 str(gene_count),
-                                                                 str(gene_mean),
-                                                                 str(gene_percentile)])))
-                except KeyError:
-                    gene_locus.append("{}:-".format(name))
-        else:
-            gene_locus = ["-"]
 
-        for epitope, effect in zip(epitopes, effects):
-            to_write = '\t'.join(str(x) for x in [key,
-                                                  dbsnp, gnomad, cosmic,
+        # Create a dictionary of epitopes so to keep unique ones (different mut peptide)
+        epitopes_dict = defaultdict(list)
+        for variant, _ in value:
+            for e in variant.epitopes:
+                epitopes_dict[e.mutseq].append(e)
+
+        # Iterate epitopes in the variant and write info to output
+        for _, epitopes in epitopes_dict.items():
+            # all epitopes share the mutated peptide so we can just take the first one
+            epitope = epitopes[0]
+            # Get the gene information of the gene (locus and expression) if possible
+            gene = epitope.gene
+            gene_locus = []
+            # Get gene exp. if any
+            if gene is not None and len(counts_dict) > 0:
+                for name, gene_counts in counts_dict.items():
+                    try:
+                        gene_count = gene_counts[gene]
+                        gene_mean = counts_stats[name]
+                        gene_percentile = counts_stats_percentile[name][gene]
+                        gene_locus.append('{}:({})'.format(name,
+                                                           ';'.join([gene,
+                                                                     str(gene_count),
+                                                                     str(gene_mean),
+                                                                     str(gene_percentile)])))
+                    except KeyError:
+                        gene_locus.append("{}:-".format(name))
+            else:
+                gene_locus = ["-"]
+            effect = '{}_{}'.format(epitope.func, gene)
+            to_write = '\t'.join(str(x) for x in [key, dbsnp, gnomad, cosmic,
                                                   ';'.join(dna_name_pass), num_dna_pass,
                                                   ';'.join(dna_name_fail), num_dna_fail,
                                                   ';'.join(rna_name_pass), num_rna_pass,

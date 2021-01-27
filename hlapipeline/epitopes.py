@@ -3,94 +3,10 @@
 """
 import re
 from Bio.Seq import translate
-from varcode import Variant
 
 
 def translate_dna(seq):
     return translate(seq, to_stop=True)
-
-
-def create_epitope_varcode(chrm, start, ref, alt, transcript, db='GRCh37'):
-    """
-    This function computes an epitope (mutated peptide) from a given mutation (variant)
-    It uses the package Varcode to obtain the WT and mutated sequences as well as the
-    mutation position.
-    :param db: the Ensembl database to use (GRCh37 or GRCh38)
-    :param chrm: the chromosome of the variant
-    :param start: the position of the variant
-    :param transcript: the transcript ID of the variant
-    :param ref: REF (reference allele) of the variant
-    :param alt: ALT (alternative allele) of the variant
-    :return:
-        The AA position
-        Error creating flags if any
-        The WT peptide (+12 -12)
-        The mutated peptide (+12 -12)
-    """
-    errors = list()
-    wt_mer = '-'
-    mut_mer = '-'
-    pos = -1
-
-    # Retrieve variant info
-    vinfo = Variant(contig=chrm, start=start, ref=ref, alt=alt, ensembl=db)
-    effects = vinfo.effects()
-    effect = None
-    for e in effects:
-        if e is not None and e.transcript_id == transcript \
-                and e.short_description is not None and e.short_description.startswith('p.'):
-            effect = e
-    if effect is None:
-        errors.append('Could not find effects for this transcript (using top effect)')
-        effect = effects.top_priority_effect()
-
-    # Retrieve effect type
-    protein_mut = effect.short_description
-    if protein_mut is None:
-        errors.append('Could not retrieve AA mutation for this effect')
-    elif not protein_mut.startswith('p.'):
-        errors.append('Invalid AA mutation: {}'.format(protein_mut))
-    elif protein_mut.startswith('p.X'):
-        errors.append('AA mutation occurs in stop codon')
-    else:
-        # Retrieve AA mut pos (it is already ajudted to 0-based)
-        pos = effect.aa_mutation_start_offset
-        if pos is None:
-            errors.append('Could not find the position for this mutation')
-        elif pos < 0:
-            errors.append('Can not code for this mutated position')
-        elif pos == 0:
-            errors.append('Mutation occurs in start codon')
-        else:
-            if effect.mutant_protein_sequence is None or effect.original_protein_sequence is None:
-                errors.append('Could not retrieve protein sequences')
-            else:
-                # Type of effect
-                effect_type = type(effect).__name__
-                if 'Stop' in effect_type:
-                    errors.append('Stop mutation')
-                elif 'FrameShift' in effect_type or 'Substitution' in effect_type \
-                        or 'Insertion' in effect_type or 'Deletion' in effect_type:
-                    end_wt = pos + 13
-                    if end_wt > len(effect.original_protein_sequence):
-                        errors.append('End of sequence is shorter than 12aa from mutation (WT)')
-                        end_wt = len(effect.original_protein_sequence)
-                    start = pos - 12
-                    if start < 0:
-                        errors.append('Start of sequence is shorter than 12aa from mutation')
-                        start = 0
-                    wt_mer = effect.original_protein_sequence[start:end_wt]
-                    if 'FrameShift' in effect_type:
-                        mut_mer = effect.mutant_protein_sequence[start:]
-                    else:
-                        end_mut = pos + 13
-                        if end_mut > len(effect.mutant_protein_sequence):
-                            errors.append('End of sequence is shorter than 12aa from mutation (MUT)')
-                            end_mut = len(effect.mutant_protein_sequence)
-                        mut_mer = effect.mutant_protein_sequence[start:end_mut]
-                else:
-                    errors.append('Unknown exonic function {}'.format(effect_type))
-    return pos, ';'.join(errors), wt_mer, mut_mer
 
 
 def create_epitope(ref, alt, exonic_func, cDNA_mut, protein_mut, cDNA_seq, protein_seq):
@@ -134,7 +50,7 @@ def create_epitope(ref, alt, exonic_func, cDNA_mut, protein_mut, cDNA_seq, prote
             else:
                 end = position + 13
                 if end > len(protein_seq):
-                    errors.append('End of sequence is shorter than 12aa from mutation')
+                    errors.append('Stop codon has been reached before 12aa')
                     end = len(protein_seq)
                 start = position - 12
                 if start < 0:
@@ -181,7 +97,7 @@ def create_epitope(ref, alt, exonic_func, cDNA_mut, protein_mut, cDNA_seq, prote
                 mut_FASTA = str(translate_dna(mut_cDNA_seq.replace(' ', '')))
                 end_wt = position + 13
                 if end_wt > len(ref_FASTA):
-                    errors.append('End of sequence is shorter than 12aa from mutation')
+                    errors.append('Stop codon has been reached before 12aa (WT)')
                     end_wt = len(ref_FASTA)
                 start = position - 12
                 if start < 0:
@@ -191,7 +107,7 @@ def create_epitope(ref, alt, exonic_func, cDNA_mut, protein_mut, cDNA_seq, prote
                 if 'nonframeshift' in exonic_func:
                     end_mut = position + 13
                     if end_mut > len(mut_FASTA):
-                        errors.append('End of sequence is shorter than 12aa from mutation (MUT)')
+                        errors.append('Stop codon has been reached before 12aa (MUT)')
                         end_mut = len(mut_FASTA)
                     Mut_25mer = mut_FASTA[start:end_mut]
                 else:
