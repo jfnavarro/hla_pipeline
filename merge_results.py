@@ -184,7 +184,7 @@ def main(dna_variants,
                         gene_locus.append("{}:-".format(name))
             else:
                 gene_locus = ["-"]
-            effect = '{}_{}'.format(epitope.func, gene)
+            effect = ';'.join(['{}_{}_{}'.format(e.func, e.gene, e.transcript) for e in epitopes])
             to_write = '\t'.join(str(x) for x in [key, dbsnp, gnomad, cosmic,
                                                   ';'.join(dna_name_pass), num_dna_pass,
                                                   ';'.join(dna_name_fail), num_dna_fail,
