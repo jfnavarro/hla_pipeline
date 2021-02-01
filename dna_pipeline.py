@@ -41,7 +41,8 @@ def main(R1_NORMAL,
          ANNOVAR_VERSION,
          HLA_FASTA,
          KEEP,
-         STEPS):
+         STEPS,
+         HLA_NORMAL):
 
     # TODO add sanity checks for the parameters
 
@@ -192,17 +193,17 @@ def main(R1_NORMAL,
         start_hla_time = datetime.datetime.now()
         logger.info('Starting HLA prediction: {}'.format(start_hla_time))
         # HLA-LA predictions
-        p1 = multiprocessing.Process(target=HLA_prediction,
-                                     args=('sample2_final.bam', THREADS,
-                                           'Normal', SAMPLEID, HLA_FASTA, 'dna', KEEP))
-        p1.start()
+        if HLA_NORMAL:
+            p1 = multiprocessing.Process(target=HLA_prediction,
+                                        args=('sample2_final.bam', THREADS,
+                                            'Normal', SAMPLEID, HLA_FASTA, 'dna', KEEP))
+            p1.start()
+            p1.join()
+
         p2 = multiprocessing.Process(target=HLA_prediction,
                                      args=('sample1_final.bam', THREADS,
                                            'Tumor', SAMPLEID, HLA_FASTA, 'dna', KEEP))
         p2.start()
-
-        # Wait for the processes to finish in parallel
-        p1.join()
         p2.join()
 
         end_hla_time = datetime.datetime.now()
@@ -405,6 +406,8 @@ if __name__ == '__main__':
                         choices=['mapping', 'gatk', 'hla', 'variant', 'filter'])
     parser.add_argument('--keep-intermediate', default=False, action='store_true', required=False,
                         help='Avoid intermediate files from being removed.')
+    parser.add_argument('--normal-hla', default=False, action='store_true', required=False,
+                        help='Perform HLA typing also in normal sample.')
 
     # Parse arguments
     args = parser.parse_args()
@@ -427,6 +430,7 @@ if __name__ == '__main__':
     ANNOVAR_VERSION = args.annovar_version
     HLA_FASTA = os.path.abspath(args.hla_fasta)
     KEEP = args.keep_intermediate
+    HLA_NORMAL = args.normal_hla
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -449,4 +453,5 @@ if __name__ == '__main__':
          ANNOVAR_VERSION,
          HLA_FASTA,
          KEEP,
-         STEPS)
+         STEPS,
+         HLA_NORMAL)
