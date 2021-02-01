@@ -198,13 +198,17 @@ def main(R1_NORMAL,
                                         args=('sample2_final.bam', THREADS,
                                             'Normal', SAMPLEID, HLA_FASTA, 'dna', KEEP))
             p1.start()
-            p1.join()
 
         p2 = multiprocessing.Process(target=HLA_prediction,
                                      args=('sample1_final.bam', THREADS,
                                            'Tumor', SAMPLEID, HLA_FASTA, 'dna', KEEP))
         p2.start()
-        p2.join()
+
+        if HLA_NORMAL:
+            p1.join()
+            p2.join()
+        else:
+            p2.join()
 
         end_hla_time = datetime.datetime.now()
         total_hla_time = end_hla_time - start_hla_time
