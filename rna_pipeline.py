@@ -94,7 +94,7 @@ def main(R1,
 
         # Mark duplicates
         logger.info('Marking duplicates')
-        cmd = '{} MarkDuplicatesSpark --input sample_header.bam --output sample_dedup.bam'.format(GATK)
+        cmd = '{} --java-options "-Xmx32g" MarkDuplicatesSpark --input sample_header.bam --output sample_dedup.bam'.format(GATK)
         exec_command(cmd)
 
         # Split N and cigars
@@ -105,7 +105,7 @@ def main(R1,
 
         # GATK base re-calibration
         logger.info('Starting re-calibration')
-        cmd = '{} BaseRecalibratorSpark --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
+        cmd = '{} --java-options "-Xmx32g" BaseRecalibratorSpark --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
               '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK,
                                                                                         GENOME,
                                                                                         SNPSITES,
