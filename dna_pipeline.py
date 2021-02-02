@@ -123,10 +123,10 @@ def main(R1_NORMAL,
 
         # Mark duplicates
         logger.info('Marking duplicates')
-        cmd = '{} MarkDuplicatesSpark --input sample1_header.bam --output sample1_dedup.bam'.format(GATK)
+        cmd = '{} --java-options "-Xmx32g" MarkDuplicatesSpark --input sample1_header.bam --output sample1_dedup.bam'.format(GATK)
         p1 = exec_command(cmd, detach=True)
 
-        cmd = '{} MarkDuplicatesSpark --input sample2_header.bam --output sample2_dedup.bam'.format(GATK)
+        cmd = '{} --java-options "-Xmx32g" MarkDuplicatesSpark --input sample2_header.bam --output sample2_dedup.bam'.format(GATK)
         p2 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel
@@ -137,12 +137,12 @@ def main(R1_NORMAL,
 
         # GATK base re-calibration
         logger.info('Starting re-calibration')
-        cmd = '{} BaseRecalibratorSpark --input sample1_dedup.bam --reference {} --known-sites {} --known-sites {}' \
+        cmd = '{} --java-options "-Xmx32g" BaseRecalibratorSpark --input sample1_dedup.bam --reference {} --known-sites {} --known-sites {}' \
               ' --known-sites {} --output sample1_recal_data.txt {}'.format(GATK, GENOME, SNPSITES,
                                                                             KNOWN_SITE1, KNOWN_SITE2, intervals_cmd)
         p1 = exec_command(cmd, detach=True)
 
-        cmd = '{} BaseRecalibratorSpark --input sample2_dedup.bam --reference {} --known-sites {} --known-sites {}' \
+        cmd = '{} --java-options "-Xmx32g" BaseRecalibratorSpark --input sample2_dedup.bam --reference {} --known-sites {} --known-sites {}' \
               ' --known-sites {} --output sample2_recal_data.txt {}'.format(GATK, GENOME, SNPSITES,
                                                                             KNOWN_SITE1, KNOWN_SITE2, intervals_cmd)
         p2 = exec_command(cmd, detach=True)
