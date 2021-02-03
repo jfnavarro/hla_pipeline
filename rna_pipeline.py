@@ -98,12 +98,12 @@ def main(R1,
 
         if SPARK:
             cmd = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample_header.bam -O sample_dedup.bam'.format(GATK)
-            exec_command(cmd)
-        
+
         else:
             cmd = '{} --java-options "-Xmx32g" MarkDuplicates -I sample_header.bam -O sample_dedup.bam ' \
                     '--CREATE_INDEX true -M sample_dup_metrics.txt'.format(GATK)
-            exec_command(cmd)
+
+        exec_command(cmd)
 
         # Split N and cigars
         logger.info('Splitting NCigar Reads')

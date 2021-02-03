@@ -127,26 +127,24 @@ def main(R1_NORMAL,
         logger.info('Marking Duplicates')
 
         if SPARK:
-            cmd = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample1_header.bam -O sample1_dedup.bam'.format(GATK)
-            p1 = exec_command(cmd, detach=True)
+            cmd1 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample1_header.bam -O sample1_dedup.bam'.format(GATK)
 
-            cmd = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample2_header.bam -O sample2_dedup.bam'.format(GATK)
-            p2 = exec_command(cmd, detach=True)
+            cmd2 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample2_header.bam -O sample2_dedup.bam'.format(GATK)
 
             # Wait for the processes to finish in parallel
             p1.wait()
             p2.wait()
 
         else:
-            cmd = '{} --java-options "-Xmx32g" MarkDuplicates -I sample1_header.bam -O sample1_dedup.bam ' \
+            cmd1 = '{} --java-options "-Xmx32g" MarkDuplicates -I sample1_header.bam -O sample1_dedup.bam ' \
                       '--CREATE_INDEX true -M sample1_dup_metrics.txt'.format(GATK)
-            p1 = exec_command(cmd, detach=True)
 
-            cmd = '{} --java-options "-Xmx32g" MarkDuplicates -I sample2_header.bam -O sample2_dedup.bam ' \
+            cmd2 = '{} --java-options "-Xmx32g" MarkDuplicates -I sample2_header.bam -O sample2_dedup.bam ' \
                       '--CREATE_INDEX true -M sample2_dup_metrics.txt'.format(GATK)
-            p2 = exec_command(cmd, detach=True)
 
             # Wait for the processes to finish in parallel
+            p1 = exec_command(cmd1, detach=True)
+            p2 = exec_command(cmd2, detach=True)
             p1.wait()
             p2.wait()
         
