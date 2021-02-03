@@ -34,7 +34,8 @@ def main(R1,
          ANNOVAR_VERSION,
          STEPS,
          HLA_FASTA,
-         KEEP):
+         KEEP,
+         SPARK):
     # TODO add sanity checks for the parameters
 
     logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S',
@@ -94,8 +95,15 @@ def main(R1,
 
         # Mark duplicates
         logger.info('Marking duplicates')
-        cmd = '{} --java-options "-Xmx32g" MarkDuplicatesSpark --input sample_header.bam --output sample_dedup.bam'.format(GATK)
-        exec_command(cmd)
+
+        if SPARK:
+            cmd = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample_header.bam -O sample_dedup.bam'.format(GATK)
+            exec_command(cmd)
+        
+        else:
+            cmd = '{} --java-options "-Xmx32g" MarkDuplicates -I sample_header.bam -O sample_dedup.bam ' \
+                    '--CREATE_INDEX true -M sample_dup_metrics.txt'.format(GATK)
+            exec_command(cmd)
 
         # Split N and cigars
         logger.info('Splitting NCigar Reads')
@@ -105,13 +113,17 @@ def main(R1,
 
         # GATK base re-calibration
         logger.info('Starting re-calibration')
-        cmd = '{} --java-options "-Xmx32g" BaseRecalibratorSpark --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
+
+        recal_cmd = 'BaseRecalibratorSpark' if SPARK else 'BaseRecalibrator'
+
+        cmd = '{} --java-options "-Xmx32g" {} --use-original-qualities --input sample_split.bam --reference {} --known-sites {} ' \
               '--known-sites {} --known-sites {} --output sample_recal_data.txt'.format(GATK,
+                                                                                        recal_cmd,
                                                                                         GENOME,
                                                                                         SNPSITES,
                                                                                         KNOWN_SITE1,
                                                                                         KNOWN_SITE2)
-        exec_command(cmd)
+        exec_command(cmd)        
         cmd = '{} ApplyBQSR --use-original-qualities --add-output-sam-program-record --reference {} --input sample_split.bam ' \
               '--bqsr-recal-file sample_recal_data.txt --output sample_final.bam'.format(GATK, GENOME)
         exec_command(cmd)
@@ -300,9 +312,9 @@ if __name__ == '__main__':
     parser.add_argument('--genome',
                         help='Path to the reference genome FASTA file', required=True)
     parser.add_argument('--genome-star',
-                        help='Path to the reference genome STAR index folder', required=False)
+                        help='Path to the reference genome STAR index folder', required=False, default='')
     parser.add_argument('--genome-ref',
-                        help='Path to the reference genome GTF file', required=False)
+                        help='Path to the reference genome GTF file', required=False, default='')
     parser.add_argument('--sample',
                         help='Name of the sample/experiment. Default is sample', default='sample')
     parser.add_argument('--outdir',
@@ -328,6 +340,8 @@ if __name__ == '__main__':
                         help="Path to the HLA reference fasta file for HLA typing with Optitype.")
     parser.add_argument('--keep-intermediate', default=False, action='store_true', required=False,
                         help='Avoid intermediate files from being removed.')
+    parser.add_argument('--use-gatk-spark', default=False, action='store_true', required=False,
+                        help='Enable the use of MarkDuplicatesSpark and BaseRecalibratorSpark.')
 
     # Parse arguments
     args = parser.parse_args()
@@ -347,6 +361,7 @@ if __name__ == '__main__':
     ANNOVAR_VERSION = args.annovar_version
     HLA_FASTA = os.path.abspath(args.hla_fasta)
     KEEP = args.keep_intermediate
+    SPARK =  args.use_gatk_spark
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -366,4 +381,5 @@ if __name__ == '__main__':
          ANNOVAR_VERSION,
          STEPS,
          HLA_FASTA,
-         KEEP)
+         KEEP,
+         SPARK)
