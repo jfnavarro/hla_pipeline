@@ -42,7 +42,8 @@ def main(R1_NORMAL,
          HLA_FASTA,
          KEEP,
          STEPS,
-         HLA_NORMAL):
+         HLA_NORMAL,
+         SPARK):
 
     # TODO add sanity checks for the parameters
 
@@ -122,28 +123,46 @@ def main(R1_NORMAL,
         logger.info('Starting GATK steps: {}'.format(start_gatk_time))
 
         # Mark duplicates
-        logger.info('Marking duplicates')
-        cmd = '{} --java-options "-Xmx32g" MarkDuplicatesSpark --input sample1_header.bam --output sample1_dedup.bam'.format(GATK)
-        p1 = exec_command(cmd, detach=True)
 
-        cmd = '{} --java-options "-Xmx32g" MarkDuplicatesSpark --input sample2_header.bam --output sample2_dedup.bam'.format(GATK)
-        p2 = exec_command(cmd, detach=True)
+        logger.info('Marking Duplicates')
 
-        # Wait for the processes to finish in parallel
-        p1.wait()
-        p2.wait()
+        if SPARK:
+            cmd1 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample1_header.bam -O sample1_dedup.bam'.format(GATK)
 
+            cmd2 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample2_header.bam -O sample2_dedup.bam'.format(GATK)
+
+            # Wait for the processes to finish in parallel
+            p1.wait()
+            p2.wait()
+
+        else:
+            cmd1 = '{} --java-options "-Xmx32g" MarkDuplicates -I sample1_header.bam -O sample1_dedup.bam ' \
+                      '--CREATE_INDEX true -M sample1_dup_metrics.txt'.format(GATK)
+
+            cmd2 = '{} --java-options "-Xmx32g" MarkDuplicates -I sample2_header.bam -O sample2_dedup.bam ' \
+                      '--CREATE_INDEX true -M sample2_dup_metrics.txt'.format(GATK)
+
+            # Wait for the processes to finish in parallel
+            p1 = exec_command(cmd1, detach=True)
+            p2 = exec_command(cmd2, detach=True)
+            p1.wait()
+            p2.wait()
+        
         intervals_cmd = '--intervals {}'.format(INTERVALS) if INTERVALS else ''
 
         # GATK base re-calibration
+
         logger.info('Starting re-calibration')
-        cmd = '{} --java-options "-Xmx32g" BaseRecalibratorSpark --input sample1_dedup.bam --reference {} --known-sites {} --known-sites {}' \
-              ' --known-sites {} --output sample1_recal_data.txt {}'.format(GATK, GENOME, SNPSITES,
+
+        recal_cmd = 'BaseRecalibratorSpark' if SPARK else 'BaseRecalibrator'
+
+        cmd = '{} --java-options "-Xmx32g" {} --input sample1_dedup.bam --reference {} --known-sites {} --known-sites {}' \
+              ' --known-sites {} --output sample1_recal_data.txt {}'.format(GATK, recal_cmd, GENOME, SNPSITES,
                                                                             KNOWN_SITE1, KNOWN_SITE2, intervals_cmd)
         p1 = exec_command(cmd, detach=True)
 
-        cmd = '{} --java-options "-Xmx32g" BaseRecalibratorSpark --input sample2_dedup.bam --reference {} --known-sites {} --known-sites {}' \
-              ' --known-sites {} --output sample2_recal_data.txt {}'.format(GATK, GENOME, SNPSITES,
+        cmd = '{} --java-options "-Xmx32g" {} --input sample2_dedup.bam --reference {} --known-sites {} --known-sites {}' \
+              ' --known-sites {} --output sample2_recal_data.txt {}'.format(GATK, recal_cmd, GENOME, SNPSITES,
                                                                             KNOWN_SITE1, KNOWN_SITE2, intervals_cmd)
         p2 = exec_command(cmd, detach=True)
 
@@ -410,6 +429,8 @@ if __name__ == '__main__':
                         help='Avoid intermediate files from being removed.')
     parser.add_argument('--normal-hla', default=False, action='store_true', required=False,
                         help='Perform HLA typing also in normal sample.')
+    parser.add_argument('--use-gatk-spark', default=False, action='store_true', required=False,
+                        help='Enable the use of MarkDuplicatesSpark and BaseRecalibratorSpark.')
 
     # Parse arguments
     args = parser.parse_args()
@@ -433,6 +454,7 @@ if __name__ == '__main__':
     HLA_FASTA = os.path.abspath(args.hla_fasta)
     KEEP = args.keep_intermediate
     HLA_NORMAL = args.normal_hla
+    SPARK =  args.use_gatk_spark
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -456,4 +478,5 @@ if __name__ == '__main__':
          HLA_FASTA,
          KEEP,
          STEPS,
-         HLA_NORMAL)
+         HLA_NORMAL,
+         SPARK)
