@@ -131,10 +131,6 @@ def main(R1_NORMAL,
 
             cmd2 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample2_header.bam -O sample2_dedup.bam'.format(GATK)
 
-            # Wait for the processes to finish in parallel
-            p1.wait()
-            p2.wait()
-
         else:
             cmd1 = '{} --java-options "-Xmx32g" MarkDuplicates -I sample1_header.bam -O sample1_dedup.bam ' \
                       '--CREATE_INDEX true -M sample1_dup_metrics.txt'.format(GATK)
@@ -143,10 +139,10 @@ def main(R1_NORMAL,
                       '--CREATE_INDEX true -M sample2_dup_metrics.txt'.format(GATK)
 
             # Wait for the processes to finish in parallel
-            p1 = exec_command(cmd1, detach=True)
-            p2 = exec_command(cmd2, detach=True)
-            p1.wait()
-            p2.wait()
+        p1 = exec_command(cmd1, detach=True)
+        p2 = exec_command(cmd2, detach=True)
+        p1.wait()
+        p2.wait()
         
         intervals_cmd = '--intervals {}'.format(INTERVALS) if INTERVALS else ''
 
