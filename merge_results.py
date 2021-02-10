@@ -115,7 +115,7 @@ def main(dna_variants,
     header_final = 'Variant key\tDBsnp ID\tGnomad MAF\tCosmic ID\tDNA samples (passing)\tNumber of DNA samples (passing)\t' \
                    'DNA samples (failing)\tNumber of DNA samples (failing)\t' \
                    'RNA samples (passing)\tNumber of RNA samples (passing)\t' \
-                   'RNA samples (failing)\tRNA of DNA samples (failing)\tEffects\t' \
+                   'RNA samples (failing)\tNumber of RNA samples (failing)\tEffects\t' \
                    'cDNA change\tAA change\tEpitope creation flags\tWt Epitope\t' \
                    'Mut Epitope\tTranscript\tDNA Callers Sample(Name:NDP;NAD;NVAF;TDP;TAD;TVAF)\t' \
                    'RNA Callers Sample(Name:TDP;TAD;TVAF)\tGeneCount info Sample(gene;exp;mean;percentile)\n'
