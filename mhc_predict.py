@@ -22,12 +22,11 @@ def main(hla, overlap_final, alleles_file, mode, results, results_filter, cutoff
     for file in hla:
         with open(file) as f:
             next(f)
-            keys = ['A', 'B', 'C']
             for line in f.readlines():
                 columns = line.split('\t')[1:7]
-                values = [columns[x:x+2] for x in range(0, len(columns), 2)]
-                for i in range(len(values)):
-                    HLA_dict[keys[i]].extend(values[i])
+                for i in range(len(columns)):
+                    key = columns[i].split("*")[0]
+                    HLA_dict[key].append(columns[i])
 
     # Filter HLAs by occurrences
     filtered_hla = []
