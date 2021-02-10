@@ -53,10 +53,10 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
     p1.wait()
     p2.wait()
 
-    cmd = '{} bam2fq -@ {} {}_output_1.bam > {}_output_1.fastq'.format(SAMTOOLS, threads, origin, origin)
+    cmd = '{} bam2fq {}_output_1.bam > {}_output_1.fastq'.format(SAMTOOLS, origin, origin)
     p1 = exec_command(cmd, detach=True)
 
-    cmd = '{} bam2fq -@ {} {}_output_2.bam > {}_output_2.fastq'.format(SAMTOOLS, threads, origin, origin)
+    cmd = '{} bam2fq {}_output_2.bam > {}_output_2.fastq'.format(SAMTOOLS, origin, origin)
     p2 = exec_command(cmd, detach=True)
 
     p1.wait()
@@ -78,10 +78,10 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
         if os.path.isfile('{}_output_2.fastq'.format(origin)):
             os.remove('{}_output_2.fastq'.format(origin))
 
-    cmd = '{} view -@ {} -h -F 4 -f 0x40 {}_output.bam > {}_mapped_1.bam'.format(SAMTOOLS, threads, origin, origin)
+    cmd = '{} view -@ {} -h -F 4 -f 0x40 -b1 {}_output.bam > {}_mapped_1.bam'.format(SAMTOOLS, threads, origin, origin)
     p1 = exec_command(cmd, detach=True)
 
-    cmd = '{} view -@ {} -h -F 4 -f 0x80 {}_output.bam > {}_mapped_2.bam'.format(SAMTOOLS, threads, origin, origin)
+    cmd = '{} view -@ {} -h -F 4 -f 0x80 -b1 {}_output.bam > {}_mapped_2.bam'.format(SAMTOOLS, threads, origin, origin)
     p2 = exec_command(cmd, detach=True)
 
     p1.wait()

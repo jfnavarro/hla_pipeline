@@ -13,7 +13,7 @@ import json
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import sys
 
-def main(hla, overlap_final, alleles_file, mode, results, results_filter):
+def main(hla, overlap_final, alleles_file, mode, results, results_filter, cutoff):
 
     # TODO perform sanity check on input parameters
     
@@ -21,18 +21,19 @@ def main(hla, overlap_final, alleles_file, mode, results, results_filter):
     print('Loading HLAs..')
     for file in hla:
         with open(file) as f:
-            keys = next(f).split("\t")[1:7]
+            next(f)
+            keys = ['A', 'B', 'C']
             for line in f.readlines():
                 columns = line.split('\t')[1:7]
-                for i in range(len(keys)):
-                    HLA_dict[keys[i]].append(columns[i])
+                values = [columns[x:x+2] for x in range(0, len(columns), 2)]
+                for i in range(len(values)):
+                    HLA_dict[keys[i]].extend(values[i])
 
     # Filter HLAs by occurrences
     filtered_hla = []
     for alleles in HLA_dict.values():
         f = Counter(alleles)
         items = f.most_common()
-        cutoff = items[0][1] if len(items) == 1 else items[1][1]
         filtered_hla += [y[0] for y in items if y[1] >= cutoff]
     # MHCflurry format (HLA-A*02:01)
     filtered_hla = ['HLA-{}'.format(':'.join(x.split(':')[0:2])) for x in filtered_hla]
@@ -115,5 +116,7 @@ if __name__ == '__main__':
     parser.add_argument('--results-filter', default='affinity',
                         help='What filtering criteria to use when using --results best (default=affinity)',
                         choices=['presentation_score', 'processing_score', 'affinity', 'affinity_percentile'])
+    parser.add_argument('--cutoff', default=1,
+                        help='Cutoff to filter in how many samples each HLA has to be present (default = 1).')
     args = parser.parse_args()
-    main(args.hla, args.variants, args.alleles, args.mode, args.results, args.results_filter)
+    main(args.hla, args.variants, args.alleles, args.mode, args.results, args.results_filter, args.cutoff)
