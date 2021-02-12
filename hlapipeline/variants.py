@@ -24,37 +24,11 @@ class Variant:
         self.dbsnp = None
         self.gnomad = None
         self.cosmic = None
+        self.gene = None
 
     @property
     def key(self):
         return "{}:{} {}>{}".format(self.chrom, self.start, self.ref, self.alt)
-
-    @property
-    def ensGene(self):
-        gene = None
-        for effect in self.epitopes:
-            if 'ensGene' in effect.func:
-                gene = effect.func.split("_")[1]
-                break
-        return gene
-
-    @property
-    def knownGene(self):
-        gene = None
-        for effect in self.epitopes:
-            if 'knownGene' in effect.func:
-                gene = effect.func.split("_")[1]
-                break
-        return gene
-
-    @property
-    def refGene(self):
-        gene = None
-        for effect in self.epitopes:
-            if 'refGene' in effect:
-                gene = effect.func.split("_")[1]
-                break
-        return gene
 
     def __str__(self):
         return '{}:{} {}>{} {} {}'.format(self.chrom, self.start, self.ref, self.alt, self.type, self.status)
@@ -141,6 +115,8 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
         gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else 'NA'
         cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO[
                                                                                         'cosmic70'] != [] else 'NA'
+        gene = record.INFO['Gene.knownGene'][0] if record.INFO['Gene.knownGene'] != [] else None
+
         if has_func_ens or has_func_known or has_func_ref:
             called = {x.sample: x.data for x in record.calls if x.called}
             filtered = dict()
@@ -177,6 +153,7 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
             variant.gnomad = gnomad_AF
             variant.cosmic = cosmic70
             variant.type = 'rna'
+            variant.gene = gene
             variants.append(variant)
 
     return variants
@@ -218,6 +195,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
         gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else 'NA'
         cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO[
                                                                                         'cosmic70'] != [] else 'NA'
+        gene = record.INFO['Gene.knownGene'][0] if record.INFO['Gene.knownGene'] != [] else None
 
         if has_func_ens or has_func_known or has_func_ref:
             called = {x.sample: x.data for x in record.calls if x.called}
@@ -351,6 +329,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
             variant.gnomad = gnomad_AF
             variant.cosmic = cosmic70
             variant.type = 'dna'
+            variant.gene = gene
             variants.append(variant)
 
     return variants

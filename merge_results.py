@@ -154,8 +154,7 @@ def main(dna_variants,
         dbsnp = value[0][0].dbsnp
         gnomad = value[0][0].gnomad
         cosmic = value[0][0].cosmic
-        # Get the gene information of the gene (we want to make sure we use the gene name annotation)
-        gene = value[0][0].knownGene
+        gene = value[0][0].gene
 
         # Create a dictionary of epitopes so to keep unique ones (different mut peptide)
         epitopes_dict = defaultdict(list)
