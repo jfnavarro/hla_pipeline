@@ -32,27 +32,27 @@ class Variant:
     @property
     def ensGene(self):
         gene = None
-        for effect in self.effects:
-            if 'ensGene' in effect:
-                gene = effect.split("_")[1]
+        for effect in self.epitopes:
+            if 'ensGene' in effect.func:
+                gene = effect.func.split("_")[1]
                 break
         return gene
 
     @property
     def knownGene(self):
         gene = None
-        for effect in self.effects:
-            if 'knownGene' in effect:
-                gene = effect.split("_")[1]
+        for effect in self.epitopes:
+            if 'knownGene' in effect.func:
+                gene = effect.func.split("_")[1]
                 break
         return gene
 
     @property
     def refGene(self):
         gene = None
-        for effect in self.effects:
+        for effect in self.epitopes:
             if 'refGene' in effect:
-                gene = effect.split("_")[1]
+                gene = effect.func.split("_")[1]
                 break
         return gene
 

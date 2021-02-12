@@ -154,6 +154,8 @@ def main(dna_variants,
         dbsnp = value[0][0].dbsnp
         gnomad = value[0][0].gnomad
         cosmic = value[0][0].cosmic
+        # Get the gene information of the gene (we want to make sure we use the gene name annotation)
+        gene = value[0][0].knownGene
 
         # Create a dictionary of epitopes so to keep unique ones (different mut peptide)
         epitopes_dict = defaultdict(list)
@@ -165,8 +167,6 @@ def main(dna_variants,
         for _, epitopes in epitopes_dict.items():
             # all epitopes share the mutated peptide so we can just take the first one
             epitope = epitopes[0]
-            # Get the gene information of the gene (locus and expression) if possible
-            gene = epitope.gene
             gene_locus = []
             # Get gene exp. if any
             if gene is not None and len(counts_dict) > 0:
