@@ -35,6 +35,8 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
     :param fasta: HLA reference fasta.
     """
 
+    THREADS = max(int(threads/2), 1)
+
     logger = logging.getLogger()
 
     # TODO use os.makedirs instead
@@ -44,10 +46,10 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
     cmd = '{} {} -o {}/index/hla_reference'.format(YARAI, fasta, os.getcwd())
     exec_command(cmd)
 
-    cmd = '{} view -@ {} -h -f 0x40 {} > {}_output_1.bam'.format(SAMTOOLS, threads, inputbam, origin)
+    cmd = '{} view -@ {} -h -f 0x40 {} > {}_output_1.bam'.format(SAMTOOLS, THREADS, inputbam, origin)
     p1 = exec_command(cmd, detach=True)
 
-    cmd = '{} view -@ {} -h -f 0x80 {} > {}_output_2.bam'.format(SAMTOOLS, threads, inputbam, origin)
+    cmd = '{} view -@ {} -h -f 0x80 {} > {}_output_2.bam'.format(SAMTOOLS, THREADS, inputbam, origin)
     p2 = exec_command(cmd, detach=True)
 
     p1.wait()
@@ -78,10 +80,10 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
         if os.path.isfile('{}_output_2.fastq'.format(origin)):
             os.remove('{}_output_2.fastq'.format(origin))
 
-    cmd = '{} view -@ {} -h -F 4 -f 0x40 -b1 {}_output.bam > {}_mapped_1.bam'.format(SAMTOOLS, threads, origin, origin)
+    cmd = '{} view -@ {} -h -F 4 -f 0x40 -b1 {}_output.bam > {}_mapped_1.bam'.format(SAMTOOLS, THREADS, origin, origin)
     p1 = exec_command(cmd, detach=True)
 
-    cmd = '{} view -@ {} -h -F 4 -f 0x80 -b1 {}_output.bam > {}_mapped_2.bam'.format(SAMTOOLS, threads, origin, origin)
+    cmd = '{} view -@ {} -h -F 4 -f 0x80 -b1 {}_output.bam > {}_mapped_2.bam'.format(SAMTOOLS, THREADS, origin, origin)
     p2 = exec_command(cmd, detach=True)
 
     p1.wait()
