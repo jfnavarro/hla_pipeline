@@ -109,7 +109,7 @@ def main(dna_variants,
                 mean = np.around(statistics.mean(counts), 3)
                 counts_stats[name] = mean
                 for gene, count in gene_counts.items():
-                    counts_stats_percentile[name][gene] = np.around(stats.percentileofscore(counts, count), 3)
+                    counts_stats_percentile[name][gene] = np.around(stats.percentileofscore(counts, count, kind='strict'), 3)
 
     print('Creating merged variants..')
     header_final = 'Variant key\tDBsnp ID\tGnomad MAF\tCosmic ID\tDNA samples (passing)\tNumber of DNA samples (passing)\t' \
