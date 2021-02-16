@@ -165,14 +165,19 @@ def main(R1_NORMAL,
         p2 = exec_command(cmd, detach=True)
 
         p1.wait()
+        p2.wait()
+
         cmd = '{} ApplyBQSR --reference {} --input sample1_dedup.bam --bqsr-recal-file sample1_recal_data.txt ' \
               '--output sample1_final.bam'.format(GATK, GENOME)
-        exec_command(cmd)
+        p1 = exec_command(cmd, detach=True)
 
-        p2.wait()
+        
         cmd = '{} ApplyBQSR --reference {} --input sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt ' \
               '--output sample2_final.bam'.format(GATK, GENOME)
-        exec_command(cmd)
+        p2 = exec_command(cmd, detach=True)
+
+        p1.wait()
+        p2.wait()
 
         # BamQC
         cmd = '{} -bam sample2_final.bam --genome-gc-distr HUMAN -nt {} --java-mem-size=16G ' \
@@ -366,8 +371,12 @@ def main(R1_NORMAL,
                         '../Normal_hla_genotype.tsv')
         if os.path.isfile('sample1_final.bam'):
             shutil.move('sample1_final.bam', '../tumor_final.bam')
+        if os.path.isfile('sample1_final.bai'):
+            shutil.move('sample1_final.bai', '../tumor_final.bai')
         if os.path.isfile('sample2_final.bam'):
             shutil.move('sample2_final.bam', '../normal_final.bam')
+        if os.path.isfile('sample2_final.bai'):
+            shutil.move('sample2_final.bai', '../normal_final.bai')
         if os.path.isdir('../{}_bamQCNormal'.format(SAMPLEID)):
             shutil.rmtree(os.path.abspath('../{}_bamQCNormal'.format(SAMPLEID)))
         if os.path.isdir('bamQC_Normal'):

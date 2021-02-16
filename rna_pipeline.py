@@ -285,6 +285,8 @@ def main(R1,
             shutil.move('Log.final.out', '../{}_Log.final.out'.format(SAMPLEID))
         if os.path.isfile('sample_final.bam'):
             shutil.move('sample_final.bam', '../sample_final.bam')
+        if os.path.isfile('sample_final.bai'):
+            shutil.move('sample_final.bai', '../sample_final.bai')
         if os.path.isdir('../{}_bamQC'.format(SAMPLEID)):
             shutil.rmtree(os.path.abspath('../{}_bamQC'.format(SAMPLEID)))
         if os.path.isdir('bamQC'):
