@@ -21,8 +21,6 @@ def main(dna_variants,
          rna_variants,
          rna_names,
          rna_counts,
-         cDNA_DICT,
-         AA_DICT,
          tumor_coverage,
          tumor_var_depth,
          tumor_var_freq,
@@ -34,24 +32,14 @@ def main(dna_variants,
          tumor_coverage_rna,
          tumor_var_depth_rna,
          tumor_var_freq_rna,
-         num_callers_rna):
+         num_callers_rna,
+         ensembl_version):
 
     if not dna_variants and not rna_variants:
         sys.stderr.write("Error, no variants given as input (DNA or RNA).\n")
         sys.exit(1)
 
     # TODO add sanity check for parameters
-
-    AA_seq_dict = dict()
-    with open(AA_DICT, "r") as handle:
-        for line in handle.readlines():
-            tokens = line.split(":")
-            AA_seq_dict[tokens[0]] = tokens[1].strip()
-    cDNA_seq_dict = dict()
-    with open(cDNA_DICT, "r") as handle:
-        for line in handle.readlines():
-            tokens = line.split(":")
-            cDNA_seq_dict[tokens[0]] = tokens[1].strip()
 
     variant_dict = defaultdict(list)
 
@@ -67,8 +55,7 @@ def main(dna_variants,
                                            t2n_ratio,
                                            num_callers,
                                            num_callers_indel,
-                                           cDNA_seq_dict,
-                                           AA_seq_dict)
+                                           ensembl_version)
             for variant in variants:
                 variant_dict[variant.key].append((variant, name))
 
@@ -80,8 +67,7 @@ def main(dna_variants,
                                            tumor_var_depth_rna,
                                            tumor_var_freq_rna,
                                            num_callers_rna,
-                                           cDNA_seq_dict,
-                                           AA_seq_dict)
+                                           ensembl_version)
             for variant in variants:
                 variant_dict[variant.key].append((variant, name))
 
@@ -220,10 +206,6 @@ if __name__ == '__main__':
                         help='List of names for each RNA sample/file (to include in the report)')
     parser.add_argument('--rna-counts', nargs='+', default=None, required=False,
                         help='List of gene counts files obtained with the RNA pipeline')
-    parser.add_argument('--dictAA',
-                        help='Path to a dictionary of transcript IDs to peptide sequences', required=True)
-    parser.add_argument('--dictcDNA',
-                        help='Path to a dictionary of transcript IDs to DNA sequences', required=True)
     parser.add_argument('--filter-dna-tumor-cov', type=int, default=10, required=False, dest='tumor_coverage',
                         help='Filter for DNA variants tumor number of reads (coverage) (DP). Default=10')
     parser.add_argument('--filter-dna-tumor-depth', type=int, default=4, required=False, dest='tumor_var_depth',
@@ -254,6 +236,8 @@ if __name__ == '__main__':
     parser.add_argument('--filter-rna-callers', type=int, default=2, required=False,
                         choices=[1, 2], dest='num_callers_rna',
                         help='Filter for RNA variants number of callers required. Default=2')
+    parser.add_argument('--ensembl-version', type=str, required=True,
+                        help='Supply the genome version with which the VCF has been annotated.')
 
     args = parser.parse_args()
     main(args.dna,
@@ -261,8 +245,6 @@ if __name__ == '__main__':
          args.rna,
          args.rna_names,
          args.rna_counts,
-         os.path.abspath(args.dictcDNA),
-         os.path.abspath(args.dictAA),
          args.tumor_coverage,
          args.tumor_var_depth,
          args.tumor_var_freq,
@@ -274,4 +256,5 @@ if __name__ == '__main__':
          args.tumor_coverage_rna,
          args.tumor_var_depth_rna,
          args.tumor_var_freq_rna,
-         args.num_callers_rna)
+         args.num_callers_rna,
+         args.ensembl_version)

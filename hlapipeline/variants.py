@@ -5,6 +5,7 @@ from hlapipeline.epitopes import create_epitope
 from collections import namedtuple
 import numpy as np
 import vcfpy
+from pyensembl import EnsemblRelease
 
 #  A convenience namedtuple to store the informatin of an epitope
 Epitope = namedtuple('Epitope', 'transcript gene func dnamut aamut flags wtseq mutseq')
@@ -34,7 +35,7 @@ class Variant:
         return '{}:{} {}>{} {} {}'.format(self.chrom, self.start, self.ref, self.alt, self.type, self.status)
 
 
-def epitopes(record, cDNA_seq_dict, AA_seq_dict):
+def epitopes(record, ens_data):
     """
     This function computes the epitopes (mutated and wt peptides) of
     an Annovar annotated variant (record from vcfpy) using the effects and
@@ -47,44 +48,30 @@ def epitopes(record, cDNA_seq_dict, AA_seq_dict):
         A list of unique epitopes detected in the variant
         Epitope (transcript gene func dnamut aamut flags wtseq mutseq)
     """
+
+    
+
     funcensGene = ''.join(record.INFO['ExonicFunc.ensGene'])
-    funcknownGene = ''.join(record.INFO['ExonicFunc.knownGene'])
-    funcRefGene = ''.join(record.INFO['ExonicFunc.refGene'])
 
     epitopes = list()
     if 'nonsynonymous' in funcensGene or 'frame' in funcensGene:
         for mutation in record.INFO['AAChange.ensGene']:
             if len(mutation.split(':')) == 5:
                 gene, transcript, exon, mut_dna, mut_aa = mutation.split(':')
-                cDNA_seq = cDNA_seq_dict.get(transcript, 'None').strip()
-                AA_seq = AA_seq_dict.get(transcript, 'None').strip()
-                pos, flags, wtmer, mutmer = create_epitope(record.REF, record.ALT[0].serialize(),
-                                                           funcensGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
-                epitopes.append(Epitope(transcript, gene, funcensGene, mut_dna, mut_aa, flags, wtmer, mutmer))
-    if 'nonsynonymous' in funcknownGene or 'frame' in funcknownGene:
-        for mutation in record.INFO['AAChange.knownGene']:
-            if len(mutation.split(':')) == 5:
-                gene, transcript, exon, mut_dna, mut_aa = mutation.split(':')
-                cDNA_seq = cDNA_seq_dict.get(transcript, 'None').strip()
-                AA_seq = AA_seq_dict.get(transcript, 'None').strip()
-                pos, flags, wtmer, mutmer = create_epitope(record.REF, record.ALT[0].serialize(),
-                                                           funcknownGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
-                epitopes.append(Epitope(transcript, gene, funcknownGene, mut_dna, mut_aa, flags, wtmer, mutmer))
-    if 'nonsynonymous' in funcRefGene or 'frame' in funcRefGene:
-        for mutation in record.INFO['AAChange.refGene']:
-            if len(mutation.split(':')) == 5:
-                gene, transcript, exon, mut_dna, mut_aa = mutation.split(':')
-                cDNA_seq = cDNA_seq_dict.get(transcript, 'None').strip()
-                AA_seq = AA_seq_dict.get(transcript, 'None').strip()
-                pos, flags, wtmer, mutmer = create_epitope(record.REF, record.ALT[0].serialize(),
-                                                           funcRefGene, mut_dna, mut_aa, cDNA_seq, AA_seq)
-                epitopes.append(Epitope(transcript, gene, funcRefGene, mut_dna, mut_aa, flags, wtmer, mutmer))
-
+                transcript = transcript.split('.')[0]
+                try:
+                    seq_object = ens_data.transcript_by_id(transcript)
+                    pos, flags, wtmer, mutmer = create_epitope(record.REF, record.ALT[0].serialize(),
+                                                            funcensGene, mut_dna, mut_aa, seq_object.coding_sequence, seq_object.protein_sequence)
+                    epitopes.append(Epitope(transcript, gene, funcensGene, mut_dna, mut_aa, flags, wtmer, mutmer))
+                except ValueError:
+                    continue
+    
     return epitopes
 
 
 def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
-                        tumor_var_freq, num_callers, cDNA_seq_dict, AA_seq_dict):
+                        tumor_var_freq, num_callers, ensembl_version):
     """
     This function processes a list of annotated RNA variants from Annovar (VCF).
     It then applies some filters to the variants and computes the epitopes of each of
@@ -101,23 +88,21 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
     :return:
         A list of Variant() objects
     """
+
+    ens_data = EnsemblRelease(int(ensembl_version))
     variants = list()
     reader = vcfpy.Reader.from_path(file)
     for record in reader:
 
         funcensGene = ''.join(record.INFO['ExonicFunc.ensGene'])
         has_func_ens = 'nonsynonymous' in funcensGene or 'frame' in funcensGene
-        funcknownGene = ''.join(record.INFO['ExonicFunc.knownGene'])
-        has_func_known = 'nonsynonymous' in funcknownGene or 'frame' in funcknownGene
-        funcRefGene = ''.join(record.INFO['ExonicFunc.refGene'])
-        has_func_ref = 'nonsynonymous' in funcRefGene or 'frame' in funcRefGene
         avsnp150 = record.INFO['avsnp150'][0] if record.INFO['avsnp150'] != [] else 'NA'
         gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else 'NA'
         cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO[
                                                                                         'cosmic70'] != [] else 'NA'
         gene = record.INFO['Gene.knownGene'][0] if record.INFO['Gene.knownGene'] != [] else None
 
-        if has_func_ens or has_func_known or has_func_ref:
+        if has_func_ens:
             called = {x.sample: x.data for x in record.calls if x.called}
             filtered = dict()
             pass_variants = 0
@@ -139,7 +124,7 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
             except KeyError:
                 continue
 
-            variant_epitopes = epitopes(record, cDNA_seq_dict, AA_seq_dict)
+            variant_epitopes = epitopes(record, ens_data)
             variant = Variant()
             variant.chrom = record.CHROM
             variant.start = record.POS
@@ -161,7 +146,7 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
 
 def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                         tumor_var_freq, normal_var_freq, t2n_ratio, num_callers,
-                        num_callers_indel, cDNA_seq_dict, AA_seq_dict):
+                        num_callers_indel, ensembl_version):
     """
     This function processes a list of annotated DNA variants from Annovar (VCF).
     It then applies some filters to the variants and computes the epitopes of each of
@@ -182,22 +167,20 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
     :return:
         A list of Variant() objects
     """
+
+    ens_data = EnsemblRelease(int(ensembl_version))
     variants = list()
     reader = vcfpy.Reader.from_path(file)
     for record in reader:
         funcensGene = ''.join(record.INFO['ExonicFunc.ensGene'])
         has_func_ens = 'nonsynonymous' in funcensGene or 'frame' in funcensGene
-        funcknownGene = ''.join(record.INFO['ExonicFunc.knownGene'])
-        has_func_known = 'nonsynonymous' in funcknownGene or 'frame' in funcknownGene
-        funcRefGene = ''.join(record.INFO['ExonicFunc.refGene'])
-        has_func_ref = 'nonsynonymous' in funcRefGene or 'frame' in funcRefGene
         avsnp150 = record.INFO['avsnp150'][0] if record.INFO['avsnp150'] != [] else 'NA'
         gnomad_AF = record.INFO['AF'][0] if record.INFO['AF'] != [] else 'NA'
         cosmic70 = ';'.join(record.INFO['cosmic70']).split(":")[1].split("-")[0] if record.INFO[
                                                                                         'cosmic70'] != [] else 'NA'
         gene = record.INFO['Gene.knownGene'][0] if record.INFO['Gene.knownGene'] != [] else None
 
-        if has_func_ens or has_func_known or has_func_ref:
+        if has_func_ens:
             called = {x.sample: x.data for x in record.calls if x.called}
             filtered = dict()
             pass_snp = 0
@@ -315,7 +298,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
             except KeyError:
                 continue
 
-            variant_epitopes = epitopes(record, cDNA_seq_dict, AA_seq_dict)
+            variant_epitopes = epitopes(record, ens_data)
             variant = Variant()
             variant.chrom = record.CHROM
             variant.start = record.POS
