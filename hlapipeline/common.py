@@ -102,18 +102,17 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
             os.remove('{}_mapped_2.bam'.format(origin))
 
 
-def annotate_variants(input, output, db, version, threads):
+def annotate_variants(input, db, version, threads, fasta):
     """
     Annotate a VCF using Annovar
     :param input: the VCF file
     :param output: the annotated VCF file
-    :param db: the species (humandb or mousedb)
-    :param version: the version (hg19 or hg38)
+    :param db: the genome assembly (GRCh37, GRCh38)
+    :param version: the ensembl version (75, 102)
     :param threads: the number of threads to use
     """
-    annovardb = '{} -buildver {}'.format(os.path.join(ANNOVAR_PATH, db), version)
-    cmd = '{} {} {} -thread {} -out {} -vcfinput -remove -protocol {}'.format(
-        os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), input, annovardb, threads, output, ANNOVAR_ANNO)
+    cmd = '{} -i {} --fork {} -o annotated.{}_multianno.vcf --fasta {} --format vcf --vcf --assembly {} '\
+        '--cache_version {} --species homo_sapiens {}'.format(VEP, input, threads, db, fasta, db, version, VEP_OPTIONS)
     exec_command(cmd)
 
 

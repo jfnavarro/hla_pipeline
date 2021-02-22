@@ -42,13 +42,6 @@ are used.
 Each tool/pipeline uses a command line interface with parameters which
 can be shown and described with --help.
 
-## cDNA and Peptides dictionaries
-merge_results.py requires two dictionaries, one mapping transcript ids to DNA sequences and another
-one mapping transcript ids to peptide sequences. The format is the following for both files:
-
-TRANSCRIPT_ID:SEQUENCE 
-
-To build these dictionaries you can use as reference the Jupyter Notebooks located in dictionaries
 
 ## Requirements
 We strongly recommend to use Anaconda or Miniconda, otherwise you may need to create aliases
@@ -104,6 +97,7 @@ Other files:
 - overlap_final_unique_rna.txt (all the RNA variants collapsed and filtered with useful information and epitopes)
 - overlap_final_discarded.txt (all the discarded DNA variants collapsed with useful information and epitopes)
 - overlap_final_discarded_rna.txt (all the discarded RNA variants collapsed with useful information and epitopes)
+- gene.counts.final (same file as gene.counts with three additional columns for TPM, RPKM and Percentile)
 
 **mhc_predict.py** 
 - predictions_mut.csv (all the mutated peptides predictions)

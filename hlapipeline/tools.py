@@ -23,8 +23,9 @@ OPTITYPE = 'OptiTypePipeline.py'
 YARAI = 'yara_indexer'
 YARAM = 'yara_mapper'
 # ANNOVAR location must be in $ANNOVAR_PATH
-ANNOVAR_PATH = os.environ['ANNOVAR_PATH']
-ANNOVAR_ANNO = 'ensGene,avsnp150,gnomad211_exome,cosmic70 -operation g,f,f,f -nastring .'
+VEP = 'vep'
+VEP_OPTIONS = '--no_escape --offline --no_stats --af_gnomad --hgvs --cache --fields "Allele,Consequence,SYMBOL,Gene,Feature_type,Feature,BIOTYPE,EXON,INTRON,HGVSc,HGVSp,' \
+    'cDNA_position,CDS_position,Protein_position,Existing_variation,FLAGS,gnomAD_AF"' # Could add --pick
 VCFTOOLS = 'vcftools'
 BGZIP = 'bgzip'
 TABIX = 'tabix'
