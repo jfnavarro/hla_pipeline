@@ -95,35 +95,29 @@ def main(dna_variants,
         print('Loading Gene counts..')
         for file, name in zip(rna_counts, rna_names):
             counts_percentile = pd.read_csv(file, sep='\t', skiprows=1)
-            counts_file = open(file)
-            counts_file_lines = counts_file.readlines()
-            _ = counts_file_lines.pop(0)
-            header_counts = counts_file_lines.pop(0).strip().split('\t')
-            genes = counts_percentile.iloc[:, 6].to_numpy()
+            counts = counts_percentile.iloc[:, 6].to_numpy()
             lengths = counts_percentile['Length'].to_numpy()
             rpk = genes / lengths
             TPM = (rpk / sum(rpk)) * 1e6
             RPKM = (rpk / sum(genes)) * 1e9
             counts_percentile['RPKM'] = RPKM
             counts_percentile['TPM'] = TPM
-            for line in counts_file_lines:
-                columns = line.strip().split('\t')
-                gene_id = columns[header_counts.index('Geneid')]
-                value = float(columns[-1])
-                counts_dict[name][gene_id] = value
+            genes = counts_percentile.iloc[:, [0, 6]].values.tolist()
+            for gene in genes:
+                counts_dict[name][gene[0]] = gene[1]
             counts_files[name] = counts_percentile
-            counts_file.close()
 
         if len(counts_dict) > 0:
             for name, gene_counts in counts_dict.items():
                 counts = list(gene_counts.values())
                 mean = np.around(statistics.mean(counts), 3)
+                counts = list(filter(lambda x: x != 0, counts))
                 counts_stats[name] = mean
                 for gene, count in gene_counts.items():
                     counts_stats_percentile[name][gene] = np.around(
                         stats.percentileofscore(counts, count, kind='strict'), 3)
                 counts_files[name]['Percentile'] = counts_stats_percentile[name].values()
-                counts_files[name].to_csv(file + '.final', sep='\t')
+                counts_files[name].to_csv(file + '.final', sep='\t', index=False)
 
     print('Creating merged variants..')
     header_final = 'Variant key\tDBsnp ID\tGnomad MAF\tCosmic ID\tDNA samples (passing)\tNumber of DNA samples (passing)\t' \
