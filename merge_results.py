@@ -99,10 +99,10 @@ def main(dna_variants,
             counts_file_lines = counts_file.readlines()
             _ = counts_file_lines.pop(0)
             header_counts = counts_file_lines.pop(0).strip().split('\t')
-            genes = list(counts_percentile.iloc[:,6].values)
-            lengths = list(counts_percentile['Length'].values)
-            rpk = [float(s) / float(l) for s,l in zip(genes, lengths)]
-            TPM = (np.array(rpk)/sum(rpk))*1e6
+            genes = counts_percentile.iloc[:, 6].to_numpy()
+            lengths = counts_percentile['Length'].to_numpy()
+            rpk = genes/lengths
+            TPM = (rpk/sum(rpk))*1e6
             RPKM = (rpk/sum(genes))*1e9
             counts_percentile['RPKM'] = RPKM
             counts_percentile['TPM'] = TPM
