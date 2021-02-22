@@ -104,6 +104,7 @@ Other files:
 - overlap_final_unique_rna.txt (all the RNA variants collapsed and filtered with useful information and epitopes)
 - overlap_final_discarded.txt (all the discarded DNA variants collapsed with useful information and epitopes)
 - overlap_final_discarded_rna.txt (all the discarded RNA variants collapsed with useful information and epitopes)
+- gene.counts.final (same file as gene.counts with three additional columns for TPM, RPKM and Percentile)
 
 **mhc_predict.py** 
 - predictions_mut.csv (all the mutated peptides predictions)
