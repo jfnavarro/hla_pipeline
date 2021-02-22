@@ -97,8 +97,8 @@ def main(dna_variants,
             counts = counts_table.iloc[:, 6].to_numpy()
             counts_filtered = list(filter(lambda x: x != 0, counts))      
             lengths = counts_table['Length'].to_numpy()
-            rpk = genes / lengths
-            counts_table['RPKM'] = (rpk / sum(genes)) * 1e9
+            rpk = counts / lengths
+            counts_table['RPKM'] = (rpk / sum(counts)) * 1e9
             counts_table['TPM'] = (rpk / sum(rpk)) * 1e6
             gene_counts = counts_table.iloc[:, [0, 6]].values.tolist()
             for gene, expr in gene_counts:
