@@ -90,34 +90,24 @@ def main(dna_variants,
     counts_dict = defaultdict(lambda: defaultdict(float))
     counts_stats = defaultdict(float)
     counts_stats_percentile = defaultdict(lambda: defaultdict(float))
-    counts_files = defaultdict()
     if rna_counts and len(rna_counts) > 0 and len(rna_counts) == len(rna_names):
         print('Loading Gene counts..')
         for file, name in zip(rna_counts, rna_names):
-            counts_percentile = pd.read_csv(file, sep='\t', skiprows=1)
-            counts = counts_percentile.iloc[:, 6].to_numpy()
-            lengths = counts_percentile['Length'].to_numpy()
+            counts_table = pd.read_csv(file, sep='\t', skiprows=1)
+            counts = counts_table.iloc[:, 6].to_numpy()
+            counts_filtered = list(filter(lambda x: x != 0, counts))      
+            lengths = counts_table['Length'].to_numpy()
             rpk = genes / lengths
-            TPM = (rpk / sum(rpk)) * 1e6
-            RPKM = (rpk / sum(genes)) * 1e9
-            counts_percentile['RPKM'] = RPKM
-            counts_percentile['TPM'] = TPM
-            genes = counts_percentile.iloc[:, [0, 6]].values.tolist()
-            for gene in genes:
-                counts_dict[name][gene[0]] = gene[1]
-            counts_files[name] = counts_percentile
-
-        if len(counts_dict) > 0:
-            for name, gene_counts in counts_dict.items():
-                counts = list(gene_counts.values())
-                mean = np.around(statistics.mean(counts), 3)
-                counts = list(filter(lambda x: x != 0, counts))
-                counts_stats[name] = mean
-                for gene, count in gene_counts.items():
-                    counts_stats_percentile[name][gene] = np.around(
-                        stats.percentileofscore(counts, count, kind='strict'), 3)
-                counts_files[name]['Percentile'] = counts_stats_percentile[name].values()
-                counts_files[name].to_csv(file + '.final', sep='\t', index=False)
+            counts_table['RPKM'] = (rpk / sum(genes)) * 1e9
+            counts_table['TPM'] = (rpk / sum(rpk)) * 1e6
+            gene_counts = counts_table.iloc[:, [0, 6]].values.tolist()
+            for gene, expr in gene_counts:
+                counts_dict[name][gene] = float(expr)
+                counts_stats_percentile[name][gene] = np.around(
+                         stats.percentileofscore(counts_filtered, float(expr), kind='strict'), 3)
+            counts_stats[name] =  np.around(np.mean(counts), 3)
+            counts_table['Percentile'] = counts_stats_percentile[name].values()
+            counts_table.to_csv(file + '.final', sep='\t', index=False)
 
     print('Creating merged variants..')
     header_final = 'Variant key\tDBsnp ID\tGnomad MAF\tCosmic ID\tDNA samples (passing)\tNumber of DNA samples (passing)\t' \
