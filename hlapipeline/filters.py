@@ -25,12 +25,15 @@ def mutect2_filter(input, output, sample1_ID, sample2_ID):
     vcf = open(input)
     for line in vcf:
         if line.startswith('#') and not line.startswith('#CHROM'):
-            line.replace(sample1_ID, "TUMOR")
-            line.replace(sample2_ID, "NORMAL")
-            filtered_vcf.write(line)
+            if sample1_ID in line:
+                filtered_vcf.write(line.replace(sample1_ID, "TUMOR"))
+            elif sample2_ID in line:
+                filtered_vcf.write(line.replace(sample2_ID, "NORMAL"))
+            else:
+                filtered_vcf.write(line)
         elif line.startswith('#CHROM'):
             headers = line.strip().split('\t')
-            filtered_vcf.write(line)
+            filtered_vcf.write(line.replace(sample1_ID, "TUMOR").replace(sample2_ID, "NORMAL"))
         elif not line.startswith('#'):
             columns = line.strip().split('\t')
             if 'PASS' in columns[headers.index('FILTER')]:
