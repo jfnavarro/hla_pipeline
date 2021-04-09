@@ -53,13 +53,12 @@ rna_pipeline.py \
   RNAR1.fastq.gz RNAR2.fastq.gz
   
 merge_results.py \
-  --dictcDNA ~/shared/GRCh38/hg38_cDNA_DICT.dict \
-  --dictAA ~/shared/GRCh38/hg38_AA_DICT.dict \
   --dna outtumor/annotated.hg38_multianno.vcf outcfdna/annotated.hg38_multianno.vcf\
   --dna-names Tumor cfDNA
   --rna outrna/annotated.hg38_multianno.vcf \
   --rna-names RNA
-  --rna-counts outrna/gene.counts'
+  --rna-counts outrna/gene.counts' \
+  --ensembl-version 102
 
 mhc_predict.py \
   --hla outtumor/Tumor_hla_genotype.tsv outcfdna/Tumor_hla_genotype.tsv outrna/hla_genotype.tsv \

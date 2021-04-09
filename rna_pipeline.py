@@ -30,8 +30,8 @@ def main(R1,
          KNOWN_SITE1,
          KNOWN_SITE2,
          THREADS,
-         ANNOVAR_DB,
-         ANNOVAR_VERSION,
+         ASSEMBLY,
+         VERSION,
          STEPS,
          HLA_FASTA,
          KEEP,
@@ -47,7 +47,7 @@ def main(R1,
     logger.info('Starting RNA somatic pipeline: {}'.format(start_pipeline_time))
     logger.info('HLA Pipeline version: {}'.format(version_number))
     logger.info('Processing FASTQs {} and {} with Sample ID {} using ' \
-                'genome version {}.'.format(R1, R2, SAMPLEID, ANNOVAR_VERSION))
+                'genome version {}.'.format(R1, R2, SAMPLEID, ASSEMBLY))
 
     # Create sub-folder to store all results
     os.makedirs('workdir', exist_ok=True)
@@ -248,15 +248,10 @@ def main(R1,
 
         # Annotate with Annovar
         logger.info('Annotating variants')
-        annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
-
-        # Replace UTF-8 code to equivalent characters
-        cmd = "sed -i -e 's/{}{}/-/g' -e 's/{}{}/:/g' annotated.{}_multianno.vcf".format("\\", "\\x3b", "\\", "\\x3d",
-                                                                                         ANNOVAR_VERSION)
-        exec_command(cmd)
+        annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF)
 
         # Summary of basic statistic of annotated VCF file
-        annotated_vcf = "annotated.{}_multianno.vcf".format(ANNOVAR_VERSION)
+        annotated_vcf = "annotated.{}_multianno.vcf".format(ASSEMBLY)
         vcf_stats(annotated_vcf, SAMPLEID)
 
         end_filer_time = datetime.datetime.now()
@@ -272,9 +267,9 @@ def main(R1,
             shutil.move('{}.vchk'.format(SAMPLEID), '../{}.vchk'.format(SAMPLEID))
         if os.path.isfile('combined_calls.vcf'):
             shutil.move('combined_calls.vcf', '../combined_calls.vcf')
-        if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
-            shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
-                        '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
+        if os.path.isfile('annotated.{}_multianno.vcf'.format(ASSEMBLY)):
+            shutil.move('annotated.{}_multianno.vcf'.format(ASSEMBLY),
+                        '../annotated.{}_multianno.vcf'.format(ASSEMBLY))
         if os.path.isfile('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
             shutil.move('rna_{}_hla_genotype_result.tsv'.format(SAMPLEID), '../hla_genotype.tsv')
         if os.path.isfile('gene.counts'):
@@ -327,12 +322,10 @@ if __name__ == '__main__':
                         help='Path to the file with 1000G phase indels (GATK bundle)', required=True)
     parser.add_argument('--snpsites',
                         help='Path to the file with the SNP sites (GATK bundle)', required=True)
-    parser.add_argument('--annovar-db',
-                        help='String indicated which Annovar database to use (default: humandb)',
-                        default='humandb', required=False)
-    parser.add_argument('--annovar-version',
-                        help='String indicated which version of the Annovar database to use (default: hg38)',
-                        default='hg38', required=False)
+    parser.add_argument('--vep-db', type=str, default='GRCh38', required=False,
+                        help='String indicating which genome assembly to use with VEP (default: GRCh38)')
+    parser.add_argument('--vep-version', type=str, default='102', required=False,
+                        help='String indicating which version from ensembl genome to use with VEP (default: 102)')
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
@@ -359,11 +352,11 @@ if __name__ == '__main__':
     KNOWN_SITE2 = os.path.abspath(args.known2)
     SNPSITES = os.path.abspath(args.snpsites)
     STEPS = args.steps
-    ANNOVAR_DB = args.annovar_db
-    ANNOVAR_VERSION = args.annovar_version
+    ASSEMBLY = args.vep_db
+    VERSION = args.vep_version
     HLA_FASTA = os.path.abspath(args.hla_fasta)
     KEEP = args.keep_intermediate
-    SPARK =  args.use_gatk_spark
+    SPARK = args.use_gatk_spark
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -379,8 +372,8 @@ if __name__ == '__main__':
          KNOWN_SITE1,
          KNOWN_SITE2,
          THREADS,
-         ANNOVAR_DB,
-         ANNOVAR_VERSION,
+         ASSEMBLY,
+         VERSION,
          STEPS,
          HLA_FASTA,
          KEEP,

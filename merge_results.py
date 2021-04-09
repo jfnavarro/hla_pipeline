@@ -14,6 +14,7 @@ from scipy import stats
 import os
 import sys
 from hlapipeline.variants import *
+import pandas as pd
 
 
 def main(dna_variants,
@@ -33,7 +34,8 @@ def main(dna_variants,
          tumor_var_depth_rna,
          tumor_var_freq_rna,
          num_callers_rna,
-         ensembl_version):
+         ensembl_version,
+         varc):
 
     if not dna_variants and not rna_variants:
         sys.stderr.write("Error, no variants given as input (DNA or RNA).\n")
@@ -55,7 +57,8 @@ def main(dna_variants,
                                            t2n_ratio,
                                            num_callers,
                                            num_callers_indel,
-                                           ensembl_version)
+                                           ensembl_version,
+                                           varcode)
             for variant in variants:
                 variant_dict[variant.key].append((variant, name))
 
@@ -67,7 +70,8 @@ def main(dna_variants,
                                            tumor_var_depth_rna,
                                            tumor_var_freq_rna,
                                            num_callers_rna,
-                                           ensembl_version)
+                                           ensembl_version,
+                                           varc)
             for variant in variants:
                 variant_dict[variant.key].append((variant, name))
 
@@ -78,25 +82,21 @@ def main(dna_variants,
     if rna_counts and len(rna_counts) > 0 and len(rna_counts) == len(rna_names):
         print('Loading Gene counts..')
         for file, name in zip(rna_counts, rna_names):
-            counts_file = open(file)
-            counts_file_lines = counts_file.readlines()
-            _ = counts_file_lines.pop(0)
-            header_counts = counts_file_lines.pop(0).strip().split('\t')
-            for line in counts_file_lines:
-                columns = line.strip().split('\t')
-                gene_id = columns[header_counts.index('Geneid')]
-                value = float(columns[-1])
-                counts_dict[name][gene_id] = value
-            counts_file.close()
-
-        if len(counts_dict) > 0:
-            for name, gene_counts in counts_dict.items():
-                counts = list(gene_counts.values())
-                mean = np.around(statistics.mean(counts), 3)
-                counts = list(filter(lambda x: x != 0, counts))
-                counts_stats[name] = mean
-                for gene, count in gene_counts.items():
-                    counts_stats_percentile[name][gene] = np.around(stats.percentileofscore(counts, count), 3)
+            counts_table = pd.read_csv(file, sep='\t', skiprows=1)
+            counts = counts_table.iloc[:, 6].to_numpy()
+            counts_filtered = list(filter(lambda x: x != 0, counts))      
+            lengths = counts_table['Length'].to_numpy()
+            rpk = counts / lengths
+            counts_table['RPKM'] = (rpk / sum(counts)) * 1e9
+            counts_table['TPM'] = (rpk / sum(rpk)) * 1e6
+            gene_counts = counts_table.iloc[:, [0, 6]].values.tolist()
+            for gene, expr in gene_counts:
+                counts_dict[name][gene] = float(expr)
+                counts_stats_percentile[name][gene] = np.around(
+                         stats.percentileofscore(counts_filtered, float(expr), kind='strict'), 3)
+            counts_stats[name] = np.around(np.mean(counts), 3)
+            counts_table['Percentile'] = counts_stats_percentile[name].values()
+            counts_table.to_csv(file + '.final', sep='\t', index=False)
 
     print('Creating merged variants..')
     header_final = 'Variant key\tDBsnp ID\tGnomad MAF\tCosmic ID\tDNA samples (passing)\tNumber of DNA samples (passing)\t' \
@@ -104,7 +104,7 @@ def main(dna_variants,
                    'RNA samples (passing)\tNumber of RNA samples (passing)\t' \
                    'RNA samples (failing)\tNumber of RNA samples (failing)\tEffects\t' \
                    'cDNA change\tAA change\tEpitope creation flags\tWt Epitope\t' \
-                   'Mut Epitope\tTranscript\tDNA Callers Sample(Name:NDP;NAD;NVAF;TDP;TAD;TVAF)\t' \
+                   'Mut Epitope\tTranscripts\tDNA Callers Sample(Name:NDP;NAD;NVAF;TDP;TAD;TVAF)\t' \
                    'RNA Callers Sample(Name:TDP;TAD;TVAF)\tGeneCount info Sample(gene;exp;mean;percentile)\n'
 
     final_file = open('overlap_final.txt', 'w')
@@ -124,12 +124,14 @@ def main(dna_variants,
         # key = variant key
         # value = list of (Variant, sample_name) tuples
 
-        rna_name_pass = [name for variant, name in value if variant.type == 'rna' and variant.status]
-        rna_name_fail = [name for variant, name in value if variant.type == 'rna' and not variant.status]
+        genes = set([value[i][0].gene for i in range(len(value))])
+
+        rna_name_pass = set([name for variant, name in value if variant.type == 'rna' and variant.status])
+        rna_name_fail = set([name for variant, name in value if variant.type == 'rna' and not variant.status])
         rna_callers = ';'.join(
             ['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'rna'])
-        dna_name_pass = [name for variant, name in value if variant.type == 'dna' and variant.status]
-        dna_name_fail = [name for variant, name in value if variant.type == 'dna' and not variant.status]
+        dna_name_pass = set([name for variant, name in value if variant.type == 'dna' and variant.status])
+        dna_name_fail = set([name for variant, name in value if variant.type == 'dna' and not variant.status])
         dna_callers = ';'.join(
             ['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'dna'])
         num_rna_pass = len(rna_name_pass)
@@ -141,7 +143,7 @@ def main(dna_variants,
         dbsnp = value[0][0].dbsnp
         gnomad = value[0][0].gnomad
         cosmic = value[0][0].cosmic
-        gene = value[0][0].gene
+        gene = value[0][0].gene # Check that the gene is the correct one for the variant
 
         # Create a dictionary of epitopes so to keep unique ones (different mut peptide)
         epitopes_dict = defaultdict(list)
@@ -171,13 +173,14 @@ def main(dna_variants,
             else:
                 gene_locus = ["-"]
             effect = ';'.join(['{}_{}_{}'.format(e.func, e.gene, e.transcript) for e in epitopes])
+            transcripts = ';'.join([e.transcript for e in epitopes])
             to_write = '\t'.join(str(x) for x in [key, dbsnp, gnomad, cosmic,
                                                   ';'.join(dna_name_pass), num_dna_pass,
                                                   ';'.join(dna_name_fail), num_dna_fail,
                                                   ';'.join(rna_name_pass), num_rna_pass,
                                                   ';'.join(rna_name_fail), num_rna_fail,
                                                   effect, epitope.dnamut, epitope.aamut, epitope.flags,
-                                                  epitope.wtseq, epitope.mutseq, epitope.transcript,
+                                                  epitope.wtseq, epitope.mutseq, transcripts,
                                                   dna_callers, rna_callers, ';'.join(gene_locus)])
             if num_dna_pass >= 1:
                 final_file.write(to_write + '\n')
@@ -238,6 +241,8 @@ if __name__ == '__main__':
                         help='Filter for RNA variants number of callers required. Default=2')
     parser.add_argument('--ensembl-version', type=str, required=True,
                         help='Supply the genome version with which the VCF has been annotated.')
+    parser.add_argument('--varcode', default=False, action='store_true', required=False,
+                        help='Use varcode for epitope creation instead of the in-house method.')
 
     args = parser.parse_args()
     main(args.dna,
@@ -257,4 +262,5 @@ if __name__ == '__main__':
          args.tumor_var_depth_rna,
          args.tumor_var_freq_rna,
          args.num_callers_rna,
-         args.ensembl_version)
+         args.ensembl_version,
+         args.varcode)
