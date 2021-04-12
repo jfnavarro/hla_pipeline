@@ -22,7 +22,6 @@ BAMQCRNA = 'qualimap rnaseq'
 OPTITYPE = 'OptiTypePipeline.py'
 YARAI = 'yara_indexer'
 YARAM = 'yara_mapper'
-# ANNOVAR location must be in $ANNOVAR_PATH
 VEP = 'vep'
 VEP_OPTIONS = '--no_escape --offline --no_stats --af_gnomad --hgvs --cache --fields "Allele,Consequence,SYMBOL,Gene,Feature_type,Feature,BIOTYPE,EXON,INTRON,HGVSc,HGVSp,' \
     'cDNA_position,CDS_position,Protein_position,Existing_variation,FLAGS,gnomAD_AF"' # Could add --pick
