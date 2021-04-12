@@ -39,7 +39,7 @@ class Variant:
         return '{}:{} {}>{} {} {}'.format(self.chrom, self.start, self.ref, self.alt, self.type, self.status)
 
 
-def epitopes(record, info, ens_data, VARCODE):
+def epitopes(record, info, ens_data):
     """
     This function computes the epitopes (mutated and wt peptides) of
     a VEP annotated variant (record from vcfpy) using the effects and
@@ -74,7 +74,7 @@ def epitopes(record, info, ens_data, VARCODE):
 
 
 def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
-                        tumor_var_freq, num_callers, ensembl_version, varc):
+                        tumor_var_freq, num_callers, ensembl_version):
     """
     This function processes a list of annotated RNA variants from VEP (VCF).
     It then applies some filters to the variants and computes the epitopes of each of
@@ -126,7 +126,7 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
                 except KeyError:
                     continue
 
-                variant_epitopes = epitopes(record, record_INFO, ens_data, varc)
+                variant_epitopes = epitopes(record, record_INFO, ens_data)
                 variant = Variant()
                 variant.chrom = record.CHROM
                 variant.start = record.POS
@@ -148,7 +148,7 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
 
 def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                         tumor_var_freq, normal_var_freq, t2n_ratio, num_callers,
-                        num_callers_indel, ensembl_version, varc):
+                        num_callers_indel, ensembl_version):
     """
     This function processes a list of annotated DNA variants from VEP (VCF).
     It then applies some filters to the variants and computes the epitopes of each of
@@ -301,7 +301,7 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                 except KeyError:
                     continue
 
-                variant_epitopes = epitopes(record, record_INFO, ens_data, varc)
+                variant_epitopes = epitopes(record, record_INFO, ens_data)
                 variant = Variant()
                 variant.chrom = record.CHROM
                 variant.start = record.POS
