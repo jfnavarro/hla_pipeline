@@ -9,6 +9,8 @@ from pyensembl import EnsemblRelease
 
 #  A convenience namedtuple to store the informatin of an epitope
 Epitope = namedtuple('Epitope', 'transcript gene func dnamut aamut flags wtseq mutseq')
+
+#  A convenience namedtuple to store the informatin of an annotated record (VEP)
 Record_INFO = namedtuple('INFO', 'Allele Consequence SYMBOL Gene Feature_type Feature BIOTYPE \
     EXON INTRON HGVSc HGVSp cDNA_position CDS_position Protein_position Existing_variation FLAGS gnomAD_AF')
 
@@ -40,10 +42,11 @@ class Variant:
 def epitopes(record, info, ens_data, VARCODE):
     """
     This function computes the epitopes (mutated and wt peptides) of
-    an Annovar annotated variant (record from vcfpy) using the effects and
+    a VEP annotated variant (record from vcfpy) using the effects and
     their isoforms from Ensembl.
     The function only considers nonsynonymous and framshift effects.
-    :param record: A vcfpy record containing the variant information from Annovar
+    :param record: A vcfpy record containing the variant information from VEP
+    :param info: 
     :param ens_data: Ensembl's database cache version used to annotate the VCF
     :return:
         A list of unique epitopes detected in the variant
@@ -51,33 +54,21 @@ def epitopes(record, info, ens_data, VARCODE):
     """
 
     funcensGene = info.Consequence
-
     epitopes = list()
-    
     if 'missense' in funcensGene or 'frame' in funcensGene:
         gene = info.SYMBOL
         transcript = info.Feature
-        sequence = ens_data.transcript_by_id(info.Feature)
+        #sequence = ens_data.transcript_by_id(info.Feature)
         mut_dna = info.HGVSc.split(':')[1] if len(info.HGVSc.split(':')) > 1 else ''
         mut_aa = info.HGVSp.split(':')[1] if len(info.HGVSp.split(':')) > 1 else ''
         
-        try:
-            cds = sequence.coding_sequence
-        except ValueError:
-            cds = 'None'
-        
-        try:
-            prot = sequence.protein_sequence
-        except ValueError:
-            prot = 'None'
-        
-        if VARCODE:
-            pos, flags, wtmer, mutmer = create_epitope_varcode(record.CHROM, record.POS, record.REF, info.Allele, ens_data, transcript)
-        
-        elif (mut_dna and mut_aa):
-            pos, flags, wtmer, mutmer = create_epitope(record.REF, info.Allele, funcensGene,
-                            mut_dna, mut_aa, cds, prot)
-        
+        # TODO this should return a list 
+        pos, flags, wtmer, mutmer = create_epitope_varcode(record.CHROM, 
+                                                           record.POS, 
+                                                           record.REF, 
+                                                           info.Allele, 
+                                                           ens_data, 
+                                                           transcript)
         epitopes.append(Epitope(transcript, gene, funcensGene, mut_dna, mut_aa, flags, wtmer, mutmer))
     return epitopes
 
@@ -85,12 +76,12 @@ def epitopes(record, info, ens_data, VARCODE):
 def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
                         tumor_var_freq, num_callers, ensembl_version, varc):
     """
-    This function processes a list of annotated RNA variants from Annovar (VCF).
+    This function processes a list of annotated RNA variants from VEP (VCF).
     It then applies some filters to the variants and computes the epitopes of each of
     the variants nonsynonymous and frameshift effects.
     The input is expected to contain HaplotypeCaller and Varscan RNA variants.
     It returns a list of Variant() objects.
-    :param file: the Annovar annotated RNA variants
+    :param file: the VEP annotated RNA variants
     :param tumor_coverage: filter value for the number of total reads (DP)
     :param tumor_var_depth: filter value for the number of allelic reads (AD)
     :param tumor_var_freq: filter value for the Variant Allele Frequency (VAF)
@@ -159,12 +150,12 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                         tumor_var_freq, normal_var_freq, t2n_ratio, num_callers,
                         num_callers_indel, ensembl_version, varc):
     """
-    This function processes a list of annotated DNA variants from Annovar (VCF).
+    This function processes a list of annotated DNA variants from VEP (VCF).
     It then applies some filters to the variants and computes the epitopes of each of
     the variants nonsynonymous and frameshift effects.
     The input is expected to contain Mutect2, Strelka, SomaticSniper and Varscan DNA variants.
     It returns a list of Variant() objects.
-    :param file: the Annovar annotated somatic variants
+    :param file: the VEP annotated somatic variants
     :param normal_coverage: filter value for the number of normal total reads (DP)
     :param tumor_coverage: filter value for the number of tumor total reads (DP)
     :param tumor_var_depth: filter value for the number tumor alleic reads (AD)

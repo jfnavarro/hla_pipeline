@@ -34,8 +34,7 @@ def main(dna_variants,
          tumor_var_depth_rna,
          tumor_var_freq_rna,
          num_callers_rna,
-         ensembl_version,
-         varc):
+         ensembl_version):
 
     if not dna_variants and not rna_variants:
         sys.stderr.write("Error, no variants given as input (DNA or RNA).\n")
@@ -57,8 +56,7 @@ def main(dna_variants,
                                            t2n_ratio,
                                            num_callers,
                                            num_callers_indel,
-                                           ensembl_version,
-                                           varcode)
+                                           ensembl_version)
             for variant in variants:
                 variant_dict[variant.key].append((variant, name))
 
@@ -70,8 +68,7 @@ def main(dna_variants,
                                            tumor_var_depth_rna,
                                            tumor_var_freq_rna,
                                            num_callers_rna,
-                                           ensembl_version,
-                                           varc)
+                                           ensembl_version)
             for variant in variants:
                 variant_dict[variant.key].append((variant, name))
 
@@ -123,8 +120,6 @@ def main(dna_variants,
 
         # key = variant key
         # value = list of (Variant, sample_name) tuples
-
-        genes = set([value[i][0].gene for i in range(len(value))])
 
         rna_name_pass = set([name for variant, name in value if variant.type == 'rna' and variant.status])
         rna_name_fail = set([name for variant, name in value if variant.type == 'rna' and not variant.status])
@@ -241,8 +236,6 @@ if __name__ == '__main__':
                         help='Filter for RNA variants number of callers required. Default=2')
     parser.add_argument('--ensembl-version', type=str, required=True,
                         help='Supply the genome version with which the VCF has been annotated.')
-    parser.add_argument('--varcode', default=False, action='store_true', required=False,
-                        help='Use varcode for epitope creation instead of the in-house method.')
 
     args = parser.parse_args()
     main(args.dna,
@@ -262,5 +255,4 @@ if __name__ == '__main__':
          args.tumor_var_depth_rna,
          args.tumor_var_freq_rna,
          args.num_callers_rna,
-         args.ensembl_version,
-         args.varcode)
+         args.ensembl_version)

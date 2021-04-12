@@ -37,8 +37,6 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
 
     THREADS = max(int(threads/2), 1)
 
-    logger = logging.getLogger()
-
     # TODO use os.makedirs instead
     cmd = 'mkdir -p {}/index'.format(os.getcwd())
     exec_command(cmd)
@@ -104,7 +102,7 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
 
 def annotate_variants(input, db, version, threads, fasta):
     """
-    Annotate a VCF using Annovar
+    Annotate a VCF using VEP
     :param input: the VCF file
     :param output: the annotated VCF file
     :param db: the genome assembly (GRCh37, GRCh38)
@@ -125,13 +123,17 @@ def vcf_stats(annotated_VCF, sampleID):
     # VCFtools: pairwise individual relatedness using relatedness2 method
     cmd = '{} --vcf {} --relatedness2 --out {}'.format(VCFTOOLS, annotated_VCF, sampleID)
     exec_command(cmd)
+    
     # VCFtools: summary of all Transitions and Transversions
     cmd = '{} --vcf {} --TsTv-summary --out {}'.format(VCFTOOLS, annotated_VCF, sampleID)
     exec_command(cmd)
+    
     # bcftools multiple stats
     cmd = '{} -c {} > {}.gz'.format(BGZIP, annotated_VCF, annotated_VCF)
     exec_command(cmd)
+    
     cmd = '{} -p vcf {}.gz'.format(TABIX, annotated_VCF)
     exec_command(cmd)
+    
     cmd = '{} stats {}.gz > {}.vchk'.format(BCFTOOLS, annotated_VCF, sampleID)
     exec_command(cmd)
