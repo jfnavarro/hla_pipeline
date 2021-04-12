@@ -1,4 +1,4 @@
-# Instructions on how to install references for GRCh38 y hg19
+# Instructions on how to install references for GRCh38
 
 # Install GSUTIL to download references
 # You need to create .boto config with gsutil config and then disable integrity check by setting this line check_hashes = if_fast_else_skip
