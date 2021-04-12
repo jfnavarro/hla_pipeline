@@ -108,6 +108,12 @@ Other files:
   - protein_sequences_mu.fasta
   - protein_sequences_wt.fasta
   
+## Authors
+Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
+
+## Contributors
+Jonatan Gonzalez <jonatan.gonzalez.r@outlook.com>
+
 ## Contact
 Contact: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 

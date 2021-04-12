@@ -7,10 +7,10 @@ import numpy as np
 import vcfpy
 from pyensembl import EnsemblRelease
 
-#  A convenience namedtuple to store the informatin of an epitope
+#  A convenience namedtuple to store the information of an epitope
 Epitope = namedtuple('Epitope', 'transcript gene func dnamut aamut flags wtseq mutseq')
 
-#  A convenience namedtuple to store the informatin of an annotated record (VEP)
+#  A convenience namedtuple to store the information of an annotated record (VEP)
 Record_INFO = namedtuple('INFO', 'Allele Consequence SYMBOL Gene Feature_type Feature BIOTYPE \
     EXON INTRON HGVSc HGVSp cDNA_position CDS_position Protein_position Existing_variation FLAGS gnomAD_AF')
 
