@@ -1,12 +1,15 @@
 #! /usr/bin/env python
 """
 This pipeline computes somatic variants from RNA data.
+
 The pipeline trims with trimgalore, aligns with STAR,
 performs the GATK4 best practices and computes variants with
 HaplotypeCaller and Varscan. The variants are then combined into
-one file and annotated with Annovar. Gene counts are also
+one file and annotated with VEP. Gene counts are also
 computed with featureCounts.
+
 Multiple options are available. To see them type --help
+
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import *
@@ -38,7 +41,8 @@ def main(R1,
          SPARK):
     # TODO add sanity checks for the parameters
 
-    logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S',
+    logging.basicConfig(format='%(asctime)s - %(message)s', 
+                        datefmt='%d-%b-%y %H:%M:%S',
                         level=logging.DEBUG, filename=SAMPLEID + ".log")
     logger = logging.getLogger(SAMPLEID)
 
@@ -246,11 +250,11 @@ def main(R1,
         cmd = 'sed -i \'s/Sample1.varscan/varscan/g\' combined_calls.vcf'
         exec_command(cmd)
 
-        # Annotate with Annovar
+        # Annotate with VEP
         logger.info('Annotating variants')
         annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF)
 
-        # Summary of basic statistic of annotated VCF file
+        # Summary of basic statistic of the annotated VCF file
         annotated_vcf = "annotated.{}_multianno.vcf".format(ASSEMBLY)
         vcf_stats(annotated_vcf, SAMPLEID)
 
@@ -290,10 +294,10 @@ def main(R1,
             shutil.rmtree(os.path.abspath('../{}_bamQCRNA'.format(SAMPLEID)))
         if os.path.isdir('bamQCRNA'):
             shutil.move('bamQCRNA', '../{}_bamQCRNA'.format(SAMPLEID))
-        for file in glob.glob('*_fastqc*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
-        for file in glob.glob('*_trimming_report*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+        for f in glob.glob('*_fastqc*'):
+            shutil.move(f, '../{}_{}'.format(SAMPLEID, f))
+        for f in glob.glob('*_trimming_report*'):
+            shutil.move(f, '../{}_{}'.format(SAMPLEID, f))
 
         end_pipeline_time = datetime.datetime.now()
         total_pipeline_time = end_pipeline_time - start_pipeline_time

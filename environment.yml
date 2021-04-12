@@ -27,3 +27,4 @@ dependencies:
   - bioconda::optitype
   - bioconda::yara
   - bioconda::vcfpy
+  - bioconda:ensembl-vep=102.0

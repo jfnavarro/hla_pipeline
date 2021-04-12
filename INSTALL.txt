@@ -3,7 +3,6 @@
 # Install Anaconda if you have not done it already
 
 mkdir -p ~/shared
-cd ~/shared
 
 # Create environment with all the tools
 conda env create -f environment.yml
@@ -11,33 +10,21 @@ conda env create -f environment.yml
 # Download mhcflurry models
 mhcflurry-downloads fetch models_class1_presentation
 
+# Download and install VEP cache (Make use to use the same version as the installed VEP)
+mkdir -p $HOME/.vep
+cd $HOME/.vep
+curl -O http://ftp.ensembl.org/pub/release-102/variation/indexed_vep_cache/homo_sapiens_vep_102_GRCh38.tar.gz
+tar xzf homo_sapiens_vep_102_GRCh38.tar.gz
+
+curl -O http://ftp.ensembl.org/pub/release-102/variation/indexed_vep_cache/homo_sapiens_vep_102_GRCh37.tar.gz
+tar xzf homo_sapiens_vep_102_GRCh37.tar.gz
+
 cd ~/shared
+
 # Install Strelka (Conda version is only compatible with Python 2.7)
 wget https://github.com/Illumina/strelka/releases/download/v2.9.10/strelka-2.9.10.centos6_x86_64.tar.bz2
 tar -xjf strelka-2.9.10.centos6_x86_64.tar.bz2
 mv strelka-2.9.10.centos6_x86_64 ~/shared/strelka
-
-# Install Annovar. Download link may be expired (email the developer for new link if expired)
-cd ~/shared
-wget http://www.openbioinformatics.org/annovar/download/0wgxR2rIVP/annovar.latest.tar.gz
-tar -xvf annovar.latest.tar.gz
-
-# Download GRCh38 references for Annovar
-cd annovar
-./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar knownGene humandb/
-./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar ensGene humandb/
-./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar refGene humandb/
-./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar gnomad211_exome humandb/
-./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar avsnp150 humandb/
-./annotate_variation.pl -downdb -buildver hg38 -webfrom annovar cosmic70 humandb/
-
-# Download hg19 references for Annovar
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar knownGene humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar ensGene humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar refGene humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar gnomad211_exome humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar avsnp150 humandb/
-./annotate_variation.pl -downdb -buildver hg19 -webfrom annovar cosmic70 humandb/
 
 # Install GATK3 from archives
 cd ~/shared
@@ -45,9 +32,8 @@ gsutil cp gs://gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-1-0-gf15c
 tar xjf GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2
 mv GenomeAnalysisTK-3.8-1-0-gf15c1c3ef/GenomeAnalysisTK.jar gatk3.8.jar
 
-# Create hg38 and hg19 dictionaries following the steps in the notebooks located in /dictionaries
-
 cd ~
+
 # Clone the pipeline and install it
 git clone https://github.com/jfnavarro/hla_pipeline.git
 cd hla_pipeline

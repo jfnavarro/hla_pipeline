@@ -1,9 +1,12 @@
 #! /usr/bin/env python
 """
 This tools uses the output of merge_results.py and HLAs predicted with either
-the dna_pipeline.py and/or the rna_pipeline.py to predict neoantigens.
+the dna_pipeline.py and/or the rna_pipeline.py to compute neoantigens affinity
+binding score.
 The tool extracts the WT and MUT peptides and makes affinity binding
-predictions for the HLAs (class I). The tools uses MHC-flurry for the predictions.
+predictions for the HLAs (class I). 
+The tools uses MHC-flurry for the predictions.
+
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import exec_command
@@ -19,8 +22,8 @@ def main(hla, overlap_final, alleles_file, mode, results, results_filter, cutoff
     
     HLA_dict = defaultdict(list)
     print('Loading HLAs..')
-    for file in hla:
-        with open(file) as f:
+    for f in hla:
+        with open(f) as f:
             next(f)
             for line in f.readlines():
                 columns = line.split('\t')[1:7]

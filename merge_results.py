@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 This tool combines results from the dna_pipeline.py and/or rna_pipeline.py
-to create an unified table with all the variants filtrated and their epitopes (for each effect).
+to create an unified table with all the variants (filtered) and their epitopes (for each effect).
 The table contains useful information for post-analysis.
 
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>

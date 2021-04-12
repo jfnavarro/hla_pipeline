@@ -5,7 +5,7 @@ This pipeline computes somatic variants from DNA tumor-normal paired data.
 The pipeline trims with trimgalore, aligns with bwa-men,
 performs the GATK4 best practices and computes variants with
 Mutect2, Strelka2, SomaticSniper and Varscan.
-The variants are then combined into one file and annotated with Annovar.
+The variants are then combined into one file and annotated with VEP.
 
 Multiple options are available. To see them type --help
 
@@ -335,7 +335,7 @@ def main(R1_NORMAL,
               '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, GENOME, THREADS)
         exec_command(cmd)
 
-        # Annotate with Annovar
+        # Annotate with VEP
         logger.info('Annotating variants')
         annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF)
 
@@ -381,10 +381,10 @@ def main(R1_NORMAL,
             shutil.rmtree(os.path.abspath('../{}_bamQCTumor'.format(SAMPLEID)))
         if os.path.isdir('bamQC_Tumor'):
             shutil.move('bamQC_Tumor', '../{}_bamQCTumor'.format(SAMPLEID))
-        for file in glob.glob('*_fastqc*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
-        for file in glob.glob('*_trimming_report*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+        for f in glob.glob('*_fastqc*'):
+            shutil.move(f, '../{}_{}'.format(SAMPLEID, f))
+        for f in glob.glob('*_trimming_report*'):
+            shutil.move(f, '../{}_{}'.format(SAMPLEID, f))
 
     end_pipeline_time = datetime.datetime.now()
     total_pipeline_time = end_pipeline_time - start_pipeline_time
