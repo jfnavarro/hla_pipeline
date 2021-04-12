@@ -124,11 +124,11 @@ def main(dna_variants,
         rna_name_pass = set([name for variant, name in value if variant.type == 'rna' and variant.status])
         rna_name_fail = set([name for variant, name in value if variant.type == 'rna' and not variant.status])
         rna_callers = ';'.join(
-            ['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'rna'])
+            set(['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'rna']))
         dna_name_pass = set([name for variant, name in value if variant.type == 'dna' and variant.status])
         dna_name_fail = set([name for variant, name in value if variant.type == 'dna' and not variant.status])
         dna_callers = ';'.join(
-            ['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'dna'])
+            set(['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'dna']))
         num_rna_pass = len(rna_name_pass)
         num_rna_fail = len(rna_name_fail)
         num_dna_pass = len(dna_name_pass)
@@ -167,8 +167,8 @@ def main(dna_variants,
                         gene_locus.append("{}:-".format(name))
             else:
                 gene_locus = ["-"]
-            effect = ';'.join(['{}_{}_{}'.format(e.func, e.gene, e.transcript) for e in epitopes])
-            transcripts = ';'.join([e.transcript for e in epitopes])
+            effect = ';'.join(set(['{}_{}_{}'.format(e.func, e.gene, e.transcript) for e in epitopes]))
+            transcripts = ';'.join(set([e.transcript for e in epitopes]))
             to_write = '\t'.join(str(x) for x in [key, dbsnp, gnomad, cosmic,
                                                   ';'.join(dna_name_pass), num_dna_pass,
                                                   ';'.join(dna_name_fail), num_dna_fail,

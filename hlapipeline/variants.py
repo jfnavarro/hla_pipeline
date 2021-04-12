@@ -1,7 +1,7 @@
 """
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com
 """
-from hlapipeline.epitopes import create_epitope, create_epitope_varcode
+from hlapipeline.epitopes import create_epitope_varcode
 from collections import namedtuple
 import numpy as np
 import vcfpy
