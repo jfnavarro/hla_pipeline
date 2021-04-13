@@ -109,8 +109,13 @@ def annotate_variants(input, db, version, threads, fasta, cache):
     :param version: the ensembl version (75, 102)
     :param threads: the number of threads to use
     """
+    if not cache:
+        cache_cmd = ''
+    else:
+        cache_cmd = '--dir_cache {}'.format(cache)
+
     cmd = '{} -i {} --fork {} -o annotated.{}_multianno.vcf --fasta {} --format vcf --vcf --assembly {} '\
-        '--cache_version {} --species homo_sapiens {} {}'.format(VEP, input, threads, db, fasta, db, version, VEP_OPTIONS, cache)
+        '--cache_version {} --species homo_sapiens {} {}'.format(VEP, input, threads, db, fasta, db, version, VEP_OPTIONS, cache_cmd)
     exec_command(cmd)
 
 

@@ -259,13 +259,9 @@ def main(R1,
         exec_command(cmd)
 
         # Annotate with VEP
-        if not CACHEDIR:
-            cache_cmd = '--dir_cache {}'.format(Path.home().joinpath('.vep'))
-        else:
-            cache_cmd = '--dir_cache {}'.format(CACHEDIR)
 
         logger.info('Annotating variants')
-        annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF, cache_cmd)
+        annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF, CACHEDIR)
 
         # Summary of basic statistic of the annotated VCF file
         annotated_vcf = "annotated.{}_multianno.vcf".format(ASSEMBLY)
@@ -373,7 +369,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ASSEMBLY = args.vep_db
     VERSION = args.vep_version
-    CACHEDIR = args.vep_dir
+    CACHEDIR = os.path.abspath(args.vep_dir) if args.vep_dir else None
     HLA_FASTA = os.path.abspath(args.hla_fasta)
     KEEP = args.keep_intermediate
     SPARK = args.use_gatk_spark
