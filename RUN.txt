@@ -1,6 +1,5 @@
 # You may want to add these to your .bashrc or .bash_profile
 export STRELKA_PATH="~/shared/strelka"
-export ANNOVAR_PATH="~/shared/annovar"
 export GATK3_PATH="~/shared/gatk3.8.jar"
 
 conda activate hla
@@ -15,28 +14,12 @@ dna_pipeline.py \
   --germline ~/shared/GRCh38/af-only-gnomad.hg38.vcf.gz \
   --pon ~/shared/GRCh38/1000g_pon.hg38.vcf.gz \
   --threads 20 \
-  --annovar-db humandb \
-  --annovar-version hg38 \
+  --vep-db GRCh38 \
+  --vep-version 102 \
   --hla-fasta ~/shared/hla_reference/hla_reference_dna.fasta \
   NormalR1.fastq.gz NormalR2.fastq.gz \
   TumorR1.fastq.gz TumorR2.fastq.gz
   
-dna_pipeline.py \
-  --genome ~/shared/GRCh38/Homo_sapiens_assembly38.fasta \
-  --sample G001 \
-  --outdir outcfdna \
-  --known1 ~/shared/GRCh38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
-  --known2 ~/shared/GRCh38/1000G_phase1.snps.high_confidence.hg38.vcf.gz \
-  --snpsites ~/shared/GRCh38/Homo_sapiens_assembly38.dbsnp138.vcf \
-  --germline ~/shared/GRCh38/af-only-gnomad.hg38.vcf.gz \
-  --pon ~/shared/GRCh38/1000g_pon.hg38.vcf.gz \
-  --threads 20 \
-  --annovar-db humandb \
-  --annovar-version hg38 \
-  --hla-fasta ~/shared/hla_reference/hla_reference_dna.fasta \
-  NormalR1.fastq.gz NormalR2.fastq.gz \
-  cfDNAR1.fastq.gz cfDNAR2.fastq.gz
-
 rna_pipeline.py \
   --genome ~/shared/GRCh38/Homo_sapiens_assembly38.fasta \
   --genome-star ~/shared/GRCh38/STARIndex \
@@ -47,21 +30,20 @@ rna_pipeline.py \
   --known2 ~/shared/GRCh38/1000G_phase1.snps.high_confidence.hg38.vcf.gz \
   --snpsites ~/shared/GRCh38/Homo_sapiens_assembly38.dbsnp138.vcf \
   --threads 20 \
-  --annovar-db humandb \
-  --annovar-version hg38 \
+  --vep-db GRCh38 \
+  --vep-version 102 \
   --hla-fasta ~/shared/hla_reference/hla_reference_rna.fasta \
   RNAR1.fastq.gz RNAR2.fastq.gz
   
 merge_results.py \
-  --dictcDNA ~/shared/GRCh38/hg38_cDNA_DICT.dict \
-  --dictAA ~/shared/GRCh38/hg38_AA_DICT.dict \
-  --dna outtumor/annotated.hg38_multianno.vcf outcfdna/annotated.hg38_multianno.vcf\
-  --dna-names Tumor cfDNA
+  --dna outtumor/annotated.hg38_multianno.vcf \
+  --dna-names Tumor
   --rna outrna/annotated.hg38_multianno.vcf \
   --rna-names RNA
-  --rna-counts outrna/gene.counts'
+  --rna-counts outrna/gene.counts' \
+  --ensembl-version 102
 
 mhc_predict.py \
-  --hla outtumor/Tumor_hla_genotype.tsv outcfdna/Tumor_hla_genotype.tsv outrna/hla_genotype.tsv \
+  --hla outtumor/Tumor_hla_genotype.tsv outrna/hla_genotype.tsv \
   --variants overlap_final.txt \
   --alleles ~/shared/alleles.txt

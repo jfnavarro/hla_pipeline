@@ -37,8 +37,6 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
 
     THREADS = max(int(threads/2), 1)
 
-    logger = logging.getLogger()
-
     # TODO use os.makedirs instead
     cmd = 'mkdir -p {}/index'.format(os.getcwd())
     exec_command(cmd)
@@ -102,18 +100,22 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
             os.remove('{}_mapped_2.bam'.format(origin))
 
 
-def annotate_variants(input, output, db, version, threads):
+def annotate_variants(input, db, version, threads, fasta, cache):
     """
-    Annotate a VCF using Annovar
+    Annotate a VCF using VEP
     :param input: the VCF file
     :param output: the annotated VCF file
-    :param db: the species (humandb or mousedb)
-    :param version: the version (hg19 or hg38)
+    :param db: the genome assembly (GRCh37, GRCh38)
+    :param version: the ensembl version (75, 102)
     :param threads: the number of threads to use
     """
-    annovardb = '{} -buildver {}'.format(os.path.join(ANNOVAR_PATH, db), version)
-    cmd = '{} {} {} -thread {} -out {} -vcfinput -remove -protocol {}'.format(
-        os.path.join(ANNOVAR_PATH, 'table_annovar.pl'), input, annovardb, threads, output, ANNOVAR_ANNO)
+    if not cache:
+        cache_cmd = ''
+    else:
+        cache_cmd = '--dir_cache {}'.format(cache)
+
+    cmd = '{} -i {} --fork {} -o annotated.{}_multianno.vcf --fasta {} --format vcf --vcf --assembly {} '\
+        '--cache_version {} --species homo_sapiens {} {}'.format(VEP, input, threads, db, fasta, db, version, VEP_OPTIONS, cache_cmd)
     exec_command(cmd)
 
 
@@ -126,13 +128,17 @@ def vcf_stats(annotated_VCF, sampleID):
     # VCFtools: pairwise individual relatedness using relatedness2 method
     cmd = '{} --vcf {} --relatedness2 --out {}'.format(VCFTOOLS, annotated_VCF, sampleID)
     exec_command(cmd)
+    
     # VCFtools: summary of all Transitions and Transversions
     cmd = '{} --vcf {} --TsTv-summary --out {}'.format(VCFTOOLS, annotated_VCF, sampleID)
     exec_command(cmd)
+    
     # bcftools multiple stats
     cmd = '{} -c {} > {}.gz'.format(BGZIP, annotated_VCF, annotated_VCF)
     exec_command(cmd)
+    
     cmd = '{} -p vcf {}.gz'.format(TABIX, annotated_VCF)
     exec_command(cmd)
+    
     cmd = '{} stats {}.gz > {}.vchk'.format(BCFTOOLS, annotated_VCF, sampleID)
     exec_command(cmd)

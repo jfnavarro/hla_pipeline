@@ -5,7 +5,7 @@ This pipeline computes somatic variants from DNA tumor-normal paired data.
 The pipeline trims with trimgalore, aligns with bwa-men,
 performs the GATK4 best practices and computes variants with
 Mutect2, Strelka2, SomaticSniper and Varscan.
-The variants are then combined into one file and annotated with Annovar.
+The variants are then combined into one file and annotated with VEP.
 
 Multiple options are available. To see them type --help
 
@@ -14,6 +14,7 @@ Multiple options are available. To see them type --help
 from hlapipeline.common import *
 from hlapipeline.version import version_number
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from pathlib import Path
 import os
 import sys
 import shutil
@@ -37,8 +38,9 @@ def main(R1_NORMAL,
          GERMLINE,
          PON,
          INTERVALS,
-         ANNOVAR_DB,
-         ANNOVAR_VERSION,
+         ASSEMBLY,
+         VERSION,
+         CACHEDIR,
          HLA_FASTA,
          KEEP,
          STEPS,
@@ -46,6 +48,13 @@ def main(R1_NORMAL,
          SPARK):
 
     # TODO add sanity checks for the parameters
+
+    if 'filter' in STEPS:
+        if not CACHEDIR:
+            if not Path.home().joinpath('.vep').exists():
+                raise Exception('Cache directory doesn\'t exist at default location, please provide a valid path.')
+        elif not Path(CACHEDIR).exists():
+            raise Exception('The cache directory provided doesn\'t exist. Please provide a different one.')
 
     logging.basicConfig(format='%(asctime)s - %(message)s',
                         datefmt='%d-%b-%y %H:%M:%S',
@@ -57,7 +66,7 @@ def main(R1_NORMAL,
     logger.info('Starting DNA somatic pipeline: {}'.format(start_pipeline_time))
     logger.info('HLA Pipeline version: {}'.format(version_number))
     logger.info('Processing Normal FASTQs {} and {}; and Tumor FASTQs {} and {} with Sample ID {} ' \
-                'using genome version {}.'.format(R1_NORMAL, R2_NORMAL, R1_TUMOR, R2_TUMOR, SAMPLEID, ANNOVAR_VERSION))
+                'using genome version {}.'.format(R1_NORMAL, R2_NORMAL, R1_TUMOR, R2_TUMOR, SAMPLEID, ASSEMBLY))
 
     # Sample 1 tumor, sample 2 normal
     sample1_ID = SAMPLEID + "_Tumor"
@@ -335,16 +344,12 @@ def main(R1_NORMAL,
               '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, GENOME, THREADS)
         exec_command(cmd)
 
-        # Annotate with Annovar
+        # Annotate with VEP
         logger.info('Annotating variants')
-        annotate_variants('combined_calls.vcf', 'annotated', ANNOVAR_DB, ANNOVAR_VERSION, THREADS)
-        # Replace UTF-8 code to equivalent characters
-        cmd = "sed -i -e 's/{}{}/-/g' -e 's/{}{}/:/g' annotated.{}_multianno.vcf".format("\\", "\\x3b", "\\", "\\x3d",
-                                                                                         ANNOVAR_VERSION)
-        exec_command(cmd)
+        annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF, CACHEDIR)
 
         # Summary of basic statistic of annotated VCF file
-        annotated_vcf = "annotated.{}_multianno.vcf".format(ANNOVAR_VERSION)
+        annotated_vcf = "annotated.{}_multianno.vcf".format(ASSEMBLY)
         vcf_stats(annotated_vcf, SAMPLEID)
 
         end_filer_time = datetime.datetime.now()
@@ -360,9 +365,9 @@ def main(R1_NORMAL,
             shutil.move('{}.TsTv.summary'.format(SAMPLEID), '../{}.TsTv.summary'.format(SAMPLEID))
         if os.path.isfile('{}.vchk'.format(SAMPLEID)):
             shutil.move('{}.vchk'.format(SAMPLEID), '../{}.vchk'.format(SAMPLEID))
-        if os.path.isfile('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION)):
-            shutil.move('annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION),
-                        '../annotated.{}_multianno.vcf'.format(ANNOVAR_VERSION))
+        if os.path.isfile('annotated.{}_multianno.vcf'.format(ASSEMBLY)):
+            shutil.move('annotated.{}_multianno.vcf'.format(ASSEMBLY),
+                        '../annotated.{}_multianno.vcf'.format(ASSEMBLY))
         if os.path.isfile('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID)):
             shutil.move('Tumor_{}_hla_genotype_result.tsv'.format(SAMPLEID),
                         '../Tumor_hla_genotype.tsv')
@@ -385,10 +390,10 @@ def main(R1_NORMAL,
             shutil.rmtree(os.path.abspath('../{}_bamQCTumor'.format(SAMPLEID)))
         if os.path.isdir('bamQC_Tumor'):
             shutil.move('bamQC_Tumor', '../{}_bamQCTumor'.format(SAMPLEID))
-        for file in glob.glob('*_fastqc*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
-        for file in glob.glob('*_trimming_report*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+        for f in glob.glob('*_fastqc*'):
+            shutil.move(f, '../{}_{}'.format(SAMPLEID, f))
+        for f in glob.glob('*_trimming_report*'):
+            shutil.move(f, '../{}_{}'.format(SAMPLEID, f))
 
     end_pipeline_time = datetime.datetime.now()
     total_pipeline_time = end_pipeline_time - start_pipeline_time
@@ -421,12 +426,15 @@ if __name__ == '__main__':
                         help='Path to the file with the panel of normals for Mutect2 (GATK bundle)')
     parser.add_argument('--intervals', type=str, default=None, required=False,
                         help='Path to the file with the intervals to operate in BaseRecalibrator and Mutect2 (BED)')
-    parser.add_argument('--annovar-db', type=str, default='humandb', required=False,
-                        help='String indicated which Annovar database to use (default: humandb)')
-    parser.add_argument('--annovar-version', type=str, default='hg38', required=False,
-                        help='String indicated which version of the Annovar database to use (default: hg38)')
+                        # Add cache dir
+    parser.add_argument('--vep-db', type=str, default='GRCh38', required=False,
+                        help='String indicating which genome assembly to use with VEP (default: GRCh38)')
+    parser.add_argument('--vep-version', type=str, default='102', required=False,
+                        help='String indicating which version from ensembl genome to use with VEP (default: 102)')
+    parser.add_argument('--vep-dir', type=str, default='', required=False,
+                        help='String indicating the path to the VEP cache directory (default: $HOME/.vep)')
     parser.add_argument("--hla-fasta", type=str, default=None, required=True,
-                        help="Path to the HLA reference fasta file located for Optype.")
+                        help="Path to the HLA reference fasta file located for OptiType.")
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
@@ -456,12 +464,13 @@ if __name__ == '__main__':
     PON = os.path.abspath(args.pon)
     INTERVALS = os.path.abspath(args.intervals) if args.intervals else None
     STEPS = args.steps
-    ANNOVAR_DB = args.annovar_db
-    ANNOVAR_VERSION = args.annovar_version
+    ASSEMBLY = args.vep_db
+    VERSION = args.vep_version
+    CACHEDIR = os.path.abspath(args.vep_dir) if args.vep_dir else None
     HLA_FASTA = os.path.abspath(args.hla_fasta)
     KEEP = args.keep_intermediate
     HLA_NORMAL = args.normal_hla
-    SPARK =  args.use_gatk_spark
+    SPARK = args.use_gatk_spark
 
     # Move to output dir
     os.makedirs(os.path.abspath(DIR), exist_ok=True)
@@ -480,8 +489,9 @@ if __name__ == '__main__':
          GERMLINE,
          PON,
          INTERVALS,
-         ANNOVAR_DB,
-         ANNOVAR_VERSION,
+         ASSEMBLY,
+         VERSION,
+         CACHEDIR,
          HLA_FASTA,
          KEEP,
          STEPS,

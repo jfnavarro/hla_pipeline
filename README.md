@@ -15,14 +15,14 @@ There are 2 pipelines and 2 tools:
 **dna_pipeline.py** processes DNA data and generates a list of unified
 filtered and annotated somatic variants. 
 The variant callers are Mutect2, Strelka2, Varscan and SomaticSniper and both indels and SNPs are
-reported. Annotation is performed using Annovar. 
+reported. Annotation is performed using VEP. 
 The pipeline uses trim-galore to trim, bwa-men to align and follows GATK4 best practices. 
 The pipeline also performs HLA predictions with OptiType (tumor and normal).
 QC is performed with FastQC and BamQC.
 
 **rna_pipeline.py** processes RNA data and generates a list of unified
 annotated somatic variants (weak filtered) and also a list of gene counts values. 
-The variant callers used are Varscan and HaplotypeCaller. Annotation is performed with Annovar.
+The variant callers used are Varscan and HaplotypeCaller. Annotation is performed with VEP.
 The pipeline uses trim-galore to trim, STAR to align and follows GATK4 best practices. 
 The pipeline also performs HLA predictions with OptiType.
 The gene counts values are computed with featureCounts.
@@ -35,20 +35,14 @@ are created for each of the variants somatic effects. The user can define
 the values of the filters for both dna and rna variants. 
 
 **mhc_predict.py** can take the file generated with merge_results.py and the HLA files
-generated in the DNA and/or RNA pipelines and then generate a list of predicted neo-antigens.
+generated in the DNA and/or RNA pipelines and then generate a list of predicted neo-antigens
+with affinity binding scores.
 Variants are filtered by certain criteria and only the most common alleles for each HLA class 1
 are used. 
 
 Each tool/pipeline uses a command line interface with parameters which
 can be shown and described with --help.
 
-## cDNA and Peptides dictionaries
-merge_results.py requires two dictionaries, one mapping transcript ids to DNA sequences and another
-one mapping transcript ids to peptide sequences. The format is the following for both files:
-
-TRANSCRIPT_ID:SEQUENCE 
-
-To build these dictionaries you can use as reference the Jupyter Notebooks located in dictionaries
 
 ## Requirements
 We strongly recommend to use Anaconda or Miniconda, otherwise you may need to create aliases
@@ -114,6 +108,12 @@ Other files:
   - protein_sequences_mu.fasta
   - protein_sequences_wt.fasta
   
+## Authors
+Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
+
+## Contributors
+Jonatan Gonzalez <jonatan.gonzalez.r@outlook.com>
+
 ## Contact
 Contact: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 

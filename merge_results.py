@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 This tool combines results from the dna_pipeline.py and/or rna_pipeline.py
-to create an unified table with all the variants filtrated and their epitopes (for each effect).
+to create an unified table with all the variants (filtered) and their epitopes (for each effect).
 The table contains useful information for post-analysis.
 
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
@@ -22,8 +22,6 @@ def main(dna_variants,
          rna_variants,
          rna_names,
          rna_counts,
-         cDNA_DICT,
-         AA_DICT,
          tumor_coverage,
          tumor_var_depth,
          tumor_var_freq,
@@ -35,24 +33,14 @@ def main(dna_variants,
          tumor_coverage_rna,
          tumor_var_depth_rna,
          tumor_var_freq_rna,
-         num_callers_rna):
+         num_callers_rna,
+         ensembl_version):
 
     if not dna_variants and not rna_variants:
         sys.stderr.write("Error, no variants given as input (DNA or RNA).\n")
         sys.exit(1)
 
     # TODO add sanity check for parameters
-
-    AA_seq_dict = dict()
-    with open(AA_DICT, "r") as handle:
-        for line in handle.readlines():
-            tokens = line.split(":")
-            AA_seq_dict[tokens[0]] = tokens[1].strip()
-    cDNA_seq_dict = dict()
-    with open(cDNA_DICT, "r") as handle:
-        for line in handle.readlines():
-            tokens = line.split(":")
-            cDNA_seq_dict[tokens[0]] = tokens[1].strip()
 
     variant_dict = defaultdict(list)
 
@@ -68,8 +56,7 @@ def main(dna_variants,
                                            t2n_ratio,
                                            num_callers,
                                            num_callers_indel,
-                                           cDNA_seq_dict,
-                                           AA_seq_dict)
+                                           ensembl_version)
             for variant in variants:
                 variant_dict[variant.key].append((variant, name))
 
@@ -81,8 +68,7 @@ def main(dna_variants,
                                            tumor_var_depth_rna,
                                            tumor_var_freq_rna,
                                            num_callers_rna,
-                                           cDNA_seq_dict,
-                                           AA_seq_dict)
+                                           ensembl_version)
             for variant in variants:
                 variant_dict[variant.key].append((variant, name))
 
@@ -105,7 +91,7 @@ def main(dna_variants,
                 counts_dict[name][gene] = float(expr)
                 counts_stats_percentile[name][gene] = np.around(
                          stats.percentileofscore(counts_filtered, float(expr), kind='strict'), 3)
-            counts_stats[name] =  np.around(np.mean(counts), 3)
+            counts_stats[name] = np.around(np.mean(counts), 3)
             counts_table['Percentile'] = counts_stats_percentile[name].values()
             counts_table.to_csv(file + '.final', sep='\t', index=False)
 
@@ -115,7 +101,7 @@ def main(dna_variants,
                    'RNA samples (passing)\tNumber of RNA samples (passing)\t' \
                    'RNA samples (failing)\tNumber of RNA samples (failing)\tEffects\t' \
                    'cDNA change\tAA change\tEpitope creation flags\tWt Epitope\t' \
-                   'Mut Epitope\tTranscript\tDNA Callers Sample(Name:NDP;NAD;NVAF;TDP;TAD;TVAF)\t' \
+                   'Mut Epitope\tTranscripts\tDNA Callers Sample(Name:NDP;NAD;NVAF;TDP;TAD;TVAF)\t' \
                    'RNA Callers Sample(Name:TDP;TAD;TVAF)\tGeneCount info Sample(gene;exp;mean;percentile)\n'
 
     final_file = open('overlap_final.txt', 'w')
@@ -135,14 +121,14 @@ def main(dna_variants,
         # key = variant key
         # value = list of (Variant, sample_name) tuples
 
-        rna_name_pass = [name for variant, name in value if variant.type == 'rna' and variant.status]
-        rna_name_fail = [name for variant, name in value if variant.type == 'rna' and not variant.status]
+        rna_name_pass = set([name for variant, name in value if variant.type == 'rna' and variant.status])
+        rna_name_fail = set([name for variant, name in value if variant.type == 'rna' and not variant.status])
         rna_callers = ';'.join(
-            ['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'rna'])
-        dna_name_pass = [name for variant, name in value if variant.type == 'dna' and variant.status]
-        dna_name_fail = [name for variant, name in value if variant.type == 'dna' and not variant.status]
+            set(['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'rna']))
+        dna_name_pass = set([name for variant, name in value if variant.type == 'dna' and variant.status])
+        dna_name_fail = set([name for variant, name in value if variant.type == 'dna' and not variant.status])
         dna_callers = ';'.join(
-            ['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'dna'])
+            set(['{}:({})'.format(name, variant.callers) for variant, name in value if variant.type == 'dna']))
         num_rna_pass = len(rna_name_pass)
         num_rna_fail = len(rna_name_fail)
         num_dna_pass = len(dna_name_pass)
@@ -152,7 +138,7 @@ def main(dna_variants,
         dbsnp = value[0][0].dbsnp
         gnomad = value[0][0].gnomad
         cosmic = value[0][0].cosmic
-        gene = value[0][0].gene
+        gene = value[0][0].gene # Check that the gene is the correct one for the variant
 
         # Create a dictionary of epitopes so to keep unique ones (different mut peptide)
         epitopes_dict = defaultdict(list)
@@ -181,14 +167,15 @@ def main(dna_variants,
                         gene_locus.append("{}:-".format(name))
             else:
                 gene_locus = ["-"]
-            effect = ';'.join(['{}_{}_{}'.format(e.func, e.gene, e.transcript) for e in epitopes])
+            effect = ';'.join(set(['{}_{}_{}'.format(e.func, e.gene, e.transcript) for e in epitopes]))
+            transcripts = ';'.join(set([e.transcript for e in epitopes]))
             to_write = '\t'.join(str(x) for x in [key, dbsnp, gnomad, cosmic,
                                                   ';'.join(dna_name_pass), num_dna_pass,
                                                   ';'.join(dna_name_fail), num_dna_fail,
                                                   ';'.join(rna_name_pass), num_rna_pass,
                                                   ';'.join(rna_name_fail), num_rna_fail,
                                                   effect, epitope.dnamut, epitope.aamut, epitope.flags,
-                                                  epitope.wtseq, epitope.mutseq, epitope.transcript,
+                                                  epitope.wtseq, epitope.mutseq, transcripts,
                                                   dna_callers, rna_callers, ';'.join(gene_locus)])
             if num_dna_pass >= 1:
                 final_file.write(to_write + '\n')
@@ -217,10 +204,6 @@ if __name__ == '__main__':
                         help='List of names for each RNA sample/file (to include in the report)')
     parser.add_argument('--rna-counts', nargs='+', default=None, required=False,
                         help='List of gene counts files obtained with the RNA pipeline')
-    parser.add_argument('--dictAA',
-                        help='Path to a dictionary of transcript IDs to peptide sequences', required=True)
-    parser.add_argument('--dictcDNA',
-                        help='Path to a dictionary of transcript IDs to DNA sequences', required=True)
     parser.add_argument('--filter-dna-tumor-cov', type=int, default=10, required=False, dest='tumor_coverage',
                         help='Filter for DNA variants tumor number of reads (coverage) (DP). Default=10')
     parser.add_argument('--filter-dna-tumor-depth', type=int, default=4, required=False, dest='tumor_var_depth',
@@ -251,6 +234,8 @@ if __name__ == '__main__':
     parser.add_argument('--filter-rna-callers', type=int, default=2, required=False,
                         choices=[1, 2], dest='num_callers_rna',
                         help='Filter for RNA variants number of callers required. Default=2')
+    parser.add_argument('--ensembl-version', type=str, required=True,
+                        help='Supply the genome version with which the VCF has been annotated.')
 
     args = parser.parse_args()
     main(args.dna,
@@ -258,8 +243,6 @@ if __name__ == '__main__':
          args.rna,
          args.rna_names,
          args.rna_counts,
-         os.path.abspath(args.dictcDNA),
-         os.path.abspath(args.dictAA),
          args.tumor_coverage,
          args.tumor_var_depth,
          args.tumor_var_freq,
@@ -271,4 +254,5 @@ if __name__ == '__main__':
          args.tumor_coverage_rna,
          args.tumor_var_depth_rna,
          args.tumor_var_freq_rna,
-         args.num_callers_rna)
+         args.num_callers_rna,
+         args.ensembl_version)
