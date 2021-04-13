@@ -11,17 +11,15 @@ conda env create -f environment.yml
 mhcflurry-downloads fetch models_class1_presentation
 
 # Download and install VEP cache (Make use to use the same version as the installed VEP)
+# Note that this will install the cache in the default location for VEP but you can have the cache folder
+# placed elsewhere and use the parameter --vep-cache in the dna_pipeline.py and rna_pipeline.py
 mkdir -p $HOME/.vep
 cd $HOME/.vep
 curl -O http://ftp.ensembl.org/pub/release-102/variation/indexed_vep_cache/homo_sapiens_vep_102_GRCh38.tar.gz
 tar xzf homo_sapiens_vep_102_GRCh38.tar.gz
 
-curl -O http://ftp.ensembl.org/pub/release-102/variation/indexed_vep_cache/homo_sapiens_vep_102_GRCh37.tar.gz
-tar xzf homo_sapiens_vep_102_GRCh37.tar.gz
-
-cd ~/shared
-
 # Install Strelka (Conda version is only compatible with Python 2.7)
+cd ~/shared
 wget https://github.com/Illumina/strelka/releases/download/v2.9.10/strelka-2.9.10.centos6_x86_64.tar.bz2
 tar -xjf strelka-2.9.10.centos6_x86_64.tar.bz2
 mv strelka-2.9.10.centos6_x86_64 ~/shared/strelka
@@ -32,9 +30,8 @@ gsutil cp gs://gatk-software/package-archive/gatk/GenomeAnalysisTK-3.8-1-0-gf15c
 tar xjf GenomeAnalysisTK-3.8-1-0-gf15c1c3ef.tar.bz2
 mv GenomeAnalysisTK-3.8-1-0-gf15c1c3ef/GenomeAnalysisTK.jar gatk3.8.jar
 
-cd ~
-
 # Clone the pipeline and install it
+cd ~
 git clone https://github.com/jfnavarro/hla_pipeline.git
 cd hla_pipeline
 cp shared/* ~/shared/
