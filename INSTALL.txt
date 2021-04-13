@@ -7,6 +7,9 @@ mkdir -p ~/shared
 # Create environment with all the tools
 conda env create -f environment.yml
 
+# Activate environment 
+conda activate hla
+
 # Download mhcflurry models
 mhcflurry-downloads fetch models_class1_presentation
 
