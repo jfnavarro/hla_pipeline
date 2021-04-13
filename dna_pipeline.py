@@ -322,27 +322,27 @@ def main(R1_NORMAL,
     if 'filter' in STEPS:
         start_filter_time = datetime.datetime.now()
         logger.info('Starting variant filtering and annotation: {}'.format(start_filter_time))
-        # logger.info('Filtering variants')
-        # cmd = '{} FilterMutectCalls --variant Mutect_unfiltered.vcf --stats Mutect_unfiltered.vcf.stats ' \
-        #       '--output Mutect.vcf --reference {}'.format(GATK, GENOME)
-        # exec_command(cmd)
+        logger.info('Filtering variants')
+        cmd = '{} FilterMutectCalls --variant Mutect_unfiltered.vcf --stats Mutect_unfiltered.vcf.stats ' \
+              '--output Mutect.vcf --reference {}'.format(GATK, GENOME)
+        exec_command(cmd)
 
-        # mutect2_filter('Mutect.vcf', 'mutect_filtered.vcf', sample1_ID, sample2_ID)
-        # strelka2_filter('Strelka_output/results/variants/somatic.snvs.vcf.gz', 'strelka_filtered.vcf')
-        # somaticSniper_filter('SS.vcf', 'somaticsniper_filtered.vcf')
-        # varscan_filter('varscan.snp.vcf', 'varscan_filtered.vcf')
-        # strelka2_filter_indels('Strelka_output/results/variants/somatic.indels.vcf.gz', 'strelka_indel_filtered.vcf')
-        # varscan_filter('varscan.indel.vcf', 'varscan_filtered_indel.vcf')
+        mutect2_filter('Mutect.vcf', 'mutect_filtered.vcf', sample1_ID, sample2_ID)
+        strelka2_filter('Strelka_output/results/variants/somatic.snvs.vcf.gz', 'strelka_filtered.vcf')
+        somaticSniper_filter('SS.vcf', 'somaticsniper_filtered.vcf')
+        varscan_filter('varscan.snp.vcf', 'varscan_filtered.vcf')
+        strelka2_filter_indels('Strelka_output/results/variants/somatic.indels.vcf.gz', 'strelka_indel_filtered.vcf')
+        varscan_filter('varscan.indel.vcf', 'varscan_filtered_indel.vcf')
 
-        # # Combine with GATK
-        # logger.info('Combining variants')
-        # # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
-        # # TODO replace this with jacquard merge
-        # cmd = '{} -T CombineVariants -R {} -V:varscan_indel varscan_filtered_indel.vcf -V:varscan varscan_filtered.vcf ' \
-        #       '-V:mutect mutect_filtered.vcf -V:strelka_indel strelka_indel_filtered.vcf -V:strelka strelka_filtered.vcf ' \
-        #       '-V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf ' \
-        #       '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, GENOME, THREADS)
-        # exec_command(cmd)
+        # Combine with GATK
+        logger.info('Combining variants')
+        # CombineVariants is not available in GATK 4 so we need to use the 3.8 version
+        # TODO replace this with jacquard merge
+        cmd = '{} -T CombineVariants -R {} -V:varscan_indel varscan_filtered_indel.vcf -V:varscan varscan_filtered.vcf ' \
+              '-V:mutect mutect_filtered.vcf -V:strelka_indel strelka_indel_filtered.vcf -V:strelka strelka_filtered.vcf ' \
+              '-V:somaticsniper somaticsniper_filtered.vcf -o combined_calls.vcf ' \
+              '-genotypeMergeOptions UNIQUIFY --num_threads {}'.format(GATK3, GENOME, THREADS)
+        exec_command(cmd)
 
         # Annotate with VEP
         logger.info('Annotating variants')
