@@ -14,6 +14,7 @@ Multiple options are available. To see them type --help
 from hlapipeline.common import *
 from hlapipeline.version import version_number
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from pathlib import Path
 import os
 import sys
 import shutil
@@ -39,6 +40,7 @@ def main(R1_NORMAL,
          INTERVALS,
          ASSEMBLY,
          VERSION,
+         CACHEDIR,
          HLA_FASTA,
          KEEP,
          STEPS,
@@ -46,6 +48,13 @@ def main(R1_NORMAL,
          SPARK):
 
     # TODO add sanity checks for the parameters
+
+    if 'filter' in STEPS:
+        if not CACHEDIR:
+            if not Path.home().joinpath('.vep').exists():
+                raise Exception('Cache directory doesn\'t exist at default location, please provide a valid path.')
+        elif not Path(CACHEDIR).exists():
+            raise Exception('The cache directory provided doesn\'t exist. Please provide a different one.')
 
     logging.basicConfig(format='%(asctime)s - %(message)s',
                         datefmt='%d-%b-%y %H:%M:%S',
@@ -336,8 +345,13 @@ def main(R1_NORMAL,
         exec_command(cmd)
 
         # Annotate with VEP
+        if not CACHEDIR:
+            cache_cmd = '--dir_cache {}'.format(Path.home().joinpath('.vep'))
+        else:
+            cache_cmd = '--dir_cache {}'.format(CACHEDIR)
+        print(cache_cmd)
         logger.info('Annotating variants')
-        annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF)
+        annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF, cache_cmd)
 
         # Summary of basic statistic of annotated VCF file
         annotated_vcf = "annotated.{}_multianno.vcf".format(ASSEMBLY)
@@ -422,6 +436,8 @@ if __name__ == '__main__':
                         help='String indicating which genome assembly to use with VEP (default: GRCh38)')
     parser.add_argument('--vep-version', type=str, default='102', required=False,
                         help='String indicating which version from ensembl genome to use with VEP (default: 102)')
+    parser.add_argument('--vep-dir', type=str, default='', required=False,
+                        help='String indicating the path to the VEP cache directory (default: $HOME/.vep)')
     parser.add_argument("--hla-fasta", type=str, default=None, required=True,
                         help="Path to the HLA reference fasta file located for OptiType.")
     parser.add_argument('--threads',
@@ -455,6 +471,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ASSEMBLY = args.vep_db
     VERSION = args.vep_version
+    CACHEDIR = args.vep_dir
     HLA_FASTA = os.path.abspath(args.hla_fasta)
     KEEP = args.keep_intermediate
     HLA_NORMAL = args.normal_hla
@@ -479,6 +496,7 @@ if __name__ == '__main__':
          INTERVALS,
          ASSEMBLY,
          VERSION,
+         CACHEDIR,
          HLA_FASTA,
          KEEP,
          STEPS,

@@ -100,7 +100,7 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
             os.remove('{}_mapped_2.bam'.format(origin))
 
 
-def annotate_variants(input, db, version, threads, fasta):
+def annotate_variants(input, db, version, threads, fasta, cache):
     """
     Annotate a VCF using VEP
     :param input: the VCF file
@@ -110,7 +110,7 @@ def annotate_variants(input, db, version, threads, fasta):
     :param threads: the number of threads to use
     """
     cmd = '{} -i {} --fork {} -o annotated.{}_multianno.vcf --fasta {} --format vcf --vcf --assembly {} '\
-        '--cache_version {} --species homo_sapiens {}'.format(VEP, input, threads, db, fasta, db, version, VEP_OPTIONS)
+        '--cache_version {} --species homo_sapiens {} {}'.format(VEP, input, threads, db, fasta, db, version, VEP_OPTIONS, cache)
     exec_command(cmd)
 
 

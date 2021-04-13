@@ -15,6 +15,7 @@ Multiple options are available. To see them type --help
 from hlapipeline.common import *
 from hlapipeline.tools import *
 from hlapipeline.version import version_number
+from pathlib import Path
 import os
 import shutil
 import glob
@@ -35,11 +36,18 @@ def main(R1,
          THREADS,
          ASSEMBLY,
          VERSION,
+         CACHEDIR,
          STEPS,
          HLA_FASTA,
          KEEP,
          SPARK):
     # TODO add sanity checks for the parameters
+    if 'filter' in STEPS:
+        if not CACHEDIR:
+            if not Path.home().joinpath('.vep').exists():
+                raise Exception('Cache directory doesn\'t exist at default location, please provide a valid path.')
+        elif not Path(CACHEDIR).exists():
+            raise Exception('The cache directory provided doesn\'t exist. Please provide a different one.')
 
     logging.basicConfig(format='%(asctime)s - %(message)s', 
                         datefmt='%d-%b-%y %H:%M:%S',
@@ -251,8 +259,13 @@ def main(R1,
         exec_command(cmd)
 
         # Annotate with VEP
+        if not CACHEDIR:
+            cache_cmd = '--dir_cache {}'.format(Path.home().joinpath('.vep'))
+        else:
+            cache_cmd = '--dir_cache {}'.format(CACHEDIR)
+
         logger.info('Annotating variants')
-        annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF)
+        annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF, cache_cmd)
 
         # Summary of basic statistic of the annotated VCF file
         annotated_vcf = "annotated.{}_multianno.vcf".format(ASSEMBLY)
@@ -330,6 +343,8 @@ if __name__ == '__main__':
                         help='String indicating which genome assembly to use with VEP (default: GRCh38)')
     parser.add_argument('--vep-version', type=str, default='102', required=False,
                         help='String indicating which version from ensembl genome to use with VEP (default: 102)')
+    parser.add_argument('--vep-dir', type=str, default='', required=False,
+                        help='String indicating the path to the VEP cache directory (default: $HOME/.vep)')
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
@@ -358,6 +373,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ASSEMBLY = args.vep_db
     VERSION = args.vep_version
+    CACHEDIR = args.vep_dir
     HLA_FASTA = os.path.abspath(args.hla_fasta)
     KEEP = args.keep_intermediate
     SPARK = args.use_gatk_spark
@@ -378,6 +394,7 @@ if __name__ == '__main__':
          THREADS,
          ASSEMBLY,
          VERSION,
+         CACHEDIR,
          STEPS,
          HLA_FASTA,
          KEEP,
