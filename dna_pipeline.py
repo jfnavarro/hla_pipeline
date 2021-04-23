@@ -44,7 +44,6 @@ def main(R1_NORMAL,
          STEPS,
          HLA_NORMAL,
          SPARK):
-
     # TODO add sanity checks for the parameters
 
     logging.basicConfig(format='%(asctime)s - %(message)s',
@@ -69,7 +68,7 @@ def main(R1_NORMAL,
 
     if 'mapping' in STEPS:
 
-        SAM_THREADS = max(int(THREADS/2), 1)
+        SAM_THREADS = max(int(THREADS / 2), 1)
 
         start_map_time = datetime.datetime.now()
         logger.info('Starting trimming and mapping step: {}'.format(start_map_time))
@@ -129,23 +128,25 @@ def main(R1_NORMAL,
         logger.info('Marking Duplicates')
 
         if SPARK:
-            cmd1 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample1_header.bam -O sample1_dedup.bam'.format(GATK)
+            cmd1 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample1_header.bam -O sample1_dedup.bam'.format(
+                GATK)
 
-            cmd2 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample2_header.bam -O sample2_dedup.bam'.format(GATK)
+            cmd2 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample2_header.bam -O sample2_dedup.bam'.format(
+                GATK)
 
         else:
             cmd1 = '{} --java-options "-Xmx32g" MarkDuplicates -I sample1_header.bam -O sample1_dedup.bam ' \
-                      '--CREATE_INDEX true -M sample1_dup_metrics.txt'.format(GATK)
+                   '--CREATE_INDEX true -M sample1_dup_metrics.txt'.format(GATK)
 
             cmd2 = '{} --java-options "-Xmx32g" MarkDuplicates -I sample2_header.bam -O sample2_dedup.bam ' \
-                      '--CREATE_INDEX true -M sample2_dup_metrics.txt'.format(GATK)
+                   '--CREATE_INDEX true -M sample2_dup_metrics.txt'.format(GATK)
 
             # Wait for the processes to finish in parallel
         p1 = exec_command(cmd1, detach=True)
         p2 = exec_command(cmd2, detach=True)
         p1.wait()
         p2.wait()
-        
+
         intervals_cmd = '--intervals {}'.format(INTERVALS) if INTERVALS else ''
 
         # GATK base re-calibration
@@ -171,7 +172,6 @@ def main(R1_NORMAL,
               '--output sample1_final.bam'.format(GATK, GENOME)
         p1 = exec_command(cmd, detach=True)
 
-        
         cmd = '{} ApplyBQSR --reference {} --input sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt ' \
               '--output sample2_final.bam'.format(GATK, GENOME)
         p2 = exec_command(cmd, detach=True)
@@ -217,8 +217,8 @@ def main(R1_NORMAL,
         # HLA-LA predictions
         if HLA_NORMAL:
             p1 = multiprocessing.Process(target=HLA_prediction,
-                                        args=('sample2_final.bam', THREADS,
-                                            'Normal', SAMPLEID, HLA_FASTA, 'dna', KEEP))
+                                         args=('sample2_final.bam', THREADS,
+                                               'Normal', SAMPLEID, HLA_FASTA, 'dna', KEEP))
             p1.start()
 
         p2 = multiprocessing.Process(target=HLA_prediction,
@@ -305,7 +305,7 @@ def main(R1_NORMAL,
                 os.remove('sample1.pileup')
             if os.path.isfile('sample2.pileup'):
                 os.remove('sample2.pileup')
-        
+
         end_variant_time = datetime.datetime.now()
         total_variant_time = end_variant_time - start_variant_time
         logger.info('Total variant calling processing time: {}'.format(total_variant_time))
@@ -389,7 +389,7 @@ def main(R1_NORMAL,
     end_pipeline_time = datetime.datetime.now()
     total_pipeline_time = end_pipeline_time - start_pipeline_time
     logger.info('Total pipeline execution time: {}'.format(total_pipeline_time))
-    
+
     logger.info('COMPLETED!')
 
 
@@ -417,7 +417,6 @@ if __name__ == '__main__':
                         help='Path to the file with the panel of normals for Mutect2 (GATK bundle)')
     parser.add_argument('--intervals', type=str, default=None, required=False,
                         help='Path to the file with the intervals to operate in BaseRecalibrator and Mutect2 (BED)')
-                        # Add cache dir
     parser.add_argument('--vep-db', type=str, default='GRCh38', required=False,
                         help='String indicating which genome assembly to use with VEP (default: GRCh38)')
     parser.add_argument('--vep-version', type=str, default='102', required=False,

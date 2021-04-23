@@ -93,7 +93,7 @@ def main(dna_variants,
             for gene, expr in gene_counts:
                 counts_dict[name][gene] = float(expr)
                 counts_stats_percentile[name][gene] = np.around(
-                         stats.percentileofscore(counts_filtered, float(expr), kind='strict'), 3)
+                    stats.percentileofscore(counts_filtered, float(expr), kind='strict'), 3)
             counts_stats[name] = np.around(np.mean(counts), 3)
             counts_table['Percentile'] = counts_stats_percentile[name].values()
             counts_table.to_csv(file + '.final', sep='\t', index=False)
