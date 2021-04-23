@@ -90,7 +90,7 @@ def main(dna_variants,
             for gene, expr in gene_counts:
                 counts_dict[name][gene] = float(expr)
                 counts_stats_percentile[name][gene] = np.around(
-                         stats.percentileofscore(counts_filtered, float(expr), kind='strict'), 3)
+                    stats.percentileofscore(counts_filtered, float(expr), kind='strict'), 3)
             counts_stats[name] = np.around(np.mean(counts), 3)
             counts_table['Percentile'] = counts_stats_percentile[name].values()
             counts_table.to_csv(file + '.final', sep='\t', index=False)
@@ -235,7 +235,7 @@ if __name__ == '__main__':
                         choices=[1, 2], dest='num_callers_rna',
                         help='Filter for RNA variants number of callers required. Default=2')
     parser.add_argument('--ensembl-version', type=str, required=True,
-                        help='Supply the genome version with which the VCF has been annotated.')
+                        help='Ensembl version number that was used to annotate the variants with VEP')
 
     args = parser.parse_args()
     main(args.dna,

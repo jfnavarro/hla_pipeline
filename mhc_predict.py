@@ -16,6 +16,7 @@ import json
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import sys
 
+
 def main(hla, overlap_final, alleles_file, mode, results, results_filter, cutoff):
 
     # TODO perform sanity check on input parameters
@@ -101,6 +102,7 @@ def main(hla, overlap_final, alleles_file, mode, results, results_filter, cutoff
 
     print('Completed')
 
+
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('--hla', nargs='+', default=None, required=True,
@@ -119,6 +121,6 @@ if __name__ == '__main__':
                         help='What filtering criteria to use when using --results best (default=affinity)',
                         choices=['presentation_score', 'processing_score', 'affinity', 'affinity_percentile'])
     parser.add_argument('--cutoff', default=1,
-                        help='Cutoff to filter in how many samples each HLA has to be present (default = 1).')
+                        help='Cutoff to filter in how many samples each HLA has to be present to be kept (default = 1)')
     args = parser.parse_args()
     main(args.hla, args.variants, args.alleles, args.mode, args.results, args.results_filter, args.cutoff)

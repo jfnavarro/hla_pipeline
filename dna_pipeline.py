@@ -46,7 +46,6 @@ def main(R1_NORMAL,
          STEPS,
          HLA_NORMAL,
          SPARK):
-
     # TODO add sanity checks for the parameters
 
     if 'filter' in STEPS:
@@ -78,7 +77,7 @@ def main(R1_NORMAL,
 
     if 'mapping' in STEPS:
 
-        SAM_THREADS = max(int(THREADS/2), 1)
+        SAM_THREADS = max(int(THREADS / 2), 1)
 
         start_map_time = datetime.datetime.now()
         logger.info('Starting trimming and mapping step: {}'.format(start_map_time))
@@ -138,23 +137,25 @@ def main(R1_NORMAL,
         logger.info('Marking Duplicates')
 
         if SPARK:
-            cmd1 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample1_header.bam -O sample1_dedup.bam'.format(GATK)
+            cmd1 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample1_header.bam -O sample1_dedup.bam'.format(
+                GATK)
 
-            cmd2 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample2_header.bam -O sample2_dedup.bam'.format(GATK)
+            cmd2 = '{} --java-options "-Xmx32g" MarkDuplicatesSpark -I sample2_header.bam -O sample2_dedup.bam'.format(
+                GATK)
 
         else:
             cmd1 = '{} --java-options "-Xmx32g" MarkDuplicates -I sample1_header.bam -O sample1_dedup.bam ' \
-                      '--CREATE_INDEX true -M sample1_dup_metrics.txt'.format(GATK)
+                   '--CREATE_INDEX true -M sample1_dup_metrics.txt'.format(GATK)
 
             cmd2 = '{} --java-options "-Xmx32g" MarkDuplicates -I sample2_header.bam -O sample2_dedup.bam ' \
-                      '--CREATE_INDEX true -M sample2_dup_metrics.txt'.format(GATK)
+                   '--CREATE_INDEX true -M sample2_dup_metrics.txt'.format(GATK)
 
             # Wait for the processes to finish in parallel
         p1 = exec_command(cmd1, detach=True)
         p2 = exec_command(cmd2, detach=True)
         p1.wait()
         p2.wait()
-        
+
         intervals_cmd = '--intervals {}'.format(INTERVALS) if INTERVALS else ''
 
         # GATK base re-calibration
@@ -180,7 +181,6 @@ def main(R1_NORMAL,
               '--output sample1_final.bam'.format(GATK, GENOME)
         p1 = exec_command(cmd, detach=True)
 
-        
         cmd = '{} ApplyBQSR --reference {} --input sample2_dedup.bam --bqsr-recal-file sample2_recal_data.txt ' \
               '--output sample2_final.bam'.format(GATK, GENOME)
         p2 = exec_command(cmd, detach=True)
@@ -226,8 +226,8 @@ def main(R1_NORMAL,
         # HLA-LA predictions
         if HLA_NORMAL:
             p1 = multiprocessing.Process(target=HLA_prediction,
-                                        args=('sample2_final.bam', THREADS,
-                                            'Normal', SAMPLEID, HLA_FASTA, 'dna', KEEP))
+                                         args=('sample2_final.bam', THREADS,
+                                               'Normal', SAMPLEID, HLA_FASTA, 'dna', KEEP))
             p1.start()
 
         p2 = multiprocessing.Process(target=HLA_prediction,
@@ -314,7 +314,7 @@ def main(R1_NORMAL,
                 os.remove('sample1.pileup')
             if os.path.isfile('sample2.pileup'):
                 os.remove('sample2.pileup')
-        
+
         end_variant_time = datetime.datetime.now()
         total_variant_time = end_variant_time - start_variant_time
         logger.info('Total variant calling processing time: {}'.format(total_variant_time))
@@ -398,7 +398,7 @@ def main(R1_NORMAL,
     end_pipeline_time = datetime.datetime.now()
     total_pipeline_time = end_pipeline_time - start_pipeline_time
     logger.info('Total pipeline execution time: {}'.format(total_pipeline_time))
-    
+
     logger.info('COMPLETED!')
 
 
@@ -426,26 +426,25 @@ if __name__ == '__main__':
                         help='Path to the file with the panel of normals for Mutect2 (GATK bundle)')
     parser.add_argument('--intervals', type=str, default=None, required=False,
                         help='Path to the file with the intervals to operate in BaseRecalibrator and Mutect2 (BED)')
-                        # Add cache dir
     parser.add_argument('--vep-db', type=str, default='GRCh38', required=False,
-                        help='String indicating which genome assembly to use with VEP (default: GRCh38)')
+                        help='Genome assembly version to be used in VEP (default: GRCh38)')
     parser.add_argument('--vep-version', type=str, default='102', required=False,
-                        help='String indicating which version from ensembl genome to use with VEP (default: 102)')
-    parser.add_argument('--vep-dir', type=str, default='', required=False,
-                        help='String indicating the path to the VEP cache directory (default: $HOME/.vep)')
+                        help='Ensembl version number to be used in VEP (default: 102)')
+    parser.add_argument('--vep-dir', type=str, default=None, required=False,
+                        help='Path to the VEP cache directory (default: $HOME/.vep)')
     parser.add_argument("--hla-fasta", type=str, default=None, required=True,
-                        help="Path to the HLA reference fasta file located for OptiType.")
+                        help="Path to the HLA reference FASTA file to be used in OptiType (HLA)")
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                         help='Steps to perform in the pipeline',
                         choices=['mapping', 'gatk', 'hla', 'variant', 'filter'])
     parser.add_argument('--keep-intermediate', default=False, action='store_true', required=False,
-                        help='Avoid intermediate files from being removed.')
+                        help='Do not remove temporary files')
     parser.add_argument('--normal-hla', default=False, action='store_true', required=False,
-                        help='Perform HLA typing also in normal sample.')
+                        help='Perform HLA typing also in normal sample')
     parser.add_argument('--use-gatk-spark', default=False, action='store_true', required=False,
-                        help='Enable the use of MarkDuplicatesSpark and BaseRecalibratorSpark.')
+                        help='Enable the use of Spark in MarkDuplicates and BaseRecalibrator (GATK)')
 
     # Parse arguments
     args = parser.parse_args()

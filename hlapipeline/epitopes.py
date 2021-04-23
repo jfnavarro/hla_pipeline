@@ -11,6 +11,7 @@ def translate_dna(seq):
     return translate(seq, to_stop=True)
 
 
+#TODO add a description to this function
 def create_epitope_varcode(chrm, start, ref, alt, db, transcript):
     # Retrieve variant info
     vinfo = Variant(contig=chrm, start=start, ref=ref, alt=alt, ensembl=db)

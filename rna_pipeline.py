@@ -336,22 +336,22 @@ if __name__ == '__main__':
     parser.add_argument('--snpsites',
                         help='Path to the file with the SNP sites (GATK bundle)', required=True)
     parser.add_argument('--vep-db', type=str, default='GRCh38', required=False,
-                        help='String indicating which genome assembly to use with VEP (default: GRCh38)')
+                        help='Genome assembly version to be used in VEP (default: GRCh38)')
     parser.add_argument('--vep-version', type=str, default='102', required=False,
-                        help='String indicating which version from ensembl genome to use with VEP (default: 102)')
-    parser.add_argument('--vep-dir', type=str, default='', required=False,
-                        help='String indicating the path to the VEP cache directory (default: $HOME/.vep)')
+                        help='Ensembl version number to be used in VEP (default: 102)')
+    parser.add_argument('--vep-dir', type=str, default=None, required=False,
+                        help='Path to the VEP cache directory (default: $HOME/.vep)')
+    parser.add_argument("--hla-fasta", type=str, default=None, required=True,
+                        help="Path to the HLA reference FASTA file to be used in OptiType (HLA)")
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                         help='Steps to perform in the pipeline',
                         choices=['mapping', 'gatk', 'hla', 'variant', 'filter'])
-    parser.add_argument("--hla-fasta", type=str, default=None, required=True,
-                        help="Path to the HLA reference fasta file for HLA typing with Optitype.")
     parser.add_argument('--keep-intermediate', default=False, action='store_true', required=False,
-                        help='Avoid intermediate files from being removed.')
+                        help='Do not remove temporary files')
     parser.add_argument('--use-gatk-spark', default=False, action='store_true', required=False,
-                        help='Enable the use of MarkDuplicatesSpark and BaseRecalibratorSpark.')
+                        help='Enable the use of Spark in MarkDuplicates and BaseRecalibrator (GATK)')
 
     # Parse arguments
     args = parser.parse_args()
