@@ -43,7 +43,7 @@ def main(R1,
          SPARK):
     # TODO add sanity checks for the parameters
     if 'filter' in STEPS:
-        if not CACHEDIR:
+        if CACHEDIR is None:
             if not Path.home().joinpath('.vep').exists():
                 raise Exception('Cache directory doesn\'t exist at default location, please provide a valid path.')
         elif not Path(CACHEDIR).exists():
