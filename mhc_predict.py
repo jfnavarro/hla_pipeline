@@ -1,9 +1,12 @@
 #! /usr/bin/env python
 """
 This tools uses the output of merge_results.py and HLAs predicted with either
-the dna_pipeline.py and/or the rna_pipeline.py to predict neoantigens.
+the dna_pipeline.py and/or the rna_pipeline.py to compute neoantigens affinity
+binding score.
 The tool extracts the WT and MUT peptides and makes affinity binding
-predictions for the HLAs (class I). The tools uses MHC-flurry for the predictions.
+predictions for the HLAs (class I). 
+The tools uses MHC-flurry for the predictions.
+
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import exec_command
@@ -13,14 +16,15 @@ import json
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import sys
 
+
 def main(hla, overlap_final, alleles_file, mode, results, results_filter, cutoff):
 
     # TODO perform sanity check on input parameters
     
     HLA_dict = defaultdict(list)
     print('Loading HLAs..')
-    for file in hla:
-        with open(file) as f:
+    for f in hla:
+        with open(f) as f:
             next(f)
             for line in f.readlines():
                 columns = line.split('\t')[1:7]
@@ -98,6 +102,7 @@ def main(hla, overlap_final, alleles_file, mode, results, results_filter, cutoff
 
     print('Completed')
 
+
 if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument('--hla', nargs='+', default=None, required=True,
@@ -116,6 +121,6 @@ if __name__ == '__main__':
                         help='What filtering criteria to use when using --results best (default=affinity)',
                         choices=['presentation_score', 'processing_score', 'affinity', 'affinity_percentile'])
     parser.add_argument('--cutoff', default=1,
-                        help='Cutoff to filter in how many samples each HLA has to be present (default = 1).')
+                        help='Cutoff to filter in how many samples each HLA has to be present to be kept (default = 1)')
     args = parser.parse_args()
     main(args.hla, args.variants, args.alleles, args.mode, args.results, args.results_filter, args.cutoff)

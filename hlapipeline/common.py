@@ -37,7 +37,7 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
     """
 
     # We do not need many threads for Samtools view
-    SAMTOOLS_THREADS = max(int(threads / 2), 1)
+    #SAMTOOLS_THREADS = max(int(threads / 2), 1)
     SAMTOOLS_THREADS = 4
 
     # TODO use os.makedirs instead
@@ -109,17 +109,19 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
             os.remove('{}_mapped_2.bam'.format(origin))
 
 
-def annotate_variants(input, db, version, threads, fasta):
+def annotate_variants(input, db, version, threads, fasta, cache):
     """
-    Annotate a VCF using Annovar
+    Annotate a VCF using VEP
     :param input: the VCF file
     :param output: the annotated VCF file
     :param db: the genome assembly (GRCh37, GRCh38)
-    :param version: the ensembl version (75, 102)
+    :param version: the ensembl version (75, 102, etc..)
     :param threads: the number of threads to use
+    :param cache: the location of the VEP cache, can be None (default location)
     """
+    cache_cmd = '--dir_cache {}'.format(cache) if cache is not None else ''
     cmd = '{} -i {} --fork {} -o annotated.{}_multianno.vcf --fasta {} --format vcf --vcf --assembly {} '\
-        '--cache_version {} --species homo_sapiens {}'.format(VEP, input, threads, db, fasta, db, version, VEP_OPTIONS)
+        '--cache_version {} --species homo_sapiens {} {}'.format(VEP, input, threads, db, fasta, db, version, VEP_OPTIONS, cache_cmd)
     exec_command(cmd)
 
 
@@ -129,6 +131,7 @@ def vcf_stats(annotated_VCF, sampleID):
     :param annotated_VCF: annotated VCF file
     :param sampleID: the ID to give to the sample
     """
+
     # VCFtools: pairwise individual relatedness using relatedness2 method
     cmd = '{} --vcf {} --relatedness2 --out {}'.format(VCFTOOLS, annotated_VCF, sampleID)
     exec_command(cmd)

@@ -1,17 +1,21 @@
 #! /usr/bin/env python
 """
 This pipeline computes somatic variants from RNA data.
+
 The pipeline trims with trimgalore, aligns with STAR,
 performs the GATK4 best practices and computes variants with
 HaplotypeCaller and Varscan. The variants are then combined into
-one file and annotated with Annovar. Gene counts are also
+one file and annotated with VEP. Gene counts are also
 computed with featureCounts.
+
 Multiple options are available. To see them type --help
+
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com>
 """
 from hlapipeline.common import *
 from hlapipeline.tools import *
 from hlapipeline.version import version_number
+from pathlib import Path
 import os
 import shutil
 import glob
@@ -32,13 +36,21 @@ def main(R1,
          THREADS,
          ASSEMBLY,
          VERSION,
+         CACHEDIR,
          STEPS,
          HLA_FASTA,
          KEEP,
          SPARK):
     # TODO add sanity checks for the parameters
+    if 'filter' in STEPS:
+        if not CACHEDIR:
+            if not Path.home().joinpath('.vep').exists():
+                raise Exception('Cache directory doesn\'t exist at default location, please provide a valid path.')
+        elif not Path(CACHEDIR).exists():
+            raise Exception('The cache directory provided doesn\'t exist. Please provide a different one.')
 
-    logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S',
+    logging.basicConfig(format='%(asctime)s - %(message)s', 
+                        datefmt='%d-%b-%y %H:%M:%S',
                         level=logging.DEBUG, filename=SAMPLEID + ".log")
     logger = logging.getLogger(SAMPLEID)
 
@@ -246,11 +258,12 @@ def main(R1,
         cmd = 'sed -i \'s/Sample1.varscan/varscan/g\' combined_calls.vcf'
         exec_command(cmd)
 
-        # Annotate with Annovar
-        logger.info('Annotating variants')
-        annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF)
+        # Annotate with VEP
 
-        # Summary of basic statistic of annotated VCF file
+        logger.info('Annotating variants')
+        annotate_variants('combined_calls.vcf', ASSEMBLY, VERSION, THREADS, GENOME_REF, CACHEDIR)
+
+        # Summary of basic statistic of the annotated VCF file
         annotated_vcf = "annotated.{}_multianno.vcf".format(ASSEMBLY)
         vcf_stats(annotated_vcf, SAMPLEID)
 
@@ -290,10 +303,10 @@ def main(R1,
             shutil.rmtree(os.path.abspath('../{}_bamQCRNA'.format(SAMPLEID)))
         if os.path.isdir('bamQCRNA'):
             shutil.move('bamQCRNA', '../{}_bamQCRNA'.format(SAMPLEID))
-        for file in glob.glob('*_fastqc*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
-        for file in glob.glob('*_trimming_report*'):
-            shutil.move(file, '../{}_{}'.format(SAMPLEID, file))
+        for f in glob.glob('*_fastqc*'):
+            shutil.move(f, '../{}_{}'.format(SAMPLEID, f))
+        for f in glob.glob('*_trimming_report*'):
+            shutil.move(f, '../{}_{}'.format(SAMPLEID, f))
 
         end_pipeline_time = datetime.datetime.now()
         total_pipeline_time = end_pipeline_time - start_pipeline_time
@@ -323,20 +336,22 @@ if __name__ == '__main__':
     parser.add_argument('--snpsites',
                         help='Path to the file with the SNP sites (GATK bundle)', required=True)
     parser.add_argument('--vep-db', type=str, default='GRCh38', required=False,
-                        help='String indicating which genome assembly to use with VEP (default: GRCh38)')
+                        help='Genome assembly version to be used in VEP (default: GRCh38)')
     parser.add_argument('--vep-version', type=str, default='102', required=False,
-                        help='String indicating which version from ensembl genome to use with VEP (default: 102)')
+                        help='Ensembl version number to be used in VEP (default: 102)')
+    parser.add_argument('--vep-dir', type=str, default=None, required=False,
+                        help='Path to the VEP cache directory (default: $HOME/.vep)')
+    parser.add_argument("--hla-fasta", type=str, default=None, required=True,
+                        help="Path to the HLA reference FASTA file to be used in OptiType (HLA)")
     parser.add_argument('--threads',
                         help='Number of threads to use in the parallel steps', type=int, default=10, required=False)
     parser.add_argument('--steps', nargs='+', default=['mapping', 'gatk', 'hla', 'variant', 'filter'],
                         help='Steps to perform in the pipeline',
                         choices=['mapping', 'gatk', 'hla', 'variant', 'filter'])
-    parser.add_argument("--hla-fasta", type=str, default=None, required=True,
-                        help="Path to the HLA reference fasta file for HLA typing with Optitype.")
     parser.add_argument('--keep-intermediate', default=False, action='store_true', required=False,
-                        help='Avoid intermediate files from being removed.')
+                        help='Do not remove temporary files')
     parser.add_argument('--use-gatk-spark', default=False, action='store_true', required=False,
-                        help='Enable the use of MarkDuplicatesSpark and BaseRecalibratorSpark.')
+                        help='Enable the use of Spark in MarkDuplicates and BaseRecalibrator (GATK)')
 
     # Parse arguments
     args = parser.parse_args()
@@ -354,6 +369,7 @@ if __name__ == '__main__':
     STEPS = args.steps
     ASSEMBLY = args.vep_db
     VERSION = args.vep_version
+    CACHEDIR = os.path.abspath(args.vep_dir) if args.vep_dir else None
     HLA_FASTA = os.path.abspath(args.hla_fasta)
     KEEP = args.keep_intermediate
     SPARK = args.use_gatk_spark
@@ -374,6 +390,7 @@ if __name__ == '__main__':
          THREADS,
          ASSEMBLY,
          VERSION,
+         CACHEDIR,
          STEPS,
          HLA_FASTA,
          KEEP,

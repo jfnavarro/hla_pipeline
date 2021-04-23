@@ -1,4 +1,4 @@
-# Instructions on how to install references for GRCh38 y hg19
+# Instructions on how to install references for GRCh38
 
 # Install GSUTIL to download references
 # You need to create .boto config with gsutil config and then disable integrity check by setting this line check_hashes = if_fast_else_skip
@@ -21,21 +21,3 @@ mkdir -p STARIndex
 STAR --runMode genomeGenerate --runThreadN 20 --genomeDir STARIndex \
   --genomeFastaFiles Homo_sapiens_assembly38.fasta \
   --sjdbGTFfile gencode.v34.primary_assembly.annotation.gtf
-
-cd ~/shared
-# Download references for GRCh38 and build STAR index
-mkdir -p hg19
-cd hg19
-gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.fasta* .
-gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/Homo_sapiens_assembly19.dict* .
-gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/Mills_and_1000G_gold_standard.indels.b37.vcf.gz* .
-gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/1000G_phase1.snps.high_confidence.b37.vcf.gz* .
-gsutil -m cp -r gs://gcp-public-data--broad-references/hg19/v0/dbsnp_138.b37.vcf.gz* .
-gsutil -m cp -r gs://gatk-best-practices/somatic-b37/af-only-gnomad.raw.sites.vcf* .
-gsutil -m cp -r gs://gatk-best-practices/somatic-b37/Mutect2-exome-panel.vcf* .
-wget ftp://ftp.ensembl.org/pub/grch37/release-100/gtf/homo_sapiens/Homo_sapiens.GRCh37.87.gtf.gz
-gunzip Homo_sapiens.GRCh37.87.gtf.gz
-mkdir -p STARIndex
-STAR --runMode genomeGenerate --runThreadN 20 --genomeDir STARIndex \
-  --genomeFastaFiles Homo_sapiens_assembly19.fasta \
-  --sjdbGTFfile Homo_sapiens.GRCh37.87.gtf
