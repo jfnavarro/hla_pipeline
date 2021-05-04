@@ -59,7 +59,7 @@ to run the pipelines.
 ## How to run
 See RUN.txt for a running example.
 
-It is recommended to use a Linux machine with at least 20 cores, 64GB of RAM
+It is recommended to use a Linux machine with at least 20 threads, 64GB of RAM
 and 500GB of disk space. 
 
 ## Output (important files)
