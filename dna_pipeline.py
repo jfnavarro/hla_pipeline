@@ -6,6 +6,7 @@ The pipeline trims with trimgalore, aligns with bwa-men,
 performs the GATK4 best practices and computes variants with
 Mutect2, Strelka2, SomaticSniper and Varscan.
 The variants are then combined into one file and annotated with VEP.
+HLA typing is performed with Optitype.
 
 Multiple options are available. To see them type --help
 

@@ -15,11 +15,12 @@ def index_column_substring(your_list, substring):
 def mutect2_filter(input, output, sample1_ID, sample2_ID):
     """
     Filters a Mutect2 VCF to only keep variants that PASS
-    :param input:
-    :param output:
+    Tumor and Normal IDs are also replaced by the words TUMOR and NORMAL
+    :param input: the input VCF generated with Mutect2
+    :param output: the name of filtered VCF file
     :param sample1_ID: ID that identifies the tumor sample
     :param sample2_ID: ID that identifies the normal sample
-    :return:
+    :return: None
     """
     filtered_vcf = open(output, 'w')
     vcf = open(input)
@@ -46,10 +47,11 @@ def mutect2_filter(input, output, sample1_ID, sample2_ID):
 
 def strelka2_filter(input, output):
     """
-    Filters a Strelka2 SNVs VCF to add the genotype and keep variants that PASS
-    :param input:
-    :param output:
-    :return:
+    Filters a Strelka2 VCF file (SNPs) to add the genotype field info
+    and keep variants that PASS
+    :param input: the input VCF generated with Strelka2
+    :param output: the name of filtered VCF file
+    :return: None
     """
     filtered_vcf = open(output, 'w')
     vcf = gzip.open(input, 'rt')
@@ -113,45 +115,13 @@ def strelka2_filter(input, output):
     filtered_vcf.close()
 
 
-def somaticSniper_filter(input, output):
-    """
-    Filters a SomaticSniper VCF to keep only somatic variants
-    :param input:
-    :param output:
-    :return:
-    """
-    filtered_vcf = open('tmp_ss.vcf', 'w')
-    vcf = open(input)
-    for line in vcf:
-        if line.startswith('#CHROM'):
-            headers = line.strip().split('\t')
-            filtered_vcf.write(line)
-        elif not line.startswith('#'):
-            columns = line.strip().split('\t')
-            format = columns[headers.index('FORMAT')]
-            tumor = columns[headers.index('TUMOR')]
-            somatic_status_index = format.split(':').index('SS')
-            somatic_status = int(tumor.split(':')[somatic_status_index])
-            if somatic_status == 2:
-                filtered_vcf.write(line)
-        else:
-            filtered_vcf.write(line)
-    vcf.close()
-    filtered_vcf.close()
-
-    # NOTE replacing IUPAC codes from VCF
-    # NOTE this will also skip variants whose REF and ALT fields are identical
-    cmd = 'awk \'{if ($1 ~ /#/) {print} else if ($4 != $5) {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS="\t"; print}}\' ' \
-          'tmp_ss.vcf > ' + output
-    exec_command(cmd)
-
-
 def strelka2_filter_indels(input, output):
     """
-    Filters a Strelka2 indels VCF to add the genotype and keep variants that PASS
-    :param input:
-    :param output:
-    :return:
+    Filters a Strelka2 VCF (indels) to add the genotype field info
+    and keep variants that PASS
+    :param input: the input VCF generated with Strelka2
+    :param output: the name of filtered VCF file
+    :return: None
     """
     filtered_vcf = open(output, 'w')
     vcf = gzip.open(input, 'rt')
@@ -190,12 +160,47 @@ def strelka2_filter_indels(input, output):
     filtered_vcf.close()
 
 
+def somaticSniper_filter(input, output):
+    """
+    Filters a SomaticSniper VCF to keep only somatic variants
+    Some reformatting is also applied to make the VCF correct
+    :param input: the input VCF generated with SomaticSniper
+    :param output: the name of filtered VCF file
+    :return: None
+    """
+    filtered_vcf = open('tmp_ss.vcf', 'w')
+    vcf = open(input)
+    for line in vcf:
+        if line.startswith('#CHROM'):
+            headers = line.strip().split('\t')
+            filtered_vcf.write(line)
+        elif not line.startswith('#'):
+            columns = line.strip().split('\t')
+            format = columns[headers.index('FORMAT')]
+            tumor = columns[headers.index('TUMOR')]
+            somatic_status_index = format.split(':').index('SS')
+            somatic_status = int(tumor.split(':')[somatic_status_index])
+            if somatic_status == 2:
+                filtered_vcf.write(line)
+        else:
+            filtered_vcf.write(line)
+    vcf.close()
+    filtered_vcf.close()
+
+    # NOTE replacing IUPAC codes from VCF
+    # NOTE this will also skip variants whose REF and ALT fields are identical
+    cmd = 'awk \'{if ($1 ~ /#/) {print} else if ($4 != $5) {gsub(/W|K|B|Y|D|H|V|R|S|M/,"N",$4); OFS="\t"; print}}\' ' \
+          'tmp_ss.vcf > ' + output
+    exec_command(cmd)
+
+
 def varscan_filter(input, output):
     """
-    Filters a Varscan VCF reformat the DP4 field and keep only SOMATIC variants that PASS
-    :param input:
-    :param output:
-    :return:
+    Filters a Varscan VCF to reformat the DP4 field and keep only SOMATIC variants that PASS
+    Some reformatting is also applied to make the VCF correct
+    :param input: the input VCF generated with Varscan
+    :param output: the name of filtered VCF file
+    :return: None
     """
     filtered_vcf = open('tmp_varscan.vcf', 'w')
     vcf = open(input)

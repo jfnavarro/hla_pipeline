@@ -4,8 +4,6 @@
 import subprocess
 import sys
 from hlapipeline.tools import *
-import pandas as pd
-import re
 import os
 import logging
 
@@ -37,7 +35,7 @@ def HLA_prediction(inputbam, threads, origin, sample, fasta, nacid, KEEP):
     """
 
     # We do not need many threads for Samtools view
-    #SAMTOOLS_THREADS = max(int(threads / 2), 1)
+    # SAMTOOLS_THREADS = max(int(threads / 2), 1)
     SAMTOOLS_THREADS = 4
 
     # TODO use os.makedirs instead

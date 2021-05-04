@@ -6,7 +6,7 @@ The pipeline trims with trimgalore, aligns with STAR,
 performs the GATK4 best practices and computes variants with
 HaplotypeCaller and Varscan. The variants are then combined into
 one file and annotated with VEP. Gene counts are also
-computed with featureCounts.
+computed with featureCounts. HLA typing is performed with Optitype.
 
 Multiple options are available. To see them type --help
 

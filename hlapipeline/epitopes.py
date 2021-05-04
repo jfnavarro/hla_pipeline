@@ -1,18 +1,21 @@
 """
 @author: Jose Fernandez Navarro <jc.fernandez.navarro@gmail.com
 """
-import re
-from Bio.Seq import translate
-from Bio.Data.IUPACData import protein_letters_3to1
 from varcode import Variant
 
 
-def translate_dna(seq):
-    return translate(seq, to_stop=True)
-
-
-#TODO add a description to this function
 def create_epitope_varcode(chrm, start, ref, alt, db, transcript):
+    """
+    This function computes and return the epitope for a given variant using the
+    package Varcode (Ensembl)
+    :param chrm: the chromosome
+    :param start: the start position
+    :param ref: the original sequence
+    :param alt: the mutated sequence
+    :param db: the Ensembl database to use
+    :param transcript: the transcript ID
+    :return: a epitope (position, error flags, original sequence, mutated sequence)
+    """
     # Retrieve variant info
     vinfo = Variant(contig=chrm, start=start, ref=ref, alt=alt, ensembl=db)
     effect = [effect for effect in vinfo.effects() if effect.transcript_id == transcript][0]
@@ -49,16 +52,16 @@ def create_epitope_varcode(chrm, start, ref, alt, db, transcript):
                     if 'Stop' in effect_type:
                         errors += ' stop mutation'
                     elif 'FrameShift' in effect_type:
-                        wt_mer = effect.original_protein_sequence[pos-12:pos+13]
-                        mut_mer = effect.mutant_protein_sequence[pos-12:]
+                        wt_mer = effect.original_protein_sequence[pos - 12:pos + 13]
+                        mut_mer = effect.mutant_protein_sequence[pos - 12:]
                     elif 'Substitution' in effect_type \
                             or 'Deletion' in effect_type:
-                        wt_mer = effect.original_protein_sequence[pos-12:pos+13]
-                        mut_mer = effect.mutant_protein_sequence[pos-12:pos+13]
+                        wt_mer = effect.original_protein_sequence[pos - 12:pos + 13]
+                        mut_mer = effect.mutant_protein_sequence[pos - 12:pos + 13]
                     elif 'Insertion' in effect_type:
                         size = int(abs(len(ref) - len(alt)) / 3)
-                        wt_mer = effect.original_protein_sequence[pos-12:pos+13+size]
-                        mut_mer = effect.mutant_protein_sequence[pos-12:pos+13+size]
+                        wt_mer = effect.original_protein_sequence[pos - 12:pos + 13 + size]
+                        mut_mer = effect.mutant_protein_sequence[pos - 12:pos + 13 + size]
                     else:
                         errors += ' unknown exonic function {}'.format(effect_type)
     return pos, errors, wt_mer, mut_mer

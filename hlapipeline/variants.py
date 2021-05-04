@@ -58,16 +58,16 @@ def epitopes(record, info, ens_data):
     if 'missense' in funcensGene or 'frame' in funcensGene:
         gene = info.SYMBOL
         transcript = info.Feature
-        #sequence = ens_data.transcript_by_id(info.Feature)
+        # sequence = ens_data.transcript_by_id(info.Feature)
         mut_dna = info.HGVSc.split(':')[1] if len(info.HGVSc.split(':')) > 1 else ''
         mut_aa = info.HGVSp.split(':')[1] if len(info.HGVSp.split(':')) > 1 else ''
-        
+
         # TODO this should return a list 
-        pos, flags, wtmer, mutmer = create_epitope_varcode(record.CHROM, 
-                                                           record.POS, 
-                                                           record.REF, 
-                                                           info.Allele, 
-                                                           ens_data, 
+        pos, flags, wtmer, mutmer = create_epitope_varcode(record.CHROM,
+                                                           record.POS,
+                                                           record.REF,
+                                                           info.Allele,
+                                                           ens_data,
                                                            transcript)
         epitopes.append(Epitope(transcript, gene, funcensGene, mut_dna, mut_aa, flags, wtmer, mutmer))
     return epitopes
@@ -86,7 +86,7 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
     :param tumor_var_depth: filter value for the number of allelic reads (AD)
     :param tumor_var_freq: filter value for the Variant Allele Frequency (VAF)
     :param num_callers: filter value for the number of variant callers
-    :param ensembl_version: ensembl version to use for epitope obtention
+    :param ensembl_version: ensembl version to use for the generation of epitoes
     :return:
         A list of Variant() objects
     """
@@ -192,7 +192,8 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     if 'NORMAL.mutect' in called and 'TUMOR.mutect' in called and 'PASS' in record.FILTER:
                         normal_DP = int(called['NORMAL.mutect']['DP'])
                         normal_AD = int(called['NORMAL.mutect']['AD'][1])
-                        normal_VAF = np.around(float(called['NORMAL.mutect']['AF'][0]) * 100, 3) if normal_DP > 0.0 else 0.0
+                        normal_VAF = np.around(float(called['NORMAL.mutect']['AF'][0]) * 100,
+                                               3) if normal_DP > 0.0 else 0.0
                         tumor_DP = int(called['TUMOR.mutect']['DP'])
                         tumor_AD = int(called['TUMOR.mutect']['AD'][1])
                         tumor_VAF = np.around(float(called['TUMOR.mutect']['AF'][0]) * 100, 3)
@@ -222,11 +223,11 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                             pass_snp += 1
                         if is_somatic:
                             filtered['somaticsniper'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                                normal_AD,
-                                                                                normal_VAF,
-                                                                                tumor_DP,
-                                                                                tumor_AD,
-                                                                                tumor_VAF)
+                                                                                   normal_AD,
+                                                                                   normal_VAF,
+                                                                                   tumor_DP,
+                                                                                   tumor_AD,
+                                                                                   tumor_VAF)
 
                     if ('NORMAL.varscan' in called and 'TUMOR.varscan' in called) \
                             or ('NORMAL.varscan_indel' in called and 'TUMOR.varscan_indel' in called) \
@@ -247,11 +248,11 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                             else:
                                 pass_snp += 1
                         filtered[label_index] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                        normal_AD,
-                                                                        normal_VAF,
-                                                                        tumor_DP,
-                                                                        tumor_AD,
-                                                                        tumor_VAF)
+                                                                           normal_AD,
+                                                                           normal_VAF,
+                                                                           tumor_DP,
+                                                                           tumor_AD,
+                                                                           tumor_VAF)
                     if 'NORMAL.strelka' in called and 'TUMOR.strelka' in called and 'PASS' in record.FILTER:
                         ref_index = record.REF + 'U'
                         alt_index = str(record.ALT[0].serialize()) + 'U'
@@ -271,11 +272,11 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                                 and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
                             pass_snp += 1
                         filtered['strelka'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                        normal_AD2,
-                                                                        normal_VAF,
-                                                                        tumor_DP,
-                                                                        tumor_AD2,
-                                                                        tumor_VAF)
+                                                                         normal_AD2,
+                                                                         normal_VAF,
+                                                                         tumor_DP,
+                                                                         tumor_AD2,
+                                                                         tumor_VAF)
                     if 'NORMAL.strelka_indel' in called and 'TUMOR.strelka_indel' in called and 'PASS' in record.FILTER:
                         # normal_DP = int(called['NORMAL.strelka_indel']['DP'])
                         normal_AD1 = int(called['NORMAL.strelka_indel']['TAR'][0])
@@ -293,11 +294,11 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                                 and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
                             pass_indel += 1
                         filtered['strelka_indel'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                            normal_AD2,
-                                                                            normal_VAF,
-                                                                            tumor_DP,
-                                                                            tumor_AD2,
-                                                                            tumor_VAF)
+                                                                               normal_AD2,
+                                                                               normal_VAF,
+                                                                               tumor_DP,
+                                                                               tumor_AD2,
+                                                                               tumor_VAF)
                 except KeyError:
                     continue
 
