@@ -68,11 +68,11 @@ def epitopes(record, info, ens_data):
         if chrom in allowed_contigs:
             # TODO this should return a list 
             pos, flags, wtmer, mutmer = create_epitope_varcode(chrom,
-                                                            record.POS,
-                                                            record.REF,
-                                                            info.Allele,
-                                                            ens_data,
-                                                            transcript)
+                                                               record.POS,
+                                                               record.REF,
+                                                               info.Allele,
+                                                               ens_data,
+                                                               transcript)
             epitopes.append(Epitope(transcript, gene, funcensGene, mut_dna, mut_aa, flags, wtmer, mutmer))
         else:
             print("Unable to infer epitope for contig {}".format(chrom))
