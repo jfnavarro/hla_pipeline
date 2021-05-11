@@ -54,6 +54,7 @@ def epitopes(record, info, ens_data):
     """
 
     funcensGene = info.Consequence
+    allowed_contigs = ens_data.contigs()
     epitopes = list()
     if 'missense' in funcensGene or 'frame' in funcensGene:
         gene = info.SYMBOL
@@ -61,15 +62,20 @@ def epitopes(record, info, ens_data):
         # sequence = ens_data.transcript_by_id(info.Feature)
         mut_dna = info.HGVSc.split(':')[1] if len(info.HGVSc.split(':')) > 1 else ''
         mut_aa = info.HGVSp.split(':')[1] if len(info.HGVSp.split(':')) > 1 else ''
-
-        # TODO this should return a list 
-        pos, flags, wtmer, mutmer = create_epitope_varcode(record.CHROM,
-                                                           record.POS,
-                                                           record.REF,
-                                                           info.Allele,
-                                                           ens_data,
-                                                           transcript)
-        epitopes.append(Epitope(transcript, gene, funcensGene, mut_dna, mut_aa, flags, wtmer, mutmer))
+        chrom = record.CHROM.replace('chr', '') if 'chr' in record.CHROM else record.CHROM
+        if chrom == 'M':
+            chrom = 'MT'
+        if chrom in allowed_contigs:
+            # TODO this should return a list 
+            pos, flags, wtmer, mutmer = create_epitope_varcode(chrom,
+                                                            record.POS,
+                                                            record.REF,
+                                                            info.Allele,
+                                                            ens_data,
+                                                            transcript)
+            epitopes.append(Epitope(transcript, gene, funcensGene, mut_dna, mut_aa, flags, wtmer, mutmer))
+        else:
+            print("Unable to infer epitope for contig {}".format(chrom))
     return epitopes
 
 
