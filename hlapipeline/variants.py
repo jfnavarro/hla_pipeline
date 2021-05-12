@@ -124,15 +124,19 @@ def filter_variants_rna(file, tumor_coverage, tumor_var_depth,
             try:
                 if 'HaplotypeCaller' in called and 'PASS' in record.FILTER:
                     tumor_DP = int(called['HaplotypeCaller']['DP'])
-                    tumor_AD = int(called['HaplotypeCaller']['AD'][1])
+                    token = called['HaplotypeCaller']['AD']
+                    tumor_AD = int(token[1]) if type(token) is list else int(token)
                     tumor_VAF = np.around(tumor_AD / float(tumor_DP) * 100, 3) if tumor_DP > 0.0 else 0.0
                     if tumor_DP >= tumor_coverage and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth:
                         pass_variants += 1
                     filtered['HaplotypeCaller'] = '{};{};{}'.format(tumor_DP, tumor_AD, tumor_VAF)
                 if 'varscan' in called and 'PASS' in record.FILTER:
                     tumor_DP = int(called['varscan']['DP'])
-                    tumor_AD = int(called['varscan']['AD'][0])
-                    tumor_VAF = float(called['varscan']['FREQ'][0].replace('%', '')) if tumor_DP > 0.0 else 0.0
+                    token = called['varscan']['AD']
+                    tumor_AD = int(token[0]) if type(token) is list else int(token)
+                    token = called['varscan']['FREQ']
+                    value = token[0] if type(token) is list else token
+                    tumor_VAF = float(value.replace('%', '')) if tumor_DP > 0.0 else 0.0
                     if tumor_DP >= tumor_coverage and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth:
                         pass_variants += 1
                     filtered['varscan'] = '{};{};{}'.format(tumor_DP, tumor_AD, tumor_VAF)
@@ -205,11 +209,18 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
             try:
                 if 'NORMAL.mutect' in called and 'TUMOR.mutect' in called and 'PASS' in record.FILTER:
                     normal_DP = int(called['NORMAL.mutect']['DP'])
-                    normal_AD = int(called['NORMAL.mutect']['AD'][1])
-                    normal_VAF = np.around(float(called['NORMAL.mutect']['AF'][0]) * 100, 3) if normal_DP > 0.0 else 0.0
+                    token = called['NORMAL.mutect']['AD']
+                    normal_AD = int(token[1]) if type(token) is list else int(token)
+                    token = called['NORMAL.mutect']['AF']
+                    value = token[0] if type(token) is list else token
+                    normal_VAF = np.around(float(value) * 100,
+                                            3) if normal_DP > 0.0 else 0.0
                     tumor_DP = int(called['TUMOR.mutect']['DP'])
-                    tumor_AD = int(called['TUMOR.mutect']['AD'][1])
-                    tumor_VAF = np.around(float(called['TUMOR.mutect']['AF'][0]) * 100, 3)
+                    token = called['TUMOR.mutect']['AD']
+                    tumor_AD = int(token[1]) if type(token) is list else int(token)
+                    token = called['TUMOR.mutect']['AF']
+                    value = token[0] if type(token) is list else token
+                    tumor_VAF = np.around(float(value) * 100, 3)
                     tumor_normal_ratio = tumor_VAF / normal_VAF if normal_VAF != 0 else t2n_ratio
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth \
@@ -236,11 +247,11 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                         pass_snp += 1
                     if is_somatic:
                         filtered['somaticsniper'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                               normal_AD,
-                                                                               normal_VAF,
-                                                                               tumor_DP,
-                                                                               tumor_AD,
-                                                                               tumor_VAF)
+                                                                                normal_AD,
+                                                                                normal_VAF,
+                                                                                tumor_DP,
+                                                                                tumor_AD,
+                                                                                tumor_VAF)
 
                 if ('NORMAL.varscan' in called and 'TUMOR.varscan' in called) \
                         or ('NORMAL.varscan_indel' in called and 'TUMOR.varscan_indel' in called) \
@@ -248,10 +259,14 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                     label_index = 'varscan' if 'NORMAL.varscan' in called else 'varscan_indel'
                     normal_DP = int(called['NORMAL.{}'.format(label_index)]['DP'])
                     normal_AD = sum(called['NORMAL.{}'.format(label_index)]['DP4'][2:])
-                    normal_VAF = float(called['NORMAL.{}'.format(label_index)]['FREQ'][0].replace('%', ''))
+                    token = called['NORMAL.{}'.format(label_index)]['FREQ']
+                    value = token[0] if type(token) is list else token
+                    normal_VAF = float(value.replace('%', ''))
                     tumor_DP = int(called['TUMOR.{}'.format(label_index)]['DP'])
                     tumor_AD = sum(called['TUMOR.{}'.format(label_index)]['DP4'][2:])
-                    tumor_VAF = float(called['TUMOR.{}'.format(label_index)]['FREQ'][0].replace('%', ''))
+                    token = called['TUMOR.{}'.format(label_index)]['FREQ']
+                    value = token[0] if type(token) is list else token
+                    tumor_VAF = float(value.replace('%', ''))
                     tumor_normal_ratio = tumor_VAF / normal_VAF if normal_VAF != 0 else t2n_ratio
                     if normal_DP >= normal_coverage and tumor_DP >= tumor_coverage \
                             and tumor_VAF >= tumor_var_freq and tumor_AD >= tumor_var_depth \
@@ -261,22 +276,26 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                         else:
                             pass_snp += 1
                     filtered[label_index] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                       normal_AD,
-                                                                       normal_VAF,
-                                                                       tumor_DP,
-                                                                       tumor_AD,
-                                                                       tumor_VAF)
+                                                                        normal_AD,
+                                                                        normal_VAF,
+                                                                        tumor_DP,
+                                                                        tumor_AD,
+                                                                        tumor_VAF)
                 if 'NORMAL.strelka' in called and 'TUMOR.strelka' in called and 'PASS' in record.FILTER:
                     ref_index = record.REF + 'U'
                     alt_index = str(record.ALT[0].serialize()) + 'U'
                     # normal_DP = int(called['NORMAL.strelka']['DP'])
-                    normal_AD1 = int(called['NORMAL.strelka'][ref_index][0])
-                    normal_AD2 = int(called['NORMAL.strelka'][alt_index][0])
+                    token = called['NORMAL.strelka'][ref_index]
+                    normal_AD1 = int(token[0]) if type(token) is list else int(token)
+                    token = called['NORMAL.strelka'][alt_index]
+                    normal_AD2 = int(token[0]) if type(token) is list else int(token)
                     normal_DP = normal_AD1 + normal_AD2
                     normal_VAF = np.around((normal_AD2 / float(normal_DP)) * 100, 3) if normal_DP > 0.0 else 0.0
                     # tumor_DP = int(called['TUMOR.strelka']['DP'])
-                    tumor_AD1 = int(called['TUMOR.strelka'][ref_index][0])
-                    tumor_AD2 = int(called['TUMOR.strelka'][alt_index][0])
+                    token = called['TUMOR.strelka'][ref_index]
+                    tumor_AD1 = int(token[0]) if type(token) is list else int(token)
+                    token = called['TUMOR.strelka'][alt_index]
+                    tumor_AD2 = int(token[0]) if type(token) is list else int(token)
                     tumor_DP = tumor_AD1 + tumor_AD2
                     tumor_VAF = np.around((tumor_AD2 / float(tumor_DP)) * 100, 3)
                     tumor_normal_ratio = tumor_VAF / normal_VAF if normal_VAF != 0 else t2n_ratio
@@ -285,20 +304,24 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
                         pass_snp += 1
                     filtered['strelka'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                     normal_AD2,
-                                                                     normal_VAF,
-                                                                     tumor_DP,
-                                                                     tumor_AD2,
-                                                                     tumor_VAF)
+                                                                        normal_AD2,
+                                                                        normal_VAF,
+                                                                        tumor_DP,
+                                                                        tumor_AD2,
+                                                                        tumor_VAF)
                 if 'NORMAL.strelka_indel' in called and 'TUMOR.strelka_indel' in called and 'PASS' in record.FILTER:
                     # normal_DP = int(called['NORMAL.strelka_indel']['DP'])
-                    normal_AD1 = int(called['NORMAL.strelka_indel']['TAR'][0])
-                    normal_AD2 = int(called['NORMAL.strelka_indel']['TIR'][0])
+                    token = called['NORMAL.strelka_indel']['TAR']
+                    normal_AD1 = int(token[0]) if type(token) is list else int(token)
+                    token = called['NORMAL.strelka_indel']['TIR']
+                    normal_AD2 = int(token[0]) if type(token) is list else int(token)
                     normal_DP = normal_AD1 + normal_AD2
                     normal_VAF = np.around((normal_AD2 / float(normal_DP)) * 100, 3) if normal_DP > 0.0 else 0.0
                     # tumor_DP = int(called['TUMOR.strelka_indel']['DP'])
-                    tumor_AD1 = int(called['TUMOR.strelka_indel']['TAR'][0])
-                    tumor_AD2 = int(called['TUMOR.strelka_indel']['TIR'][0])
+                    token = called['TUMOR.strelka_indel']['TAR']
+                    tumor_AD1 = int(token[0]) if type(token) is list else int(token)
+                    token = called['TUMOR.strelka_indel']['TIR']
+                    tumor_AD2 = int(token[0]) if type(token) is list else int(token)
                     tumor_DP = tumor_AD1 + tumor_AD2
                     tumor_VAF = np.around((tumor_AD2 / float(tumor_DP)) * 100, 3)
                     tumor_normal_ratio = tumor_VAF / normal_VAF if normal_VAF != 0 else t2n_ratio
@@ -307,11 +330,11 @@ def filter_variants_dna(file, normal_coverage, tumor_coverage, tumor_var_depth,
                             and normal_VAF <= normal_var_freq and tumor_normal_ratio >= t2n_ratio:
                         pass_indel += 1
                     filtered['strelka_indel'] = '{};{};{};{};{};{}'.format(normal_DP,
-                                                                           normal_AD2,
-                                                                           normal_VAF,
-                                                                           tumor_DP,
-                                                                           tumor_AD2,
-                                                                           tumor_VAF)
+                                                                            normal_AD2,
+                                                                            normal_VAF,
+                                                                            tumor_DP,
+                                                                            tumor_AD2,
+                                                                            tumor_VAF)
             except KeyError:
                 continue
 
