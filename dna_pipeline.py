@@ -250,13 +250,27 @@ def main(R1_NORMAL,
         logger.info('Starting variant calling: {}'.format(start_variant_time))
         logger.info('Performing variant calling Mutect2')
 
-        intervals_cmd = '--intervals {}'.format(INTERVALS) if INTERVALS else ''
+        # Retrieve the contigs present in one of the bam files (should be the same for both)
+        cmd = 'samtools idxstats sample2_final.bam | cut -f1 | grep -v "*"'
+        contigs = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).communicate()[0]\
+            .decode().strip().split('\n')
+
+        # Split the Intervals file by chromosome in case of providing an Intervals file
+        
+        if INTERVALS:
+            cmd = 'awk \'{{ print $0 >> $1".bed" }}\' {}'.format(INTERVALS)
+            exec_command(cmd)
 
         # Variant calling Mutect2
-        cmd = '{} Mutect2 --reference {} --input sample1_final.bam --input sample2_final.bam --normal-sample {} ' \
-              '--output Mutect_unfiltered.vcf --germline-resource {} --dont-use-soft-clipped-bases ' \
-              '--panel-of-normals {} {}'.format(GATK, GENOME, sample2_ID, GERMLINE, PON, intervals_cmd)
-        p1 = exec_command(cmd, detach=True)
+        p1 = list()
+        for contig in contigs:
+            intervals_cmd = '--intervals {}.bed'.format(contig) if (INTERVALS and os.path.exists('{}.bed'.format(contig))) else ''
+            
+            # Spawn a Mutect2 process for each contig only calling for the contig and intervals specific
+            cmd = '{} Mutect2 --reference {} --input sample1_final.bam --input sample2_final.bam --normal-sample {} ' \
+                '--output Mutect_unfiltered_{}.vcf --germline-resource {} --dont-use-soft-clipped-bases ' \
+                '--panel-of-normals {} -L {} {}'.format(GATK, GENOME, sample2_ID, contig, GERMLINE, PON, contig, intervals_cmd)
+            p1.append(exec_command(cmd, detach=True))
 
         # Variant calling Strelka2
         logger.info('Performing variant calling with Strelka2')
@@ -305,10 +319,21 @@ def main(R1_NORMAL,
         p6 = exec_command(cmd, detach=True)
 
         # Wait for the processes to finish in parallel
-        p1.wait()
+        [process.wait() for process in p1]
         p2.wait()
         p3.wait()
         p6.wait()
+
+        # Merge scattered Mutect2 VCFs and Mutect2 stats prior filtering
+
+        cmd = 'bcftools concat --threads 8 -o Mutect_unfiltered.vcf -Ov Mutect_unfiltered_*.vcf'
+        p1 = exec_command(cmd, detach=True)
+
+        cmd = 'gatk MergeMutectStats -O Mutect_unfiltered.vcf.stats {}'.format(' '.join([f'--stats Mutect_unfiltered_{contig}.vcf.stats' for contig in contigs]))
+        p2 = exec_command(cmd, detach=True)
+
+        p1.wait()
+        p2.wait()
 
         if not KEEP:
             if os.path.isfile('sample1.pileup'):

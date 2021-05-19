@@ -25,7 +25,7 @@ YARAM = 'yara_mapper'
 VEP = 'vep'
 VEP_OPTIONS = '--no_escape --offline --no_stats --af_gnomad --hgvs --cache --fields "Allele,Consequence,SYMBOL,' \
               'Gene,Feature_type,Feature,BIOTYPE,EXON,INTRON,HGVSc,HGVSp,' \
-              'cDNA_position,CDS_position,Protein_position,Existing_variation,FLAGS,gnomAD_AF'  # Could add --pick
+              'cDNA_position,CDS_position,Protein_position,Existing_variation,FLAGS,gnomAD_AF"'  # Could add --pick
 VCFTOOLS = 'vcftools'
 BGZIP = 'bgzip'
 TABIX = 'tabix'
